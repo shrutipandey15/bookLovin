@@ -13,7 +13,7 @@ HASHED_PASSWORD = pwd_context.hash(TEST_PASSWORD)
 async def test_login_success(client):
     """Test successful login and token retrieval."""
     response = await client.post(
-        "/api/v1/login",  # Adjust URL prefix if needed
+        "/api/v1/auth/login",  # Adjust URL prefix if needed
         data={"username": TEST_USERNAME, "password": TEST_PASSWORD},
     )
     assert response.status_code == 200
@@ -26,7 +26,7 @@ async def test_login_success(client):
 async def test_login_failure_incorrect_password(client):
     """Test login failure with incorrect password."""
     response = await client.post(
-        "/api/v1/login",  # Adjust URL prefix if needed
+        "/api/v1/auth/login",  # Adjust URL prefix if needed
         data={"username": TEST_USERNAME, "password": "incorrectpassword"},
     )
     assert response.status_code == 401
@@ -37,7 +37,7 @@ async def test_login_failure_incorrect_password(client):
 async def test_login_failure_incorrect_username(client):
     """Test login failure with non-existent username."""
     response = await client.post(
-        "/api/v1/login",  # Adjust URL prefix if needed
+        "/api/v1/auth/login",  # Adjust URL prefix if needed
         data={"username": "nonexistent@user.com", "password": "password"},
     )
     assert response.status_code == 401
@@ -49,7 +49,8 @@ async def test_access_protected_route_success(client):
     """Test accessing a protected route with a valid token."""
     # 1. Login to get the token
     login_response = await client.post(
-        "/api/v1/login", data={"username": TEST_USERNAME, "password": TEST_PASSWORD}
+        "/api/v1/auth/login",
+        data={"username": TEST_USERNAME, "password": TEST_PASSWORD},
     )
     assert login_response.status_code == 200
     d = login_response.json()
@@ -58,7 +59,7 @@ async def test_access_protected_route_success(client):
     # 2. Access the protected route with the token
     headers = {"Authorization": f"Bearer {token}"}
     test_response = await client.get(
-        "/api/v1/test", headers=headers
+        "/api/v1/auth/test", headers=headers
     )  # Adjust URL prefix if needed
 
     assert test_response.status_code == 200
@@ -69,7 +70,7 @@ async def test_access_protected_route_success(client):
 @pytest.mark.asyncio
 async def test_access_protected_route_no_token(client):
     """Test accessing a protected route without a token."""
-    response = await client.get("/api/v1/test")  # Adjust URL prefix if needed
+    response = await client.get("/api/v1/auth/test")  # Adjust URL prefix if needed
     assert response.status_code == 401  # Or 403 depending on FastAPI version/config
     assert "Not authenticated" in response.json().get("detail", "")
 
@@ -79,7 +80,7 @@ async def test_access_protected_route_invalid_token(client):
     """Test accessing a protected route with an invalid token."""
     headers = {"Authorization": "Bearer invalidtoken"}
     response = await client.get(
-        "/api/v1/test", headers=headers
+        "/api/v1/auth/test", headers=headers
     )  # Adjust URL prefix if needed
     assert response.status_code == 401
     # The exact detail message might vary based on JWTError
