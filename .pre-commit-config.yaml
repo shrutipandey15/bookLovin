@@ -23,6 +23,6 @@ repos:
     hooks:
       - id: pytest
         name: run pytest (backend)
-        entry: cd backend && just test
+        entry: poetry run pytest --rootdir=backend
         files: \.(py)$
         language: system
