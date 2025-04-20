@@ -4,5 +4,8 @@ run:
 test:
     poetry run pytest
 
+debug:
+    poetry run pytest --pdb
+
 docs:
     poetry run pdoc -d google booklovin -o docs
