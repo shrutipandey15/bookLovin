@@ -1,12 +1,5 @@
 import pytest
-import httpx
-from passlib.context import CryptContext
-from booklovin.main import app
-from settings import getAsyncClientParams
-
-from booklovin.api.v1.auth import get_user
 from booklovin.core.config import pwd_context
-from booklovin.models.users import UserLogin as User
 
 # --- Test Setup ---
 
