@@ -11,7 +11,7 @@ from booklovin.services.post_service import (
 )
 from booklovin.models.post import Post, PostId
 
-router = APIRouter()
+router = APIRouter(tags=["posts"])
 
 
 # create
