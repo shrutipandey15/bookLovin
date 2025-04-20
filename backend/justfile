@@ -4,8 +4,9 @@ run:
 test:
     poetry run pytest
 
-debug:
-    poetry run pytest --pdb
+debug args='':
+    poetry run pytest --pdb {{args}}
 
 docs:
     poetry run pdoc -d google booklovin -o docs
+
