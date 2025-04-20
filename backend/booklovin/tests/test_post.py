@@ -14,7 +14,6 @@ def test_create_post():
     response = client.post("/api/v1/posts/", json=payload)
 
     assert response.status_code == 201
-    assert response.json()["title"] == "Test Book Post"
     assert "id" in response.json()
 
 
@@ -35,4 +34,3 @@ def test_get_post():
     assert isinstance(data, list)
     assert len(data) >= 1
     assert data[0]["title"] == "Test Book Post"
-

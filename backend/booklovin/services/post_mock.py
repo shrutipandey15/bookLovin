@@ -11,3 +11,11 @@ async def create_post(post: Post) -> str:
 
 async def get_all_posts() -> List[dict]:
     return posts
+
+
+async def update_post(post_id: str, post_data: Post) -> int:
+    return 1
+
+
+async def delete_post(post_id: str) -> int:
+    return 1
