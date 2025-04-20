@@ -17,35 +17,6 @@ ALGORITHM = "HS256"
 router = APIRouter(tags=["auth"])
 
 
-def create_access_token(data: dict, expires_delta: timedelta | None = None):
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
-    else:
-        # Default expiration time if none provided
-        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
-    to_encode.update({"exp": expire, "iat": datetime.now(timezone.utc)})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
-
-
-# Dependency to get the current user from the token
-async def get_from_token(token: str = Depends(oauth2_scheme)) -> User | None:
-    # Decode the token to get the user ID
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub")
-        if user_id is None:
-            raise CredentialsException
-    except JWTError:
-        raise CredentialsException
-    else:
-        user = await get_user(email=user_id)
-        if user is None:
-            raise CredentialsException
-        return user
-
-
 @router.get("/test")
 async def test(user: User = Depends(get_from_token)) -> UserLogin:
     return user
@@ -86,3 +57,32 @@ CredentialsException = HTTPException(
     detail="Could not validate credentials",
     headers={"WWW-Authenticate": "Bearer"},
 )
+
+
+def create_access_token(data: dict, expires_delta: timedelta | None = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        # Default expiration time if none provided
+        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+    to_encode.update({"exp": expire, "iat": datetime.now(timezone.utc)})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+# Dependency to get the current user from the token
+async def get_from_token(token: str = Depends(oauth2_scheme)) -> User | None:
+    # Decode the token to get the user ID
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id: str = payload.get("sub")
+        if user_id is None:
+            raise CredentialsException
+    except JWTError:
+        raise CredentialsException
+    else:
+        user = await get_user(email=user_id)
+        if user is None:
+            raise CredentialsException
+        return user
