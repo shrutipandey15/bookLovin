@@ -1,8 +1,8 @@
 run:
     poetry run uvicorn booklovin.main:app --reload
 
-test:
-    poetry run pytest
+test args='':
+    poetry run pytest {{args}}
 
 debug args='':
     poetry run pytest --pdb {{args}}
