@@ -4,3 +4,5 @@ run:
 test:
     poetry run pytest
 
+docs:
+    poetry run pdoc -d google booklovin -o docs
