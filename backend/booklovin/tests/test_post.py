@@ -1,13 +1,14 @@
 from fastapi.testclient import TestClient
-from app.main import app
+from booklovin.main import app
 
 client = TestClient(app)
+
 
 def test_create_post():
     payload = {
         "title": "Test Book Post",
         "content": "This is a test post about a book.",
-        "image_url": "test.jpg"
+        "image_url": "test.jpg",
     }
 
     response = client.post("/api/v1/posts/", json=payload)
@@ -16,13 +17,14 @@ def test_create_post():
     assert response.json()["title"] == "Test Book Post"
     assert "id" in response.json()
 
+
 def test_get_post():
     client = TestClient(app)
 
     payload = {
         "title": "Test Book Post",
         "Content": "Sample content for GET test",
-        "image_url": "sample.jpg"
+        "image_url": "sample.jpg",
     }
     client.post("/api/v1/posts/", json=payload)
 
@@ -33,3 +35,4 @@ def test_get_post():
     assert isinstance(data, list)
     assert len(data) >= 1
     assert data[0]["title"] == "Test Book Post"
+

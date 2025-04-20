@@ -1,5 +1,6 @@
 from fastapi import FastAPI
-from app.api.v1 import posts
+
+from .api.v1 import posts
 
 app = FastAPI()
 
