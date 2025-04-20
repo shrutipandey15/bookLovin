@@ -23,6 +23,10 @@ repos:
     hooks:
       - id: pytest
         name: run pytest (backend)
-        entry: poetry run pytest --rootdir=backend
+        entry: ./scripts/run_backend_unit_tests
         files: \.(py)$
         language: system
+  - repo: https://github.com/lovesegfault/beautysh
+    rev: "v6.2.1"
+    hooks:
+      - id: beautysh
