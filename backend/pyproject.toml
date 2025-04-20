@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "booklovin"
+version = "0.1.0"
+description = "Backend for BookLovin app using FastAPI"
+authors = ["Your Name"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.115.12"
+uvicorn = "^0.34.0"
+motor = "^3.7.0"
+python-dotenv = "^1.1.0"
+pydantic = "^2.11.3"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.5"
+pytest-asyncio = "^0.26.0"
+httpx = "^0.28.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
