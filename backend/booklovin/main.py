@@ -1,3 +1,6 @@
+"""Main entry point for the app.
+Loads all the routes."""
+
 from fastapi import FastAPI
 import importlib
 
