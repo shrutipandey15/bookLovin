@@ -1,7 +1,7 @@
 from datetime import datetime, timezone, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm
 
 from jose import JWTError, jwt
 
@@ -15,11 +15,6 @@ ALGORITHM = "HS256"
 
 
 router = APIRouter(tags=["auth"])
-
-
-@router.get("/test")
-async def test(user: User = Depends(get_from_token)) -> UserLogin:
-    return user
 
 
 @router.post("/login", response_model=dict)
@@ -39,16 +34,12 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     # Adapt access based on whether 'user' is a dict or an object
     hashed_password = user["password"]
 
-    if not hashed_password or not pwd_context.verify(
-        form_data.password, hashed_password
-    ):
+    if not hashed_password or not pwd_context.verify(form_data.password, hashed_password):
         raise credentials_exception
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     # The 'sub' (subject) claim is typically the user identifier (e.g., username or user ID)
-    access_token = create_access_token(
-        data={"sub": form_data.username}, expires_delta=access_token_expires
-    )
+    access_token = create_access_token(data={"sub": form_data.username}, expires_delta=access_token_expires)
     return {"access_token": access_token, "token_type": "bearer"}
 
 
@@ -86,3 +77,8 @@ async def get_from_token(token: str = Depends(oauth2_scheme)) -> User | None:
         if user is None:
             raise CredentialsException
         return user
+
+
+@router.get("/test")
+async def test(user: User = Depends(get_from_token)) -> UserLogin:
+    return user
