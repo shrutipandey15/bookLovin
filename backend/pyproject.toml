@@ -8,6 +8,9 @@ authors = [
 ]
 readme = "README.md"
 
+[tool.poetry.scripts]
+start = "uvicorn booklovin.main:app --reload"
+
 [tool.poetry.dependencies]
 python = "^3.12"
 fastapi = "^0.115.12"
