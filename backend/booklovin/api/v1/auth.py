@@ -1,5 +1,4 @@
 from datetime import datetime, timezone, timedelta
-from passlib.context import CryptContext
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -8,13 +7,12 @@ from jose import JWTError, jwt
 
 from booklovin.models.users import UserLogin, User
 from booklovin.services.users_service import get_user
-from booklovin.core.config import oauth2_scheme
+from booklovin.core.config import oauth2_scheme, pwd_context
 
 SECRET_KEY = "development key"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 ALGORITHM = "HS256"
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 router = APIRouter(tags=["auth"])
 
@@ -42,14 +40,14 @@ async def get_from_token(token: str = Depends(oauth2_scheme)) -> User | None:
     except JWTError:
         raise CredentialsException
     else:
-        user = await get_user(id=user_id)
+        user = await get_user(email=user_id)
         if user is None:
             raise CredentialsException
         return user
 
 
 @router.get("/test")
-async def test(user: User = Depends(get_from_token)) -> User:
+async def test(user: User = Depends(get_from_token)) -> UserLogin:
     return user
 
 
@@ -68,7 +66,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
         raise credentials_exception
 
     # Adapt access based on whether 'user' is a dict or an object
-    hashed_password = user.password
+    hashed_password = user["password"]
 
     if not hashed_password or not pwd_context.verify(
         form_data.password, hashed_password
