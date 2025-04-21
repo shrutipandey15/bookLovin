@@ -3,7 +3,7 @@ from typing import Annotated
 
 from booklovin.auth_utils import ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM, SECRET_KEY, get_from_token
 from booklovin.core.config import pwd_context
-from booklovin.errors import ErrorCode
+from booklovin.errors import ErrorCode, gen_error
 from booklovin.models.users import User
 from booklovin.services.users_service import create_user, get_user
 from fastapi import APIRouter, Depends, Form, HTTPException, status
@@ -22,7 +22,7 @@ async def me_page(user: User = Depends(get_from_token)) -> User:
 async def register(username: Annotated[str, Form()], email: Annotated[str, Form()], password: Annotated[str, Form()]):
     existing_user = await get_user(email=email)
     if existing_user:
-        return {"error": ErrorCode.USER_ALREADY_EXISTS}
+        return gen_error(ErrorCode.USER_ALREADY_EXISTS)
     user_id = await create_user(User(name=username, email=email, password=password))
     return {"id": user_id}
 
