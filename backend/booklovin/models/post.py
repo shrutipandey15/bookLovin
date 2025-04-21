@@ -1,14 +1,10 @@
-from typing import Optional
-from pydantic import BaseModel
-
-
-class PostId(BaseModel):
-    id: str
+from pydantic import BaseModel, Field
 
 
 class Post(BaseModel):
-    id: Optional[str] = ""
     title: str
     content: str
-    image_url: str
-
+    links: list[dict[str, str]] = Field(default_factory=list)
+    imageUrl: str = ""
+    creationTime: int = 0
+    authorId: str

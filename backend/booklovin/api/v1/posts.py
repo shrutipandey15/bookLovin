@@ -9,16 +9,16 @@ from booklovin.services.post_service import (
     delete_post,
     update_post,
 )
-from booklovin.models.post import Post, PostId
+from booklovin.models.post import Post
 
 router = APIRouter(tags=["posts"])
 
 
 # create
 @router.post("/", status_code=201)
-async def create_book_post(post: Post) -> PostId:
+async def create_book_post(post: Post) -> dict:
     post_id = await create_post(post)
-    return PostId(id=post_id)
+    return dict(id=post_id)
 
 
 # list all
