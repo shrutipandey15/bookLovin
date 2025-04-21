@@ -23,7 +23,7 @@ async def register(username: Annotated[str, Form()], email: Annotated[str, Form(
     existing_user = await get_user(email=email)
     if existing_user:
         return {"error": ErrorCode.USER_ALREADY_EXISTS}
-    user_id = await create_user(name=username, email=email, password=password)
+    user_id = await create_user(User(name=username, email=email, password=password))
     return {"id": user_id}
 
 
