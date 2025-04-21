@@ -4,9 +4,11 @@ from enum import IntEnum, auto
 
 
 class UserRole(IntEnum):
-    standard = auto()
-    publisher = auto()
-    editor = auto()
+    """Different user types / classes"""
+
+    STANDARD = auto()
+    PUBLISHER = auto()
+    EDITOR = auto()
 
 
 class UserLogin(BaseModel):
@@ -17,6 +19,6 @@ class UserLogin(BaseModel):
 class User(BaseModel):
     name: str
     description: str = ""
-    role: UserRole = UserRole.standard
+    role: UserRole = UserRole.STANDARD
     link: Optional[str] = ""
     location: Optional[str] = "unknown"
