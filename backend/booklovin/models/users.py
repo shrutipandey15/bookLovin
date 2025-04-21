@@ -16,7 +16,7 @@ class UserLogin(BaseModel):
 
 class User(BaseModel):
     name: str
-    description: str
+    description: str = ""
     role: UserRole = UserRole.standard
     link: Optional[str] = ""
     location: Optional[str] = "unknown"

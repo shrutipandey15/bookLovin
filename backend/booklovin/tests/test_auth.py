@@ -58,19 +58,17 @@ async def test_access_protected_route_success(client):
 
     # 2. Access the protected route with the token
     headers = {"Authorization": f"Bearer {token}"}
-    test_response = await client.get(
-        "/api/v1/auth/test", headers=headers
-    )  # Adjust URL prefix if needed
+    test_response = await client.get("/api/v1/auth/me", headers=headers)  # Adjust URL prefix if needed
 
     assert test_response.status_code == 200
     json_response = test_response.json()
-    assert json_response["email"] == TEST_USERNAME
+    assert json_response["name"]
 
 
 @pytest.mark.asyncio
 async def test_access_protected_route_no_token(client):
     """Test accessing a protected route without a token."""
-    response = await client.get("/api/v1/auth/test")  # Adjust URL prefix if needed
+    response = await client.get("/api/v1/auth/me")  # Adjust URL prefix if needed
     assert response.status_code == 401  # Or 403 depending on FastAPI version/config
     assert "Not authenticated" in response.json().get("detail", "")
 
@@ -79,11 +77,7 @@ async def test_access_protected_route_no_token(client):
 async def test_access_protected_route_invalid_token(client):
     """Test accessing a protected route with an invalid token."""
     headers = {"Authorization": "Bearer invalidtoken"}
-    response = await client.get(
-        "/api/v1/auth/test", headers=headers
-    )  # Adjust URL prefix if needed
+    response = await client.get("/api/v1/auth/me", headers=headers)  # Adjust URL prefix if needed
     assert response.status_code == 401
     # The exact detail message might vary based on JWTError
-    assert "Could not validate credentials" in response.json().get(
-        "detail", ""
-    ) or "Invalid token" in response.json().get("detail", "")
+    assert "Could not validate credentials" in response.json().get("detail", "") or "Invalid token" in response.json().get("detail", "")

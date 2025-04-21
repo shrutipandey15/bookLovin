@@ -1,14 +1,30 @@
 from datetime import datetime, timedelta, timezone
+from typing import Annotated
 
 from booklovin.auth_utils import ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM, SECRET_KEY, get_from_token
 from booklovin.core.config import pwd_context
-from booklovin.models.users import User, UserLogin
-from booklovin.services.users_service import get_user
-from fastapi import APIRouter, Depends, HTTPException, status
+from booklovin.errors import ErrorCode
+from booklovin.models.users import User
+from booklovin.services.users_service import create_user, get_user
+from fastapi import APIRouter, Depends, Form, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import jwt
 
 router = APIRouter(tags=["auth"])
+
+
+@router.get("/me")
+async def me_page(user: User = Depends(get_from_token)) -> User:
+    return user
+
+
+@router.post("/register")
+async def register(username: Annotated[str, Form()], email: Annotated[str, Form()], password: Annotated[str, Form()]):
+    existing_user = await get_user(email=email)
+    if existing_user:
+        return {"error": ErrorCode.USER_ALREADY_EXISTS}
+    user_id = await create_user(name=username, email=email, password=password)
+    return {"id": user_id}
 
 
 @router.post("/login", response_model=dict)
@@ -47,8 +63,3 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode.update({"exp": expire, "iat": datetime.now(timezone.utc)})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
-
-
-@router.get("/test")
-async def test(user: User = Depends(get_from_token)) -> UserLogin:
-    return user
