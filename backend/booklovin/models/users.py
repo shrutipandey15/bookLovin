@@ -22,3 +22,4 @@ class User(BaseModel):
     role: UserRole = UserRole.STANDARD
     link: Optional[str] = ""
     location: Optional[str] = "unknown"
+    active: bool = True
