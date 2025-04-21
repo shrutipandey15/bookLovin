@@ -1,18 +1,12 @@
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 
+from booklovin.auth_utils import ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM, SECRET_KEY, get_from_token
+from booklovin.core.config import pwd_context
+from booklovin.models.users import User, UserLogin
+from booklovin.services.users_service import get_user
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
-
-from jose import JWTError, jwt
-
-from booklovin.models.users import UserLogin, User
-from booklovin.services.users_service import get_user
-from booklovin.core.config import oauth2_scheme, pwd_context
-
-SECRET_KEY = "development key"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-ALGORITHM = "HS256"
-
+from jose import jwt
 
 router = APIRouter(tags=["auth"])
 
@@ -43,13 +37,6 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-CredentialsException = HTTPException(
-    status_code=status.HTTP_401_UNAUTHORIZED,
-    detail="Could not validate credentials",
-    headers={"WWW-Authenticate": "Bearer"},
-)
-
-
 def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     if expires_delta:
@@ -60,23 +47,6 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode.update({"exp": expire, "iat": datetime.now(timezone.utc)})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
-
-
-# Dependency to get the current user from the token
-async def get_from_token(token: str = Depends(oauth2_scheme)) -> User | None:
-    # Decode the token to get the user ID
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub")
-        if user_id is None:
-            raise CredentialsException
-    except JWTError:
-        raise CredentialsException
-    else:
-        user = await get_user(email=user_id)
-        if user is None:
-            raise CredentialsException
-        return user
 
 
 @router.get("/test")
