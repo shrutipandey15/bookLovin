@@ -10,3 +10,5 @@ debug args='':
 docs:
     poetry run pdoc -d google booklovin -o docs
 
+install:
+    poetry install
