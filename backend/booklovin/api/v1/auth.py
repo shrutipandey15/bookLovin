@@ -41,7 +41,6 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     if not user:
         raise credentials_exception
 
-    # Adapt access based on whether 'user' is a dict or an object
     hashed_password = user["password"]
 
     if not hashed_password or not pwd_context.verify(form_data.password, hashed_password):
