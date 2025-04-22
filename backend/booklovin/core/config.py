@@ -1,8 +1,15 @@
+import os
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer
 
-MONGO_SERVER = ("localhost", 27017)
-SECRET_KEY = "development key"
+DEBUG = "ENV_MODE" in os.environ and os.environ["ENV_MODE"] == "dev"
+
+# DB
+MONGO_SERVER = (os.environ["MONGO_HOST"], int(os.environ["MONGO_PORT"]))
+DB_NAME = "booklovin_test" if DEBUG else "booklovin"
+
+# PASSWORD
+SECRET_KEY = "ABCD" if DEBUG else os.getenv("TOKEN_SECRET_KEY", "CHANGE ME")
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 ALGORITHM = "HS256"
 
@@ -11,7 +18,10 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/login")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-# Create a dummy user for testing
+# Test data
 TEST_USERNAME = "dummy@dummy.com"
 TEST_PASSWORD = "password"
-HASHED_PASSWORD = pwd_context.hash(TEST_PASSWORD)
+
+
+def get_test_password():
+    return pwd_context.hash(TEST_PASSWORD)
