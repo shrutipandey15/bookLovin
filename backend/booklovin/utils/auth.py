@@ -19,8 +19,8 @@ async def get_from_token(token: str = Depends(oauth2_scheme)) -> User | None:
         user_id: str = payload.get("sub")
         if user_id is None:
             raise CredentialsException
-    except JWTError:
-        raise CredentialsException
+    except JWTError as exc:
+        raise CredentialsException from exc
     else:
         user = await get_user(email=user_id)
         if user is None:
