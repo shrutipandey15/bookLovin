@@ -7,6 +7,9 @@ authors = [
     "Shu",
 ]
 readme = "README.md"
+exclude = [
+    "booklovin/tests",
+]
 
 [tool.poetry.scripts]
 start = "uvicorn booklovin.main:app --reload"
@@ -57,9 +60,7 @@ enabled = true
 live_mode = true
 strict = false
 exclude = [
-    "tests/*",
-    "scripts/*",
-    "sample_extension/*",
+    "booklovin/tests/*",
 ]
 
 [build-system]
@@ -67,4 +68,3 @@ requires = [
     "poetry-core",
 ]
 build-backend = "poetry.core.masonry.api"
-
