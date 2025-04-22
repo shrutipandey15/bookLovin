@@ -1,10 +1,10 @@
 from datetime import datetime, timedelta, timezone
 
-from booklovin.auth_utils import ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM, SECRET_KEY, get_from_token
 from booklovin.core.config import pwd_context
 from booklovin.models.errors import ErrorCode, UserError, gen_error
 from booklovin.models.users import NewUser, User, UserId
 from booklovin.services.users_service import create_user, get_user
+from booklovin.utils.auth import ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM, SECRET_KEY, get_from_token
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import jwt

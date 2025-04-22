@@ -2,7 +2,6 @@
 
 from typing import List
 
-from booklovin.auth_utils import get_from_token
 from booklovin.models.post import Post
 from booklovin.models.users import User
 from booklovin.services.post_service import (
@@ -12,6 +11,7 @@ from booklovin.services.post_service import (
     get_one_post,
     update_post,
 )
+from booklovin.utils.auth import get_from_token
 from fastapi import APIRouter, Depends
 
 router = APIRouter(tags=["posts"])
