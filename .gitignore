@@ -1,4 +1,6 @@
 nohup.out
+**.pyc
+**.pyo
 dist/
 __pycache__/
 docs/
