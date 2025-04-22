@@ -1,12 +1,8 @@
-from booklovin.core.config import oauth2_scheme
+from booklovin.core.config import oauth2_scheme, SECRET_KEY, ALGORITHM
 from booklovin.models.users import User
 from booklovin.services.users_service import get_user
 from fastapi import Depends, HTTPException, status
 from jose import JWTError, jwt
-
-SECRET_KEY = "development key"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-ALGORITHM = "HS256"
 
 CredentialsException = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
