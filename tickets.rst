@@ -5,31 +5,6 @@ Tickets
 
 --------------------------------------------------------------------------------
 
-Generalize authentication
-=========================
-
-:bugid: 1
-:created: 2025-04-20T19:01:58
-:priority: 0
-
-- adapt the "/test" call to posts API
-- remove the /test call when done (after adapting the tests)
-- make nice fixture or helper for testing with auth
-
---------------------------------------------------------------------------------
-
-Finish /auth API
-================
-
-:bugid: 2
-:created: 2025-04-20T19:03:29
-:priority: 0
-
-- register
-- me
-
---------------------------------------------------------------------------------
-
 Finish /posts API
 =================
 
