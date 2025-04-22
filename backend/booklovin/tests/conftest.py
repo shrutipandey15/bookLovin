@@ -1,8 +1,9 @@
 import httpx
+from booklovin.core.config import HASHED_PASSWORD, MONGO_SERVER, TEST_PASSWORD, TEST_USERNAME
 from booklovin.main import app
+from booklovin.models.users import UserRole
 from httpx import ASGITransport
 from pytest_asyncio import fixture
-from test_auth import TEST_PASSWORD, TEST_USERNAME
 
 
 @fixture(scope="function")
@@ -26,3 +27,33 @@ async def aclient():
 
         client_instance.headers["Authorization"] = f"Bearer {token}"
         yield client_instance
+
+
+async def pytest_configure():
+    """
+    Fixture to clear the users collection and add the default test user ONCE per session.
+    WARNING: Tests will share database state. Prefer scope="function" for isolation.
+    """
+    import pymongo
+
+    mymongo = pymongo.MongoClient(*MONGO_SERVER)
+    db = mymongo["booklovin"]
+
+    users_collection = db["users"]
+    await users_collection.delete_many({})
+    await db["posts"].delete_many({})
+
+    # Create the test user document
+    test_user_data = {
+        "name": "Alice",
+        "password": HASHED_PASSWORD,
+        "email": TEST_USERNAME,
+        "description": "Test user account",
+        "role": UserRole.STANDARD,
+        "link": "",
+        "location": "SolarSystem/Earth",
+        "active": True,
+    }
+
+    await users_collection.insert_one(test_user_data)
+    yield

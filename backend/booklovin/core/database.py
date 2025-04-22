@@ -1,9 +1,8 @@
 """Database connector"""
 
+from booklovin.core.config import MONGO_SERVER
 import pymongo
-
-SERVER = ("localhost", 27017)
 
 
 def get_database() -> pymongo.AsyncMongoClient:
-    return pymongo.AsyncMongoClient(*SERVER)["booklovin"]
+    return pymongo.AsyncMongoClient(*MONGO_SERVER)["booklovin"]

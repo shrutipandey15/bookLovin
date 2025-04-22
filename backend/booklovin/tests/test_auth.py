@@ -1,12 +1,7 @@
 import pytest
-from booklovin.core.config import pwd_context
+from booklovin.core.config import TEST_PASSWORD, TEST_USERNAME
 
 # --- Test Setup ---
-
-# Create a dummy user for testing
-TEST_USERNAME = "dummy@dummy.com"
-TEST_PASSWORD = "password"
-HASHED_PASSWORD = pwd_context.hash(TEST_PASSWORD)
 
 
 @pytest.mark.asyncio
@@ -81,3 +76,19 @@ async def test_access_protected_route_invalid_token(client):
     assert response.status_code == 401
     # The exact detail message might vary based on JWTError
     assert "Could not validate credentials" in response.json().get("detail", "") or "Invalid token" in response.json().get("detail", "")
+
+
+@pytest.mark.asyncio
+async def test_register_failure_existing_user(client):
+    """Test registration failure when username already exists."""
+    # Use the already existing TEST_USERNAME
+    response = await client.post(
+        "/api/v1/auth/register",  # Adjust URL prefix if needed
+        json={
+            "username": "Bidibule",
+            "email": TEST_USERNAME,
+            "password": "anotherpassword",
+        },
+    )
+    assert response.status_code == 200
+    assert response.json()["error"]  # Should be marked as error
