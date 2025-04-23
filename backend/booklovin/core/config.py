@@ -26,3 +26,6 @@ TEST_PASSWORD = "password"
 
 def get_test_password():
     return pwd_context.hash(TEST_PASSWORD)
+
+
+REACT_DEV_SERVER = "http://localhost:5173"

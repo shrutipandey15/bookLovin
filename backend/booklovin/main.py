@@ -1,17 +1,14 @@
 from fastapi import FastAPI
 import importlib
-import os
 from fastapi.middleware.cors import CORSMiddleware
+from booklovin.core import config
 
 app = FastAPI()
 
-# Load DEBUG setting from environment variable (set to 'True' or 'False' in your environment)
-DEBUG = os.getenv("DEBUG", "False").lower() == "true"  # defaults to False if not set
-
-if DEBUG:
+if config.DEBUG:
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:5173"],
+        allow_origins=[config.REACT_DEV_SERVER],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
