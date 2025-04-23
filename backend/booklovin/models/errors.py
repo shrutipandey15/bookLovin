@@ -8,7 +8,7 @@ from pydantic import BaseModel
 class ErrorCode(IntEnum):
     """Global website error codes"""
 
-    FATAL = auto()
+    FATAL = 1
     USER_ALREADY_EXISTS = auto()
 
 
