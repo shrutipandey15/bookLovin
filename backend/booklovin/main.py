@@ -5,15 +5,6 @@ from booklovin.core import config
 
 app = FastAPI()
 
-if config.DEBUG:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=[config.REACT_DEV_SERVER],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-
 providers = ("posts", "auth")
 
 for api_provider in providers:
@@ -24,3 +15,12 @@ for api_provider in providers:
         print(f"Error: Module booklovin.api.v1.{api_provider} not found!")
     except AttributeError:
         print(f"Error: {api_provider} module does not contain a 'router' attribute.")
+
+if config.DEBUG:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[config.REACT_DEV_SERVER],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
