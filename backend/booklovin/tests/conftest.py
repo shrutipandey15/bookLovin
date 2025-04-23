@@ -7,14 +7,14 @@ from httpx import ASGITransport
 from pytest_asyncio import fixture
 
 
-@fixture(scope="function")
+@fixture()
 async def client():
     """Async client fixture."""
     async with httpx.AsyncClient(transport=ASGITransport(app=app), base_url="http://booklov.in") as client_instance:
         yield client_instance
 
 
-@fixture(scope="function")
+@fixture()
 async def aclient():
     """Async (logged-in) client fixture."""
     async with httpx.AsyncClient(transport=ASGITransport(app=app), base_url="http://booklov.in") as client_instance:

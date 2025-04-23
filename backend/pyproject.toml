@@ -55,6 +55,10 @@ convention = "google"
 indent-style = "space"
 line-ending = "auto"
 
+[tool.pytest.ini_options]
+minversion = "6.0"
+asyncio_default_fixture_loop_scope = "function"
+
 [tool.pylsp-mypy]
 enabled = true
 live_mode = true
