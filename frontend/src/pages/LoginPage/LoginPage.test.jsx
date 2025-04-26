@@ -2,28 +2,32 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { vi, beforeEach } from 'vitest'
 import LoginPage from './LoginPage'
 import { MemoryRouter } from 'react-router-dom'
+import axiosInstance from '../../api/axiosInstance'
+import { fetchCurrentUser } from '../../components/auth'
 
-const originalFetch = global.fetch
-global.fetch = vi.fn()
+vi.mock('../../components/auth', () => ({
+  fetchCurrentUser: vi.fn(),
+}))
+vi.mock('../../api/axiosInstance')
 
 beforeEach(() => {
   vi.resetAllMocks()
 })
 
-afterAll(() => {
-  global.fetch = originalFetch
-})
-
 test('logs in successfully with correct credentials', async () => {
-  global.fetch.mockResolvedValueOnce({
-    ok: true,
-    json: async () => ({ access_token: 'fake-token' })
+  axiosInstance.post.mockResolvedValueOnce({
+    data: { access_token: 'fake-token' }
+  })
+  fetchCurrentUser.mockResolvedValueOnce({
+    name: 'Test User',
+    email: 'testuser@example.com',
   })
 
-  const { container } = render(
+  render(
     <MemoryRouter>
       <LoginPage />
-    </MemoryRouter>)
+    </MemoryRouter>
+  )
 
   const emailInput = screen.getByLabelText(/email/i)
   const passwordInput = screen.getByLabelText(/password/i)
@@ -39,15 +43,17 @@ test('logs in successfully with correct credentials', async () => {
 })
 
 test('shows error with incorrect credentials', async () => {
-  global.fetch.mockResolvedValueOnce({
-    ok: false,
-    json: async () => ({ detail: 'Incorrect username or password' })
+  axiosInstance.post.mockRejectedValueOnce({
+    response: {
+      data: { detail: 'Incorrect username or password' }
+    }
   })
 
   render(
-  <MemoryRouter>
-    <LoginPage />
-    </MemoryRouter>)
+    <MemoryRouter>
+      <LoginPage />
+    </MemoryRouter>
+  )
 
   fireEvent.change(screen.getByLabelText(/email/i), {
     target: { value: 'wronguser@example.com' },

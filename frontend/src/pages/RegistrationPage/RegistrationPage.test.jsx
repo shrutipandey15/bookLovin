@@ -2,19 +2,15 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { vi, beforeEach } from 'vitest'
 import RegistrationPage from './RegistrationPage'
+import axiosInstance from '../../api/axiosInstance' // Import the axiosInstance
 
-const originalFetch = global.fetch
-global.fetch = vi.fn()
+// Mock axiosInstance
+vi.mock('../../api/axiosInstance')
 
 beforeEach(() => {
   vi.resetAllMocks()
 })
 
-afterAll(() => {
-  global.fetch = originalFetch
-})
-
-// Helper function to fill form inputs
 const fillRegistrationForm = ({ username, email, password }) => {
   fireEvent.change(screen.getByLabelText(/username/i), {
     target: { value: username },
@@ -28,9 +24,8 @@ const fillRegistrationForm = ({ username, email, password }) => {
 }
 
 test('registers successfully with correct details', async () => {
-  global.fetch.mockResolvedValueOnce({
-    ok: true,
-    json: async () => ({ id: 'some-user-id', message: 'Registration successful' }),
+  axiosInstance.post.mockResolvedValueOnce({
+    data: { id: 'some-user-id', message: 'Registration successful' }
   })
 
   render(
@@ -53,9 +48,8 @@ test('registers successfully with correct details', async () => {
 })
 
 test('shows error with invalid details', async () => {
-  global.fetch.mockResolvedValueOnce({
-    ok: false,
-    json: async () => ({ detail: 'Email already in use or invalid details' }),
+  axiosInstance.post.mockResolvedValueOnce({
+    data: { error_code: 'INVALID_DETAILS' }
   })
 
   render(

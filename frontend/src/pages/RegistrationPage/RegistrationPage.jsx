@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import axiosInstance from '../../api/axiosInstance'
 
 const RegistrationPage = () => {
   const [username, setUsername] = useState('')
@@ -16,28 +17,27 @@ const RegistrationPage = () => {
     setError('')
 
     try {
-      const response = await fetch('http://localhost:8000/api/v1/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, email, password }),
+      const response = await axiosInstance.post('/auth/register', {
+        username,
+        email,
+        password,
       })
 
-      const data = await response.json()
+      const data = response.data
 
-      if (response.ok && data.id) {
+      if (data?.id) {
         setSuccess(true)
         console.log('User registered:', data)
         setTimeout(() => {
-          navigate('/');
-        }, 2000);
+          navigate('/')
+        }, 2000)
       } else if (data?.error_code === 'USER_ALREADY_EXISTS') {
         setError('User already exists. Try logging in.')
       } else {
         setError('Registration failed. Please check your inputs.')
       }
     } catch (err) {
+      console.error(err)
       setError('An error occurred. Please try again later.')
     } finally {
       setLoading(false)
