@@ -1,3 +1,5 @@
+"""Load routes for APIs and setup CORS if needed."""
+
 from fastapi import FastAPI
 import importlib
 from fastapi.middleware.cors import CORSMiddleware
