@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { vi, beforeEach } from 'vitest'
 import RegistrationPage from './RegistrationPage'
-import axiosInstance from '../../api/axiosInstance' // Import the axiosInstance
+import axiosInstance from '@/api/axiosInstance'
 
 // Mock axiosInstance
 vi.mock('../../api/axiosInstance')

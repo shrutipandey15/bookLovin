@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import LoginPage from './pages/LoginPage/LoginPage';
-import RegistrationPage from './pages/RegistrationPage/RegistrationPage';
-import './App.css';
-import './styles/themes.css';
-import Layout from './components/Layout';
+import LoginPage from '@/pages/LoginPage/LoginPage';
+import RegistrationPage from '@/pages/RegistrationPage/RegistrationPage';
+import '@/App.css';
+import '@/styles/themes.css';
+import Layout from '@/components/Layout';
 
 function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');

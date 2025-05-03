@@ -2,8 +2,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { vi, beforeEach } from 'vitest'
 import LoginPage from './LoginPage'
 import { MemoryRouter } from 'react-router-dom'
-import axiosInstance from '../../api/axiosInstance'
-import { fetchCurrentUser } from '../../components/auth'
+import axiosInstance from '@/api/axiosInstance'
+import { fetchCurrentUser } from '@/components/auth'
 
 vi.mock('../../components/auth', () => ({
   fetchCurrentUser: vi.fn(),
