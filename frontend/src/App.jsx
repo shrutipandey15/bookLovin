@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import LoginPage from './pages/LoginPage/LoginPage';
 import RegistrationPage from './pages/RegistrationPage/RegistrationPage';
 import './App.css';
+import './styles/themes.css';
+import Layout from './components/Layout';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -16,6 +18,7 @@ function App() {
 
   return (
     <Router>
+      <Layout>
       <div className="app">
         <h1>BookLovin</h1>
 
@@ -24,6 +27,7 @@ function App() {
           <Route path="/register" element={<RegistrationPage />} />
         </Routes>
       </div>
+      </Layout>
     </Router>
   );
 }
