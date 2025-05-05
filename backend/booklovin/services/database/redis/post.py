@@ -19,7 +19,7 @@ async def create(post: Post) -> str:
 
 async def get_one(post_id: str) -> Post:
     async with database() as db:
-        return await db.get(f"posts:{post_id}")
+        return Post.model_validate(loads(await db.get(f"posts:{post_id}")))
 
 
 async def get_all() -> list[Post]:

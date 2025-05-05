@@ -16,7 +16,7 @@ async def get_from_token(token: str = Depends(oauth2_scheme)) -> User | None:
     # Decode the token to get the user ID
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str = payload.get("sub")
+        user_id: str | None = payload.get("sub")
         if user_id is None:
             raise CredentialsException
     except JWTError as exc:

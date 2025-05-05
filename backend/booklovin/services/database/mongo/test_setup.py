@@ -3,7 +3,7 @@ from booklovin.core.config import DB_NAME, MONGO_SERVER
 
 
 def setup(user_data):
-    mymongo = pymongo.MongoClient(*MONGO_SERVER)
+    mymongo: pymongo.MongoClient = pymongo.MongoClient(*MONGO_SERVER)
     db = mymongo[DB_NAME]
 
     users_collection = db["users"]

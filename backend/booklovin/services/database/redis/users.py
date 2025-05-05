@@ -19,3 +19,4 @@ async def get(email: str) -> User | None:
         user_data = await db.get(get_user_key(email))
         if user_data:
             return User.model_validate(loads(user_data))
+    return None
