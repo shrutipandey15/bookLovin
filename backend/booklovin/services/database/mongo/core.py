@@ -2,7 +2,6 @@ from booklovin.core.config import MONGO_SERVER, DB_NAME
 import contextlib
 import typing
 import pymongo
-import pymongo.database
 
 
 @contextlib.asynccontextmanager
