@@ -7,6 +7,9 @@ test args='':
 debug args='':
     poetry run pytest booklovin/tests --pdb {{args}}
 
+checktypes:
+    poetry run mypy -p booklovin
+
 docs:
     poetry run pdoc -d google booklovin -o docs
 
