@@ -6,9 +6,9 @@ import pymongo.database
 
 
 @contextlib.asynccontextmanager
-async def database() -> typing.AsyncGenerator[pymongo.database.Database, None]:
+async def database() -> typing.AsyncGenerator[pymongo.asynchronous.database.AsyncDatabase, None]:
     """Provides an asynchronous database connection context."""
-    client = pymongo.AsyncMongoClient(*MONGO_SERVER)
+    client: pymongo.AsyncMongoClient = pymongo.AsyncMongoClient(*MONGO_SERVER)
     try:
         yield client[DB_NAME]
     finally:

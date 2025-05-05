@@ -24,7 +24,7 @@ async def get_all() -> List[Post]:
 async def get_one(post_id: str) -> Post:
     async with database() as db:
         post = await db.posts.find_one({"_id": ObjectId(post_id)})
-        return post
+        return Post.model_validate(post)
 
 
 async def update(post_id: str, post_data: Post) -> int:

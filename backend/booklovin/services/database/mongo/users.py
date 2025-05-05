@@ -10,6 +10,7 @@ async def get(email: str) -> User | None:
         obj = await db.users.find_one({"email": email})
         if obj:
             return User.model_validate(obj)
+    return None
 
 
 async def create(user: User) -> str:

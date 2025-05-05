@@ -49,4 +49,4 @@ def pytest_configure():
     # Create the test user document
     from booklovin.services import database
 
-    database.test_setup.setup(user_data)
+    database.test_setup.setup(user_data)  # type: ignore
