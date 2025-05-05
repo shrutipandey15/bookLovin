@@ -2,10 +2,10 @@ run:
     poetry run uvicorn booklovin.main:app --reload
 
 test args='':
-    poetry run pytest {{args}}
+    poetry run pytest booklovin/tests {{args}}
 
 debug args='':
-    poetry run pytest --pdb {{args}}
+    poetry run pytest booklovin/tests --pdb {{args}}
 
 docs:
     poetry run pdoc -d google booklovin -o docs
