@@ -14,7 +14,7 @@ async def create(post: Post) -> str:
     state.posts.append(post)
     state.posts_count += 1
     state.save()
-    return post_id
+    return str(post_id)
 
 
 async def get_all() -> List[Post]:
@@ -22,28 +22,26 @@ async def get_all() -> List[Post]:
 
 
 async def get_one(post_id: str) -> Post:
-    for post in state.posts:
-        if post.id == post_id:
-            return post
+    return state.posts[int(post_id)]
 
 
 async def update(post_id: str, post_data: Post) -> int:
     """Updates an existing post."""
     update_data = post_data.model_dump(exclude_unset=True)  # Only update provided fields
     count = itertools.count()
-    for post in state.posts:
-        if post.id == post_id:
-            for key, value in update_data.items():
-                if getattr(post, key) == value:
-                    next(count)
-                    setattr(post, key, value)
-            state.save()
-            return next(count)
+    post = state.posts[int(post_id)]
+    model = post.model_dump()
+    for key, value in model.items():
+        if getattr(post, key) == value:
+            next(count)
+            setattr(post, key, value)
+    state.save()
+    return next(count)
 
 
 async def delete(post_id: str) -> int:
     """Deletes a post by its ID."""
-    post = get_one(post_id)
+    post = await get_one(post_id)
     try:
         state.posts.remove(post)
     except ValueError:
