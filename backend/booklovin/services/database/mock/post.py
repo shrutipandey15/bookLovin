@@ -19,7 +19,7 @@ async def create(post: Post) -> str:
     return post_id
 
 
-async def get_all() -> List[dict]:
+async def get_all() -> List[Post]:
     return state.posts.copy()
 
 

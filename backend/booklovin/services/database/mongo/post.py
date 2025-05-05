@@ -15,13 +15,13 @@ async def create(post: Post) -> str:
         return str(result.inserted_id)
 
 
-async def get_all(response_model=List[dict]) -> List[dict]:
+async def get_all() -> List[Post]:
     async with database() as db:
         posts = await db.posts.find().to_list(length=None)
         return posts
 
 
-async def get_one(post_id: str, response_model=Post) -> Post:
+async def get_one(post_id: str) -> Post:
     async with database() as db:
         post = await db.posts.find_one({"_id": ObjectId(post_id)})
         return post
