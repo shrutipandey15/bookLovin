@@ -1,6 +1,6 @@
 from booklovin.core.config import oauth2_scheme, SECRET_KEY, ALGORITHM
 from booklovin.models.users import User
-from booklovin.services.users_service import get_user
+from booklovin.services.database import users
 from fastapi import Depends, HTTPException, status
 from jose import JWTError, jwt
 
@@ -22,7 +22,7 @@ async def get_from_token(token: str = Depends(oauth2_scheme)) -> User | None:
     except JWTError as exc:
         raise CredentialsException from exc
     else:
-        user = await get_user(email=user_id)
+        user = await users.get(email=user_id)
         if user is None:
             raise CredentialsException
         return user

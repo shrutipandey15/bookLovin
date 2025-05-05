@@ -1,11 +1,15 @@
-"""Load routes for APIs and setup CORS if needed."""
+"""Load routes for APIs and setup CORS for dev."""
 
 from fastapi import FastAPI
 import importlib
 from fastapi.middleware.cors import CORSMiddleware
 from booklovin.core import config
+from booklovin.services import database
+
 
 app = FastAPI()
+
+database.init(config.DB_TYPE)
 
 providers = ("posts", "auth")
 
@@ -13,8 +17,8 @@ for api_provider in providers:
     try:
         module = importlib.import_module(f"booklovin.api.v1.{api_provider}")
         app.include_router(module.router, prefix=f"/api/v1/{api_provider}")
-    except ModuleNotFoundError:
-        print(f"Error: Module booklovin.api.v1.{api_provider} not found!")
+    except ModuleNotFoundError as e:
+        print(f"Error: Module booklovin.api.v1.{api_provider} not found: {e}")
     except AttributeError:
         print(f"Error: {api_provider} module does not contain a 'router' attribute.")
 

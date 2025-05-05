@@ -3,8 +3,8 @@ from datetime import datetime, timedelta, timezone
 from booklovin.core.config import ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM, SECRET_KEY, pwd_context
 from booklovin.models.errors import ErrorCode, UserError, gen_error
 from booklovin.models.users import NewUser, User, UserId
-from booklovin.services.users_service import create_user, get_user
-from booklovin.utils.auth import get_from_token
+from booklovin.services import database
+from booklovin.utils.user_token import get_from_token
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import jwt
@@ -19,16 +19,16 @@ async def me_page(user: User = Depends(get_from_token)) -> User:
 
 @router.post("/register")
 async def register(user: NewUser, response_model=UserId | UserError) -> UserId | UserError:
-    existing_user = await get_user(email=user.email)
+    existing_user = await database.users.get(email=user.email)
     if existing_user:
         return gen_error(ErrorCode.USER_ALREADY_EXISTS)
-    user_id = await create_user(User(name=user.username, email=user.email, password=user.password))
+    user_id = await database.users.create(User(name=user.username, email=user.email, password=user.password))
     return UserId(id=user_id)
 
 
 @router.post("/login", response_model=dict)
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = await get_user(email=form_data.username)
+    user = await database.users.get(email=form_data.username)
 
     # Use a generic error message to avoid revealing whether username exists
     credentials_exception = HTTPException(
