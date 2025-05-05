@@ -2,17 +2,15 @@ import os
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer
 
-from booklovin.utils import apply_env
-
 DEBUG = "ENV_MODE" in os.environ and os.environ["ENV_MODE"] == "dev"
 
 # DB
 DB_TYPE = os.environ.get("DB_TYPE", "mongo")  # mongo or mock
 DB_NAME = "booklovin_test" if DEBUG else "booklovin"
 # MONGO
-MONGO_SERVER = (os.environ["MONGO_HOST"], int(os.environ["MONGO_PORT"]))
+MONGO_SERVER = (os.environ.get("MONGO_HOST", "localhost"), int(os.environ.get("MONGO_PORT", "27017")))
 # REDIS
-REDIS_SERVER = (os.environ["REDIS_HOST"], int(os.environ["REDIS_PORT"]))
+REDIS_SERVER = (os.environ.get("REDIS_HOST", "localhost"), int(os.environ.get("REDIS_PORT", "6379")))
 
 # PASSWORD
 SECRET_KEY = "ABCD" if DEBUG else os.getenv("TOKEN_SECRET_KEY", "CHANGE ME")

@@ -1,4 +1,3 @@
-import booklovin.utils.apply_env  # noqa: F401
 import httpx
 from booklovin.core.config import TEST_PASSWORD, TEST_USERNAME, get_test_password
 from booklovin.main import app
