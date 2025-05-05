@@ -10,10 +10,8 @@ from .core import state
 
 
 async def create(post: Post) -> str:
-    new_post = post.model_dump()
     post_id = state.posts_count
-    new_post["id"] = post_id
-    state.posts.append(new_post)
+    state.posts.append(post)
     state.posts_count += 1
     state.save()
     return post_id

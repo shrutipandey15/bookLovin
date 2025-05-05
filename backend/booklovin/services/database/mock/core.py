@@ -5,8 +5,7 @@ from dataclasses import dataclass, field
 from booklovin.models.post import Post
 from booklovin.models.users import User
 
-DB_FILE = None
-# DB_FILE = "/tmp/booklovin_mock.db"
+DB_FILE = "/tmp/booklovin_mock.db"
 
 
 @dataclass
@@ -21,9 +20,9 @@ class _State:
             return
         json_str = json.dumps(
             {
-                "posts": self.posts,
+                "posts": [p.model_dump() for p in self.posts],
                 "posts_count": self.posts_count,
-                "users": self.users,
+                "users": [p.model_dump() for p in self.users],
                 "users_count": self.users_count,
             }
         )
