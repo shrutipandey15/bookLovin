@@ -7,8 +7,11 @@ DEBUG = "ENV_MODE" in os.environ and os.environ["ENV_MODE"] == "dev"
 
 # DB
 DB_TYPE = os.environ.get("DB_TYPE", "mongo")  # mongo or mock
-MONGO_SERVER = (os.environ["MONGO_HOST"], int(os.environ["MONGO_PORT"]))
 DB_NAME = "booklovin_test" if DEBUG else "booklovin"
+# MONGO
+MONGO_SERVER = (os.environ["MONGO_HOST"], int(os.environ["MONGO_PORT"]))
+# REDIS
+REDIS_SERVER = (os.environ["REDIS_HOST"], int(os.environ["REDIS_PORT"]))
 
 # PASSWORD
 SECRET_KEY = "ABCD" if DEBUG else os.getenv("TOKEN_SECRET_KEY", "CHANGE ME")

@@ -38,6 +38,10 @@ pytest-asyncio = "^0.26.0"
 httpx = "^0.28.1"
 pdoc = "^15.0.2"
 
+
+[tool.poetry.group.redis.dependencies]
+redis = "^6.0.0"
+
 [tool.ruff]
 line-length = 140
 preview = false
