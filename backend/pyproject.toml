@@ -38,6 +38,7 @@ pytest-asyncio = "^0.26.0"
 httpx = "^0.28.1"
 pdoc = "^15.0.2"
 mypy = "^1.15.0"
+vulture = "^2.14"
 
 
 [tool.poetry.group.redis.dependencies]

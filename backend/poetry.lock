@@ -979,7 +979,19 @@ h11 = ">=0.8"
 [package.extras]
 standard = ["colorama (>=0.4) ; sys_platform == \"win32\"", "httptools (>=0.6.3)", "python-dotenv (>=0.13)", "pyyaml (>=5.1)", "uvloop (>=0.14.0,!=0.15.0,!=0.15.1) ; sys_platform != \"win32\" and sys_platform != \"cygwin\" and platform_python_implementation != \"PyPy\"", "watchfiles (>=0.13)", "websockets (>=10.4)"]
 
+[[package]]
+name = "vulture"
+version = "2.14"
+description = "Find dead code"
+optional = false
+python-versions = ">=3.8"
+groups = ["dev"]
+files = [
+    {file = "vulture-2.14-py2.py3-none-any.whl", hash = "sha256:d9a90dba89607489548a49d557f8bac8112bd25d3cbc8aeef23e860811bd5ed9"},
+    {file = "vulture-2.14.tar.gz", hash = "sha256:cb8277902a1138deeab796ec5bef7076a6e0248ca3607a3f3dee0b6d9e9b8415"},
+]
+
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.12"
-content-hash = "45febbe72929060a341af88f42ca9a4cd2aa926c81f6ec909520a8ddfe64530a"
+content-hash = "5b781e6c32a5b09809e2d00b0e957d9fb394d67caee7854dd3543aa2a8e508cf"

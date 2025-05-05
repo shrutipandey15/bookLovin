@@ -4,7 +4,7 @@ from json import dumps, loads
 
 from booklovin.models.post import Post
 
-from .core import database, get_user_key, get_post_key
+from .core import database
 
 POST_ID_COUNTER_KEY = "post:id"
 

@@ -12,6 +12,9 @@ debug args='':
 checktypes:
     poetry run mypy -p booklovin
 
+checkcoverage:
+    poetry run vulture booklovin
+
 docs:
     poetry run pdoc -d google booklovin -o docs
 
