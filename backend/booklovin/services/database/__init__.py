@@ -6,6 +6,11 @@ from typing import Protocol, Any, Dict, List
 
 from booklovin.models.users import User
 from booklovin.models.post import Post
+from booklovin.core import config
+
+sub_services = ["post", "users"]
+if config.DEBUG:
+    sub_services.append("test_setup")
 
 
 class PostService(Protocol):
@@ -25,11 +30,11 @@ post: PostService
 users: UserService
 
 
-def init(backend="mongo"):
+def init(backend: str):
     namespace = "booklovin.services.database"
     core = importlib.import_module(f".{backend}.core", namespace)
     core.init()
     globs = globals()
-    for submodule in ("post", "users"):
+    for submodule in sub_services:
         m = importlib.import_module(f".{backend}.{submodule}", namespace)
         globs[submodule] = m

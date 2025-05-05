@@ -1,10 +1,21 @@
 import booklovin.utils.apply_env  # noqa: F401
 import httpx
-from booklovin.core.config import DB_NAME, MONGO_SERVER, TEST_PASSWORD, TEST_USERNAME, get_test_password, DB_TYPE
+from booklovin.core.config import TEST_PASSWORD, TEST_USERNAME, get_test_password
 from booklovin.main import app
-from booklovin.models.users import UserRole, User
+from booklovin.models.users import UserRole
 from httpx import ASGITransport
 from pytest_asyncio import fixture
+
+user_data = {
+    "name": "Alice",
+    "password": get_test_password(),
+    "email": TEST_USERNAME,
+    "description": "Test user account",
+    "role": UserRole.STANDARD,
+    "link": "",
+    "location": "SolarSystem/Earth",
+    "active": True,
+}
 
 
 @fixture()
@@ -37,30 +48,6 @@ def pytest_configure():
     """
 
     # Create the test user document
-    user_data = {
-        "name": "Alice",
-        "password": get_test_password(),
-        "email": TEST_USERNAME,
-        "description": "Test user account",
-        "role": UserRole.STANDARD,
-        "link": "",
-        "location": "SolarSystem/Earth",
-        "active": True,
-    }
-    test_user = User(**user_data)
+    from booklovin.services import database
 
-    if DB_TYPE == "mock":
-        from booklovin.services.database.mock.core import state
-
-        state.users.append(test_user)
-    else:
-        import pymongo
-
-        mymongo = pymongo.MongoClient(*MONGO_SERVER)
-        db = mymongo[DB_NAME]
-
-        users_collection = db["users"]
-        users_collection.delete_many({})
-        db["posts"].delete_many({})
-
-        users_collection.insert_one(user_data)
+    database.test_setup.setup(user_data)
