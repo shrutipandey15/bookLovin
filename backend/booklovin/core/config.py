@@ -6,7 +6,7 @@ from booklovin.utils import apply_env
 DEBUG = "ENV_MODE" in os.environ and os.environ["ENV_MODE"] == "dev"
 
 # DB
-DB_TYPE = "mongo"
+DB_TYPE = os.environ.get("DB_TYPE", "mongo")  # mongo or mock
 MONGO_SERVER = (os.environ["MONGO_HOST"], int(os.environ["MONGO_PORT"]))
 DB_NAME = "booklovin_test" if DEBUG else "booklovin"
 
