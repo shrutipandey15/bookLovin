@@ -29,7 +29,9 @@ async def register(user: NewUser, response_model=UserId | UserError) -> UserId |
     existing_user = await database.users.get(email=user.email)
     if existing_user:
         return gen_error(ErrorCode.USER_ALREADY_EXISTS)
-    user_id = await database.users.create(User(name=user.username, email=user.email, password=user.password))
+    passwd = pwd_context.hash(user.password)
+    new_user = User(name=user.username, email=user.email, password=passwd)
+    user_id = await database.users.create(new_user)
     return UserId(id=user_id)
 
 
