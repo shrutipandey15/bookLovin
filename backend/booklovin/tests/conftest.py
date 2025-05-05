@@ -1,8 +1,8 @@
 import booklovin.utils.apply_env  # noqa: F401
 import httpx
-from booklovin.core.config import DB_NAME, MONGO_SERVER, TEST_PASSWORD, TEST_USERNAME, get_test_password
+from booklovin.core.config import DB_NAME, MONGO_SERVER, TEST_PASSWORD, TEST_USERNAME, get_test_password, DB_TYPE
 from booklovin.main import app
-from booklovin.models.users import UserRole
+from booklovin.models.users import UserRole, User
 from httpx import ASGITransport
 from pytest_asyncio import fixture
 
@@ -35,17 +35,9 @@ def pytest_configure():
     Fixture to clear the users collection and add the default test user ONCE per session.
     WARNING: Tests will share database state. Prefer scope="function" for isolation.
     """
-    import pymongo
-
-    mymongo = pymongo.MongoClient(*MONGO_SERVER)
-    db = mymongo[DB_NAME]
-
-    users_collection = db["users"]
-    users_collection.delete_many({})
-    db["posts"].delete_many({})
 
     # Create the test user document
-    test_user_data = {
+    user_data = {
         "name": "Alice",
         "password": get_test_password(),
         "email": TEST_USERNAME,
@@ -55,5 +47,20 @@ def pytest_configure():
         "location": "SolarSystem/Earth",
         "active": True,
     }
+    test_user = User(**user_data)
 
-    users_collection.insert_one(test_user_data)
+    if DB_TYPE == "mock":
+        from booklovin.services.database.mock.core import state
+
+        state.users.append(test_user)
+    else:
+        import pymongo
+
+        mymongo = pymongo.MongoClient(*MONGO_SERVER)
+        db = mymongo[DB_NAME]
+
+        users_collection = db["users"]
+        users_collection.delete_many({})
+        db["posts"].delete_many({})
+
+        users_collection.insert_one(user_data)

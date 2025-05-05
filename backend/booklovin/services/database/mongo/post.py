@@ -1,9 +1,11 @@
 """Database helpers for mongo: posts"""
 
 from typing import List
-from bson import ObjectId
+
 from booklovin.models.post import Post
-from booklovin.services.mongo.core import database
+from bson import ObjectId
+
+from .core import database
 
 
 async def create(post: Post) -> str:

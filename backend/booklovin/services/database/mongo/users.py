@@ -1,14 +1,16 @@
 """Database helper for mongo: Users"""
 
 from booklovin.core.config import pwd_context
-from booklovin.models.users import User, UserLogin
+from booklovin.models.users import User
 
-from booklovin.services.mongo.core import database
+from .core import database
 
 
-async def get(email: str | None = None, uid: str | None = None) -> UserLogin | None:
+async def get(email: str) -> User | None:
     async with database() as db:
-        return await db.users.find_one({"email": email}) if email else await db.users.find_one({"_id": uid})
+        obj = await db.users.find_one({"email": email})
+        if obj:
+            return User.model_validate(obj)
 
 
 async def create(user: User) -> str:

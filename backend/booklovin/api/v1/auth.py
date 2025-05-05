@@ -11,6 +11,13 @@ from jose import jwt
 
 router = APIRouter(tags=["auth"])
 
+# Use a generic error message to avoid revealing whether username exists
+credentials_exception = HTTPException(
+    status_code=status.HTTP_401_UNAUTHORIZED,
+    detail="Incorrect username or password",
+    headers={"WWW-Authenticate": "Bearer"},
+)
+
 
 @router.get("/me")
 async def me_page(user: User = Depends(get_from_token)) -> User:
@@ -30,19 +37,13 @@ async def register(user: NewUser, response_model=UserId | UserError) -> UserId |
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     user = await database.users.get(email=form_data.username)
 
-    # Use a generic error message to avoid revealing whether username exists
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Incorrect username or password",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-
     if not user:
         raise credentials_exception
 
-    hashed_password = user["password"]
+    hashed_password = user.password
+    verification_passed = pwd_context.verify(form_data.password, hashed_password)
 
-    if not hashed_password or not pwd_context.verify(form_data.password, hashed_password):
+    if not hashed_password or not verification_passed:
         raise credentials_exception
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)

@@ -4,7 +4,7 @@ import importlib
 
 from typing import Protocol, Any, Dict, List
 
-from booklovin.models.users import User, UserLogin
+from booklovin.models.users import User
 from booklovin.models.post import Post
 
 
@@ -17,7 +17,7 @@ class PostService(Protocol):
 
 
 class UserService(Protocol):
-    async def get(self, email: str | None = None, uid: str | None = None) -> UserLogin | None: ...
+    async def get(self, email: str) -> User | None: ...
     async def create(self, user: User) -> str: ...
 
 
@@ -26,9 +26,10 @@ users: UserService
 
 
 def init(backend="mongo"):
-    core = importlib.import_module(f"booklovin.services.{backend}.core")
+    namespace = "booklovin.services.database"
+    core = importlib.import_module(f".{backend}.core", namespace)
     core.init()
     globs = globals()
     for submodule in ("post", "users"):
-        m = importlib.import_module(f"booklovin.services.{backend}.{submodule}")
+        m = importlib.import_module(f".{backend}.{submodule}", namespace)
         globs[submodule] = m

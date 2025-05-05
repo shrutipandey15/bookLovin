@@ -6,7 +6,7 @@ from typing import List
 from bson import ObjectId
 
 from booklovin.models.post import Post
-from booklovin.services.mock.core import state
+from .core import state
 
 
 async def create(post: Post) -> str:
@@ -15,6 +15,7 @@ async def create(post: Post) -> str:
     new_post["id"] = post_id
     state.posts.append(new_post)
     state.posts_count += 1
+    state.save()
     return post_id
 
 
@@ -38,6 +39,7 @@ async def update(post_id: str, post_data: Post) -> int:
                 if getattr(post, key) == value:
                     next(count)
                     setattr(post, key, value)
+            state.save()
             return next(count)
 
 
@@ -48,4 +50,6 @@ async def delete(post_id: str) -> int:
         state.posts.remove(post)
     except ValueError:
         return 0
+    else:
+        state.save()
     return 1
