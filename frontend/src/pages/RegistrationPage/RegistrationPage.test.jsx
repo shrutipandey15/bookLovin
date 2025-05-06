@@ -1,8 +1,8 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
-import { vi, beforeEach } from 'vitest'
+import { vi, beforeEach, test, expect } from 'vitest'
 import RegistrationPage from './RegistrationPage'
-import axiosInstance from '@/api/axiosInstance'
+import axiosInstance from '../../api/axiosInstance'
 
 // Mock axiosInstance
 vi.mock('../../api/axiosInstance')
@@ -12,13 +12,13 @@ beforeEach(() => {
 })
 
 const fillRegistrationForm = ({ username, email, password }) => {
-  fireEvent.change(screen.getByLabelText(/username/i), {
+  fireEvent.change(screen.getByLabelText(/pen name/i), {
     target: { value: username },
   })
-  fireEvent.change(screen.getByLabelText(/email/i), {
+  fireEvent.change(screen.getByLabelText(/ravenmail/i), {
     target: { value: email },
   })
-  fireEvent.change(screen.getByLabelText(/password/i), {
+  fireEvent.change(screen.getByLabelText(/secret rune/i), {
     target: { value: password },
   })
 }
@@ -40,10 +40,10 @@ test('registers successfully with correct details', async () => {
     password: 'newpassword123',
   })
 
-  fireEvent.click(screen.getByRole('button', { name: /register/i }))
+  fireEvent.click(screen.getByRole('button', { name: /scribe me in/i }))
 
   await waitFor(() =>
-    expect(screen.getByText(/registration successful! welcome/i)).toBeInTheDocument()
+    expect(screen.getByText(/your legend begins/i)).toBeInTheDocument()
   )
 })
 
@@ -64,9 +64,9 @@ test('shows error with invalid details', async () => {
     password: 'wrongpassword',
   })
 
-  fireEvent.click(screen.getByRole('button', { name: /register/i }))
+  fireEvent.click(screen.getByRole('button', { name: /scribe me in/i }))
 
   await waitFor(() =>
-    expect(screen.getByText(/registration failed. please check your inputs/i)).toBeInTheDocument()
+    expect(screen.getByText(/the scroll was not sealed. check your runes/i)).toBeInTheDocument()
   )
 })

@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { vi, beforeEach } from 'vitest'
+import { vi, beforeEach, test, expect } from 'vitest'
 import LoginPage from './LoginPage'
 import { MemoryRouter } from 'react-router-dom'
 import axiosInstance from '@/api/axiosInstance'
@@ -29,16 +29,16 @@ test('logs in successfully with correct credentials', async () => {
     </MemoryRouter>
   )
 
-  const emailInput = screen.getByLabelText(/email/i)
-  const passwordInput = screen.getByLabelText(/password/i)
-  const loginButton = screen.getByRole('button', { name: /login/i })
+  const emailInput = screen.getByLabelText(/ravenmail/i)
+  const passwordInput = screen.getByLabelText(/secret rune/i)
+  const loginButton = screen.getByRole('button', { name: /unlock the tome/i })
 
   fireEvent.change(emailInput, { target: { value: 'testuser@example.com' } })
   fireEvent.change(passwordInput, { target: { value: 'password123' } })
   fireEvent.click(loginButton)
 
   await waitFor(() => {
-    expect(screen.getByText(/welcome back, testuser@example.com/i)).toBeInTheDocument()
+    expect(screen.getByText(/the realm welcomes you back, testuser@example.com/i)).toBeInTheDocument()
   }, { timeout: 3000 })
 })
 
@@ -55,14 +55,14 @@ test('shows error with incorrect credentials', async () => {
     </MemoryRouter>
   )
 
-  fireEvent.change(screen.getByLabelText(/email/i), {
+  fireEvent.change(screen.getByLabelText(/ravenmail/i), {
     target: { value: 'wronguser@example.com' },
   })
-  fireEvent.change(screen.getByLabelText(/password/i), {
+  fireEvent.change(screen.getByLabelText(/secret rune/i), {
     target: { value: 'wrongpassword' },
   })
 
-  fireEvent.click(screen.getByRole('button', { name: /login/i }))
+  fireEvent.click(screen.getByRole('button', { name: /unlock the tome/i }))
 
   await waitFor(() =>
     expect(screen.getByText(/incorrect username or password/i)).toBeInTheDocument()

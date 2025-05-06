@@ -32,13 +32,13 @@ const RegistrationPage = () => {
           navigate('/')
         }, 2000)
       } else if (data?.error_code === 'USER_ALREADY_EXISTS') {
-        setError('User already exists. Try logging in.')
+        setError('A tale with that Pen name already exists. Try entering the realm.')
       } else {
-        setError('Registration failed. Please check your inputs.')
+        setError('The scroll was not sealed. Check your runes')
       }
     } catch (err) {
       console.error(err)
-      setError('An error occurred. Please try again later.')
+      setError('The stars are misaligned. Try again later.')
     } finally {
       setLoading(false)
     }
@@ -47,17 +47,17 @@ const RegistrationPage = () => {
   return (
     <div className="flex items-center justify-center min-h-screen px-4 bg-coffee-bg dark:bg-dragon-bg text-coffee-text dark:text-dragon-text transition-colors duration-300">
       <div className="w-full max-w-md p-8 bg-coffee-card dark:bg-dragon-card rounded-2xl shadow-md">
-        <h2 className="text-2xl font-bold mb-6 text-center">Register</h2>
+        <h2 className="text-2xl font-bold mb-6 text-center">Begin Your Chapter</h2>
 
         {success ? (
           <p className="text-center font-medium text-green-600 dark:text-green-400">
-            Registration successful! Welcome, {username}.
+            Your legend begins, {username}.
           </p>
         ) : (
           <form onSubmit={handleRegister} className="space-y-4">
             <div>
-              <label htmlFor="username" className="block mb-1 font-semibold">
-                Username
+              <label htmlFor="username" className="block mb-1 font-semibold text-center">
+                Pen Name
               </label>
               <input
                 type="text"
@@ -70,8 +70,8 @@ const RegistrationPage = () => {
             </div>
 
             <div>
-              <label htmlFor="email" className="block mb-1 font-semibold">
-                Email
+              <label htmlFor="email" className="block mb-1 font-semibold text-center">
+                Ravenmail
               </label>
               <input
                 type="email"
@@ -84,8 +84,8 @@ const RegistrationPage = () => {
             </div>
 
             <div>
-              <label htmlFor="password" className="block mb-1 font-semibold">
-                Password
+              <label htmlFor="password" className="block mb-1 font-semibold text-center">
+                Secret Rune
               </label>
               <input
                 type="password"
@@ -108,7 +108,7 @@ const RegistrationPage = () => {
               disabled={loading}
               className="w-full px-4 py-2 mt-2 bg-coffee-button dark:bg-dragon-blue text-white rounded hover:bg-coffee-hover dark:hover:bg-dragon-blueHover transition-colors duration-200 disabled:opacity-50"
             >
-              {loading ? 'Registering...' : 'Register'}
+              {loading ? 'Inscribing...' : 'Scribe Me In'}
             </button>
           </form>
         )}

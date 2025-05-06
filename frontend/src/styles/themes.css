@@ -10,3 +10,54 @@ html {
 html.dark {
   @apply bg-dragon-bg text-dragon-text font-fantasy;
 }
+
+.theme-toggle-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-family: 'Georgia', serif;
+  font-size: 0.95rem;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 50;
+  box-shadow: 0 0 6px rgba(0,0,0,0.15);
+}
+
+/* Light theme button */
+.light-btn {
+  background: #fdf3e7;
+  color: #3b2f2f;
+  border: 1px solid #e0c097;
+}
+
+.light-btn:hover {
+  background: #ffe9cc;
+  box-shadow: 0 0 12px rgba(255, 221, 150, 0.7);
+}
+
+/* Dark theme button */
+.dark-btn {
+  background: #1a1a2e;
+  color: #facc15;
+  border: 1px solid #444;
+}
+
+.dark-btn:hover {
+  background: #2c2c54;
+  box-shadow: 0 0 12px rgba(250, 204, 21, 0.6);
+}
+
+.theme-toggle-btn .icon {
+  font-size: 1.2rem;
+}
+
+.theme-toggle-btn .label {
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}

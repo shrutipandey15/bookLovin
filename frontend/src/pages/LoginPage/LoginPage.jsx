@@ -8,7 +8,7 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [setUser] = useState(null)
+  const [_user, setUser] = useState(null)
 
   const handleLogin = async (e) => {
     e.preventDefault()
@@ -37,7 +37,7 @@ const LoginPage = () => {
       console.log('Login successful:', response.data)
 
     } catch (err) {
-      const message = err.response?.data?.detail || err.message || 'Login failed'
+      const message = err.response?.data?.detail || err.message || 'The gatekeeper denies entry. Check your runes.'
       setError(message)
     } finally {
       setLoading(false)
@@ -47,15 +47,15 @@ const LoginPage = () => {
   return (
     <div className="flex items-center justify-center min-h-screen px-4 bg-coffee-bg dark:bg-dragon-bg text-coffee-text dark:text-dragon-text transition-colors duration-300">
       <div className="w-full max-w-md p-8 bg-coffee-card dark:bg-dragon-card rounded-2xl shadow-md">
-        <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
+        <h2 className="text-2xl font-bold mb-6 text-center">Enter the Realm</h2>
 
       {isLoggedIn ? (
-        <p classname="text-center font-medium">Welcome back, {email}!</p>
+        <p className="text-center font-medium">The realm welcomes you back, {email}!</p>
       ) : (
         <>
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block mb-1 font-semibold">Email</label>
+              <label htmlFor="email" className="block mb-1 font-semibold text-center">Ravenmail</label>
               <input
                 type="email"
                 id="email"
@@ -68,7 +68,7 @@ const LoginPage = () => {
             </div>
 
             <div>
-              <label htmlFor="password" className="block mb-1 font-semibold">Password</label>
+              <label htmlFor="password" className="block mb-1 font-semibold text-center">Secret Rune</label>
               <input
                 type="password"
                 id="password"
@@ -89,16 +89,16 @@ const LoginPage = () => {
             disabled={loading}
             className="w-full px-4 py-2 mt-2 bg-coffee-button dark:bg-dragon-blue text-white rounded hover:bg-coffee-hover dark:hover:bg-dragon-blueHover transition-colors duration-200 disabled:opacity-50"
             >
-              {loading ? 'Logging in...' : 'Login'}
+              {loading ? 'Opening scrolls...' : 'Unlock the Tome'}
             </button>
           </form>
-          <p classname="mt-4 text-sm text-center">
-            Don't have an account?{' '}
+          <p className="mt-4 text-sm text-center">
+            New to the realm?{' '}
             <Link
             to="/register"
             className="underline text-coffee-accent dark:text-dragon-gold hover:opacity-80"
             >
-            Register here</Link></p>
+            Begin your chapter</Link></p>
         </>
       )}
       </div>

@@ -7,7 +7,7 @@ import '@/styles/themes.css';
 import Layout from '@/components/Layout';
 
 function App() {
-  const [setIsLoggedIn] = useState(false);
+  const [_isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -19,8 +19,8 @@ function App() {
   return (
     <Router>
       <Layout>
-      <div className="app">
-        <h1>BookLovin</h1>
+      <div className="w-full max-w-3xl mx-auto px-4 py-8">
+      <h1 className="text-4xl font-bold text-center mb-8 tracking-wide">BookLovin</h1>
 
         <Routes>
           <Route path="/" element={<LoginPage />} />
