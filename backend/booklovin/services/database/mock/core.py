@@ -12,15 +12,18 @@ DB_FILE = "/tmp/booklovin_mock.db"
 
 class MockSetup(ServiceSetup):
     async def setup(self, app: FastAPI):
-        app.state.db = None
+        app.state.db = State()
 
 
 @dataclass
-class _State:
+class State:
     posts: list[Post] = field(default_factory=list)
     posts_count: int = 0
     users: list[User] = field(default_factory=list)
     users_count: int = 0
+
+    def __init__(self):
+        self.load()
 
     def save(self, db=None):
         if not DB_FILE:
@@ -36,7 +39,7 @@ class _State:
         with open(DB_FILE, "w") as f:
             f.write(json_str)
 
-    def load(self, db=None):
+    def load(self):
         if DB_FILE and os.path.exists(DB_FILE):
             data = json.loads(open(DB_FILE).read())
             self.posts_count = data["posts_count"]
@@ -45,9 +48,5 @@ class _State:
             self.posts = [Post.model_validate(post) for post in data["posts"]]
 
 
-state = _State()
-
-
 def init() -> ServiceSetup:
-    state.load()
     return MockSetup()

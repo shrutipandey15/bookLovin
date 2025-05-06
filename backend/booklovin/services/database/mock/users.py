@@ -2,19 +2,19 @@
 
 from booklovin.models.users import User
 
-from .core import state
+from .core import State
 
 
-async def create(db: None, user: User) -> str:
-    uid = state.users_count
-    state.users_count += 1
-    state.users.append(user)
-    state.save(db)
+async def create(db: State, user: User) -> str:
+    uid = db.users_count
+    db.users_count += 1
+    db.users.append(user)
+    db.save()
     return str(uid)
 
 
-async def get(db: None, email: str) -> User | None:
-    for user in state.users:
+async def get(db: State, email: str) -> User | None:
+    for user in db.users:
         if user.email == email:
             return User.model_validate(user)
     return None
