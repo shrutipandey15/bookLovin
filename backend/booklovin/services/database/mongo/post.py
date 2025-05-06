@@ -2,41 +2,36 @@
 
 from typing import List
 
+import pymongo
 from booklovin.models.post import Post
 from bson import ObjectId
+from fastapi import Depends
 
-from .core import database
 
-
-async def create(post: Post) -> str:
+async def create(post: Post, db: pymongo.asynchronous.database.AsyncDatabase) -> str:
     new_post = post.model_dump()
-    async with database() as db:
-        result = await db.posts.insert_one(new_post)
-        return str(result.inserted_id)
+    result = await db.posts.insert_one(new_post)
+    return str(result.inserted_id)
 
 
-async def get_all() -> List[Post]:
-    async with database() as db:
-        posts = await db.posts.find().to_list(length=None)
-        return posts
+async def get_all(db: pymongo.asynchronous.database.AsyncDatabase) -> List[Post]:
+    posts = await db.posts.find().to_list(length=None)
+    return posts
 
 
-async def get_one(post_id: str) -> Post:
-    async with database() as db:
-        post = await db.posts.find_one({"_id": ObjectId(post_id)})
-        return Post.model_validate(post)
+async def get_one(post_id: str, db: pymongo.asynchronous.database.AsyncDatabase) -> Post:
+    post = await db.posts.find_one({"_id": ObjectId(post_id)})
+    return Post.model_validate(post)
 
 
-async def update(post_id: str, post_data: Post) -> int:
+async def update(post_id: str, post_data: Post, db: pymongo.asynchronous.database.AsyncDatabase) -> int:
     """Updates an existing post."""
-    async with database() as db:
-        update_data = post_data.model_dump(exclude_unset=True)  # Only update provided fields
-        result = await db.posts.update_one({"_id": ObjectId(post_id)}, update_data)
-        return result.modified_count
+    update_data = post_data.model_dump(exclude_unset=True)  # Only update provided fields
+    result = await db.posts.update_one({"_id": ObjectId(post_id)}, update_data)
+    return result.modified_count
 
 
-async def delete(post_id: str) -> int:
+async def delete(post_id: str, db: pymongo.asynchronous.database.AsyncDatabase) -> int:
     """Deletes a post by its ID."""
-    async with database() as db:
-        result = await db.posts.delete_one({"_id": ObjectId(post_id)})
-        return result.deleted_count
+    result = await db.posts.delete_one({"_id": ObjectId(post_id)})
+    return result.deleted_count

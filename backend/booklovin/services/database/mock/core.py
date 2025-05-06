@@ -1,11 +1,18 @@
-import os
 import json
+import os
 from dataclasses import dataclass, field
 
 from booklovin.models.post import Post
+from booklovin.models.types import ServiceSetup
 from booklovin.models.users import User
+from fastapi import FastAPI
 
 DB_FILE = "/tmp/booklovin_mock.db"
+
+
+class MockSetup(ServiceSetup):
+    async def setup(self, app: FastAPI):
+        app.state.db = None
 
 
 @dataclass
@@ -15,7 +22,7 @@ class _State:
     users: list[User] = field(default_factory=list)
     users_count: int = 0
 
-    def save(self):
+    def save(self, db=None):
         if not DB_FILE:
             return
         json_str = json.dumps(
@@ -29,7 +36,7 @@ class _State:
         with open(DB_FILE, "w") as f:
             f.write(json_str)
 
-    def load(self):
+    def load(self, db=None):
         if DB_FILE and os.path.exists(DB_FILE):
             data = json.loads(open(DB_FILE).read())
             self.posts_count = data["posts_count"]
@@ -41,5 +48,6 @@ class _State:
 state = _State()
 
 
-def init():
+def init() -> ServiceSetup:
     state.load()
+    return MockSetup()

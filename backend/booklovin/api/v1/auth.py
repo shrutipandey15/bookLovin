@@ -5,7 +5,7 @@ from booklovin.models.errors import ErrorCode, UserError, gen_error
 from booklovin.models.users import NewUser, User, UserId
 from booklovin.services import database
 from booklovin.utils.user_token import get_from_token
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, Request, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import jwt
 
@@ -25,19 +25,19 @@ async def me_page(user: User = Depends(get_from_token)) -> User:
 
 
 @router.post("/register")
-async def register(user: NewUser, response_model=UserId | UserError) -> UserId | UserError:
-    existing_user = await database.users.get(email=user.email)
+async def register(request: Request, user: NewUser, response_model=UserId | UserError) -> UserId | UserError:
+    existing_user = await database.users.get(db=request.app.state.db, email=user.email)
     if existing_user:
         return gen_error(ErrorCode.USER_ALREADY_EXISTS)
     passwd = pwd_context.hash(user.password)
     new_user = User(name=user.username, email=user.email, password=passwd)
-    user_id = await database.users.create(new_user)
+    user_id = await database.users.create(new_user, db=request.app.state.db)
     return UserId(id=user_id)
 
 
 @router.post("/login", response_model=dict)
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = await database.users.get(email=form_data.username)
+async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
+    user = await database.users.get(db=request.app.state.db, email=form_data.username)
 
     if not user:
         raise credentials_exception
@@ -50,11 +50,11 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     # The 'sub' (subject) claim is typically the user identifier (e.g., username or user ID)
-    access_token = create_access_token(data={"sub": form_data.username}, expires_delta=access_token_expires)
+    access_token = _create_access_token(data={"sub": form_data.username}, expires_delta=access_token_expires)
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-def create_access_token(data: dict, expires_delta: timedelta | None = None):
+def _create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta

@@ -1,7 +1,7 @@
 set dotenv-required
 
 run:
-    poetry run uvicorn booklovin.main:app --reload
+    poetry run uvicorn booklovin.main:booklovin --reload
 
 test args='':
     poetry run pytest booklovin/tests {{args}}
