@@ -9,8 +9,8 @@ from booklovin.models.types import ServiceSetup
 
 class MongoSetup(ServiceSetup):
     async def setup(self, app: FastAPI):
-        app.state.client: pymongo.AsyncMongoClient = pymongo.AsyncMongoClient(*MONGO_SERVER)
-        app.state.db: pymongo.asynchronous.database.AsyncDatabase = app.state.client[DB_NAME]
+        app.state.client = pymongo.AsyncMongoClient(*MONGO_SERVER)
+        app.state.db = app.state.client[DB_NAME]
 
     async def teardown(self, app: FastAPI):
         await app.state.client.close()

@@ -27,17 +27,17 @@ async def read_all_posts(request: Request, user: User = Depends(get_from_token))
 # get one
 @router.get("/{post_id}", response_model=Post)
 async def read_one_post(request: Request, post_id: str, user: User = Depends(get_from_token)) -> Post:
-    return await database.post.get_one(post_id, db=request.app.state.db)
+    return await database.post.get_one(post_id=post_id, db=request.app.state.db)
 
 
 # update
 # TODO: allow partial updates
 @router.put("/{post_id}", response_model=int)
 async def update_book_post(request: Request, post_id: str, post: Post, user: User = Depends(get_from_token)) -> int:
-    return await database.post.update(post_id, post, db=request.app.state.db)
+    return await database.post.update(db=request.app.state.db, post_id=post_id, post_data=post)
 
 
 # delete
 @router.delete("/{post_id}", response_model=int)
 async def delete_book_post(request: Request, post_id: str, user: User = Depends(get_from_token)) -> int:
-    return await database.post.delete(post_id, db=request.app.state.db)
+    return await database.post.delete(post_id=post_id, db=request.app.state.db)
