@@ -6,7 +6,6 @@ from pymongo.asynchronous.database import AsyncDatabase as Database
 
 async def get(db: Database, email: str) -> User | None:
     obj = await db.users.find_one({"email": email})
-    db.us
     if obj:
         return User.model_validate(obj)
     return None
