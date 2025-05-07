@@ -4,10 +4,10 @@ run:
     poetry run uvicorn booklovin.main:booklovin --reload
 
 test args='':
-    poetry run pytest booklovin/tests {{args}}
+    poetry run pytest -v booklovin/tests {{args}}
 
 debug args='':
-    poetry run pytest booklovin/tests --pdb {{args}}
+    poetry run pytest -v booklovin/tests --pdb {{args}}
 
 checktypes:
     poetry run mypy -p booklovin
