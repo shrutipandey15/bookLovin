@@ -10,3 +10,4 @@ def setup(user_data):
     client.flushdb()
     uid = user_data["email"]
     client.set(get_user_key(uid), dumps(user_data))
+    client.close()

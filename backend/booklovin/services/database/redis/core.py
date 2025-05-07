@@ -1,20 +1,20 @@
-import contextlib
-import typing
-
 import redis.asyncio as redis
 from booklovin.core.config import DB_NAME, REDIS_SERVER
+from booklovin.models.types import ServiceSetup
+from fastapi import FastAPI
+
+
+class RedisSetup(ServiceSetup):
+    async def setup(self, app: FastAPI):
+        app.state.db = redis.from_url(f"redis://{REDIS_SERVER[0]}:{REDIS_SERVER[1]}/{DB_NAME}")
+
+    async def teardown(self, app: FastAPI):
+        await app.state.db.aclose()
 
 
 def get_user_key(uid: str):
     return f"user:{uid}:data"
 
 
-@contextlib.asynccontextmanager
-async def database() -> typing.AsyncGenerator[redis.Redis, None]:
-    client = redis.from_url(f"redis://{REDIS_SERVER[0]}:{REDIS_SERVER[1]}/{DB_NAME}")
-    yield client
-    await client.aclose()
-
-
-def init():
-    pass
+def init() -> ServiceSetup:
+    return RedisSetup()

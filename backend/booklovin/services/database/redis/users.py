@@ -4,19 +4,18 @@ from json import dumps, loads
 
 from booklovin.models.users import User
 
-from .core import database, get_user_key
+from .core import get_user_key
+from redis.asyncio import Redis
 
 
-async def create(user: User) -> str:
+async def create(db: Redis, user: User) -> str:
     model = user.model_dump()
-    async with database() as db:
-        await db.set(get_user_key(user.email), dumps(model))
-        return user.email
+    await db.set(get_user_key(user.email), dumps(model))
+    return user.email
 
 
-async def get(email: str) -> User | None:
-    async with database() as db:
-        user_data = await db.get(get_user_key(email))
-        if user_data:
-            return User.model_validate(loads(user_data))
+async def get(db: Redis, email: str) -> User | None:
+    user_data = await db.get(get_user_key(email))
+    if user_data:
+        return User.model_validate(loads(user_data))
     return None
