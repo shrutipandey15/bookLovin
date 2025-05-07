@@ -1,11 +1,10 @@
 """Database helper for mongo: Users"""
 
-import pymongo
 from booklovin.models.users import User
-from fastapi import Depends, Request
+from pymongo.asynchronous.database import AsyncDatabase as Database
 
 
-async def get(email: str, db: pymongo.asynchronous.database.AsyncDatabase) -> User | None:
+async def get(db: Database, email: str) -> User | None:
     obj = await db.users.find_one({"email": email})
     db.us
     if obj:
@@ -13,6 +12,6 @@ async def get(email: str, db: pymongo.asynchronous.database.AsyncDatabase) -> Us
     return None
 
 
-async def create(user: User, db: pymongo.asynchronous.database.AsyncDatabase) -> str:
+async def create(db: Database, user: User) -> str:
     result = await db.users.insert_one(user.model_dump())
     return str(result.inserted_id)
