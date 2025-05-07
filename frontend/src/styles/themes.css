@@ -61,3 +61,23 @@ html.dark {
   font-weight: bold;
   letter-spacing: 0.5px;
 }
+
+.theme-toggle-btn:hover {
+  background-color: #f5ebe0;
+  box-shadow: 2px 4px 10px rgba(201, 162, 126, 0.7);
+  transform: scale(1.02);
+}
+
+/* Dark mode (Dragon-inspired) */
+html.dark .theme-toggle-btn {
+  background-color: #1f2937;
+  color: #facc15;
+  border: 2px solid #facc15;
+  box-shadow: 2px 2px 6px rgba(250, 204, 21, 0.3);
+}
+
+html.dark .theme-toggle-btn:hover {
+  background-color: #111827;
+  box-shadow: 2px 4px 12px rgba(250, 204, 21, 0.6);
+  transform: scale(1.02);
+}
