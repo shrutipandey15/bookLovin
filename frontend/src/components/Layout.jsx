@@ -42,9 +42,9 @@ const Layout = ({ children }) => {
       {/* Theme toggle button */}
       <button
         onClick={toggleTheme}
-        className="fixed top-4 right-4 p-2 rounded-full z-20 shadow-md bg-black dark:bg-white bg-opacity-60 dark:bg-opacity-60 backdrop-blur-md"
+        className="fixed top-4 right-4 p-1 rounded-full z-20 shadow-md bg-sky-700"
       >
-        <DarkLightIcon isDark={isDark} size={20} />
+        <DarkLightIcon isDark={isDark} size={24} />
       </button>
 
       {/* Main content */}
