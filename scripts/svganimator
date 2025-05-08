@@ -2,11 +2,18 @@
 
 import argparse
 import re
+from enum import Enum
 import sys
 import xml.etree.ElementTree as ET
 
 SVG_NS = "http://www.w3.org/2000/svg"
 ET.register_namespace("", SVG_NS)  # Register a default namespace
+
+
+class AnimTypes(Enum):
+    loop = "loop"
+    click = "click"
+    control = "control"
 
 
 # Helper function to extract a specific property value from a style string
@@ -25,7 +32,7 @@ def create_animated_svg(
     svg1_path,
     svg2_path,
     animation_duration_one_way="1s",
-    click_to_animate=False,
+    anim_type=AnimTypes.loop,
     root_id_override=None,
 ):
     try:
@@ -85,19 +92,24 @@ def create_animated_svg(
         val1,
         val2,
         duration,
-        loop_anim,
+        anim_type: AnimTypes = AnimTypes.loop,
         trigger_id_for_click=None,
     ):
         if val1 != val2:
             animate_el = ET.SubElement(parent_element, "animate")
             animate_el.set("attributeName", attribute_name)
+            animate_el.set("id", f"animation{animations_added}")
             animate_el.set("values", f"{val1};{val2};{val1}")
             animate_el.set("dur", duration)
-            if loop_anim:
-                animate_el.set("repeatCount", "indefinite")
-                animate_el.set("begin", "0s")  # Start immediately
+
+            if anim_type == AnimTypes.control.value:  # TODO: external control
+                animate_el.set("fill", "freeze")  # Start immediately
+                animate_el.set("begin", "indefinite")  # Start immediately
             elif trigger_id_for_click:
                 animate_el.set("begin", trigger_id_for_click)
+            else:
+                animate_el.set("repeatCount", "indefinite")
+                animate_el.set("begin", "0s")  # Start immediately
             # Default for non-looping is effectively one cycle if begin is specified.
             return True
         return False
@@ -108,6 +120,8 @@ def create_animated_svg(
     root1.set("id", actual_root_id)
     # Store one-way duration for JS access
     root1.set("data-one-way-duration", animation_duration_one_way)
+
+    click_to_animate = anim_type == AnimTypes.click.value
 
     if click_to_animate:
         trigger_event_id = f"{actual_root_id}.click"
@@ -129,7 +143,7 @@ def create_animated_svg(
                     d1,
                     d2,
                     cycle_duration_str,
-                    not click_to_animate,
+                    anim_type,
                     trigger_event_id,
                 ):
                     animations_added += 1
@@ -143,7 +157,7 @@ def create_animated_svg(
                 style1,
                 style2,
                 cycle_duration_str,
-                not click_to_animate,
+                anim_type,
                 trigger_event_id,
             ):
                 animations_added += 1
@@ -170,7 +184,7 @@ def create_animated_svg(
                     val1,
                     val2,
                     cycle_duration_str,
-                    not click_to_animate,
+                    anim_type,
                     trigger_event_id,
                 ):
                     animations_added += 1
@@ -184,7 +198,7 @@ def create_animated_svg(
                 t1_val,
                 t2_val,
                 cycle_duration_str,
-                not click_to_animate,
+                anim_type,
                 trigger_event_id,
             ):
                 animations_added += 1
@@ -244,9 +258,11 @@ To make the animation trigger on click (single cycle A->B->A):
         "The full A->B->A cycle will take twice this duration.",
     )
     parser.add_argument(
-        "--click-to-animate",
-        action="store_true",
-        help="If set, animation triggers on a click and plays one full cycle (A->B->A) instead of looping on load.",
+        "--anim-type",
+        type=str,
+        choices=["loop", "click", "control"],
+        default="loop",
+        help="Specify the animation type. 'loop' (default): animation loops on load. 'click': animation triggers on a click and plays one full cycle (A->B->A).",
     )
     parser.add_argument(
         "--root-id",
@@ -256,6 +272,6 @@ To make the animation trigger on click (single cycle A->B->A):
     args = parser.parse_args()
 
     output_svg_str = create_animated_svg(
-        args.svg1_path, args.svg2_path, args.dur, args.click_to_animate, args.root_id
+        args.svg1_path, args.svg2_path, args.dur, args.anim_type, args.root_id
     )
     print(output_svg_str)
