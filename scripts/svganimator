@@ -9,6 +9,8 @@ import xml.etree.ElementTree as ET
 SVG_NS = "http://www.w3.org/2000/svg"
 ET.register_namespace("", SVG_NS)  # Register a default namespace
 
+global_config = {"prefix": ""}
+
 
 class AnimTypes(Enum):
     """Animation flavors."""
@@ -33,9 +35,10 @@ def get_style_property(style_string, property_name):
 def create_animated_svg(
     svg1_path,
     svg2_path,
-    animation_duration_one_way="1s",
-    anim_type=AnimTypes.LOOP,
-    root_id_override=None,
+    animation_duration_one_way: str,
+    anim_type: AnimTypes,
+    root_id_override: str | None = None,
+    prefix: str = "unnamed",
 ):
     try:
         tree1 = ET.parse(svg1_path)
@@ -61,6 +64,7 @@ def create_animated_svg(
     # This will find all elements with an 'id' attribute, regardless of type or location
     elements1_by_id = {el.get("id"): el for el in root1.iter() if el.get("id")}
     elements2_by_id = {el.get("id"): el for el in root2.iter() if el.get("id")}
+    global_config["prefix"] = prefix
 
     if not elements1_by_id and not elements2_by_id:
         print(
@@ -93,28 +97,54 @@ def create_animated_svg(
         attribute_name,
         val1,
         val2,
-        duration,
-        anim_type: AnimTypes = AnimTypes.LOOP,
-        trigger_id_for_click=None,
+        one_way_duration: str,
+        cycle_duration: str,
+        anim_type: AnimTypes,
+        current_animations_count_for_id: int,  # Used for ID generation in loop/click
+        trigger_event_id_for_click: str = None,  # For click-triggered animations
     ):
-        if val1 != val2:
-            animate_el = ET.SubElement(parent_element, "animate")
-            animate_el.set("attributeName", attribute_name)
-            animate_el.set("id", f"animation{animations_added}")
-            animate_el.set("values", f"{val1};{val2};{val1}")
-            animate_el.set("dur", duration)
+        if val1 == val2:
+            return 0  # No animation needed, 0 animations added
+        el_id = parent_element.get("id")
+        animations_created_count = 0
 
-            if anim_type == AnimTypes.CONTROL.value:  # TODO: external control
-                animate_el.set("fill", "freeze")  # Start immediately
-                animate_el.set("begin", "indefinite")  # Start immediately
-            elif trigger_id_for_click:
-                animate_el.set("begin", trigger_id_for_click)
-            else:
+        if anim_type == AnimTypes.CONTROL.value:
+            # Forward animation (A -> B)
+            animate_fwd = ET.SubElement(parent_element, "animate")
+            # animate_fwd.set("id", f"{el_id}_{attribute_name}_forward")
+            animate_fwd.set("class", global_config["prefix"] + "forward-anim")
+            animate_fwd.set("attributeName", attribute_name)
+            animate_fwd.set("values", f"{val1};{val2}")
+            animate_fwd.set("dur", one_way_duration)
+            animate_fwd.set("begin", "indefinite")
+            animate_fwd.set("fill", "freeze")
+            animations_created_count += 1
+
+            # Backward animation (B -> A)
+            animate_bwd = ET.SubElement(parent_element, "animate")
+            # animate_bwd.set("id", f"{el_id}_{attribute_name}_backward")
+            animate_bwd.set("class", global_config["prefix"] + "backward-anim")
+            animate_bwd.set("attributeName", attribute_name)
+            animate_bwd.set("values", f"{val2};{val1}")  # Reverse values
+            animate_bwd.set("dur", one_way_duration)
+            animate_bwd.set("begin", "indefinite")
+            animate_bwd.set("fill", "freeze")
+            animations_created_count += 1
+        else:  # LOOP or CLICK
+            animate_el = ET.SubElement(parent_element, "animate")
+            animate_el.set("id", f"animation{current_animations_count_for_id}")
+            animate_el.set("attributeName", attribute_name)
+            animate_el.set("values", f"{val1};{val2};{val1}")
+            animate_el.set("dur", cycle_duration)
+
+            if anim_type == AnimTypes.CLICK.value and trigger_event_id_for_click:
+                animate_el.set("begin", trigger_event_id_for_click)
+            elif anim_type == AnimTypes.LOOP.value:
                 animate_el.set("repeatCount", "indefinite")
                 animate_el.set("begin", "0s")  # Start immediately
             # Default for non-looping is effectively one cycle if begin is specified.
-            return True
-        return False
+            animations_created_count += 1
+        return animations_created_count
 
     animations_added = 0
     trigger_event_id = None
@@ -139,30 +169,34 @@ def create_animated_svg(
             if el1.tag == f"{{{SVG_NS}}}path" and el2.tag == f"{{{SVG_NS}}}path":
                 d1 = el1.get("d", "")
                 d2 = el2.get("d", "")
-                if _add_animation_if_different(
+                num_created = _add_animation_if_different(
                     el1,
                     "d",
                     d1,
                     d2,
+                    animation_duration_one_way,
                     cycle_duration_str,
                     anim_type,
+                    animations_added,
                     trigger_event_id,
-                ):
-                    animations_added += 1
+                )
+                animations_added += num_created
 
             # Animate 'style' attribute
             style1 = el1.get("style", "")
             style2 = el2.get("style", "")
-            if _add_animation_if_different(
+            num_created = _add_animation_if_different(
                 el1,
                 "style",
                 style1,
                 style2,
+                animation_duration_one_way,
                 cycle_duration_str,
                 anim_type,
+                animations_added,
                 trigger_event_id,
-            ):
-                animations_added += 1
+            )
+            animations_added += num_created
 
             # Animate common presentation attributes
             common_attrs_to_animate = {
@@ -180,30 +214,34 @@ def create_animated_svg(
                 val2_style = get_style_property(style2, attr)
                 val2 = val2_attr or val2_style or default_val
 
-                if _add_animation_if_different(
+                num_created = _add_animation_if_different(
                     el1,
                     attr,
                     val1,
                     val2,
+                    animation_duration_one_way,
                     cycle_duration_str,
                     anim_type,
+                    animations_added,
                     trigger_event_id,
-                ):
-                    animations_added += 1
+                )
+                animations_added += num_created
 
             # Animate direct 'transform' attribute
             t1_val = el1.get("transform", "")
             t2_val = el2.get("transform", "")
-            if _add_animation_if_different(
+            num_created = _add_animation_if_different(
                 el1,
                 "transform",
                 t1_val,
                 t2_val,
+                animation_duration_one_way,
                 cycle_duration_str,
                 anim_type,
+                animations_added,
                 trigger_event_id,
-            ):
-                animations_added += 1
+            )
+            animations_added += num_created
         else:
             sys.stderr.write(
                 f"Info: Element with ID '{id_val}' found in first SVG but not in second. Skipping.\n"
@@ -254,6 +292,11 @@ To make the animation trigger on click (single cycle A->B->A):
     parser.add_argument("svg1_path", help="Path to the first SVG file (base state).")
     parser.add_argument("svg2_path", help="Path to the second SVG file (target state).")
     parser.add_argument(
+        "--name",
+        default="",
+        help="prefix used for animation classes. Default: ''.",
+    )
+    parser.add_argument(
         "--dur",
         default="1s",
         help="Duration for one direction of the animation (e.g., '1s', '500ms'). Default: '1s'. "
@@ -274,6 +317,11 @@ To make the animation trigger on click (single cycle A->B->A):
     args = parser.parse_args()
 
     output_svg_str = create_animated_svg(
-        args.svg1_path, args.svg2_path, args.dur, args.anim_type, args.root_id
+        args.svg1_path,
+        args.svg2_path,
+        args.dur,
+        args.anim_type,
+        args.root_id,
+        args.name,
     )
     print(output_svg_str)
