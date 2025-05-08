@@ -45,7 +45,7 @@ const LoginPage = () => {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen px-4 bg-coffee-bg dark:bg-dragon-bg text-coffee-text dark:text-dragon-text transition-colors duration-300">
+    <div className="flex items-center justify-center min-h-screen px-4 text-coffee-text dark:text-dragon-text transition-colors duration-300">
       <div className="w-full max-w-md p-8 bg-coffee-card dark:bg-dragon-card rounded-2xl shadow-md">
         <h2 className="text-2xl font-bold mb-6 text-center">Enter the Realm</h2>
 
