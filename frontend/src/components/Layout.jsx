@@ -1,6 +1,6 @@
-import { Sun, Moon } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import ParticleBackground from './ParticleBackground';
+import ParticlesBackground from './ParticlesBackground';
+import { Sun, Moon } from 'lucide-react';
 
 const Layout = ({ children }) => {
   const [isDark, setIsDark] = useState(false);
@@ -16,25 +16,23 @@ const Layout = ({ children }) => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-coffee-bg dark:bg-dragon-bg text-coffee-text dark:text-dragon-text font-serif dark:font-fantasy transition-all duration-300 relative overflow-hidden">
-      <ParticleBackground />
+    <div className="min-h-screen bg-coffee-bg dark:bg-dragon-bg text-coffee-text dark:text-dragon-text font-serif dark:font-fantasy transition-all duration-300 relative">
+      {/* Background particles */}
+      <ParticlesBackground />
+
+      {/* Theme toggle button */}
       <button
         onClick={toggleTheme}
-        className={`theme-toggle-btn ${isDark ? 'dark-btn' : 'light-btn'}`}
+        className="fixed top-4 right-4 p-2 rounded-full z-20 shadow-md bg-white dark:bg-black bg-opacity-60 dark:bg-opacity-60 backdrop-blur-md"
       >
         {isDark ? (
-          <>
-            <Sun size={20} className="text-dragon-gold" />
-            <span className="label">To Light</span>
-          </>
+          <Sun size={20} className="text-dragon-gold" />
         ) : (
-          <>
-            <Moon size={20} className="text-coffee-button" />
-            <span className="label">To Shadow</span>
-          </>
+          <Moon size={20} className="text-coffee-button" />
         )}
       </button>
 
+      {/* Main content */}
       <div className="relative z-10">
         {children}
       </div>
