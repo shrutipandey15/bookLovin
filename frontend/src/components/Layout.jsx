@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import ParticlesBackground from './ParticlesBackground';
 import DarkLightIcon from './DarkLightIcon';
+import TestIcon from './TestIcon';
 
 const Layout = ({ children }) => {
 
@@ -38,6 +39,8 @@ const Layout = ({ children }) => {
     <div className="min-h-screen bg-coffee-bg dark:bg-dragon-bg text-coffee-text dark:text-dragon-text font-serif dark:font-fantasy transition-all duration-300 relative">
       {/* Background particles */}
       <ParticlesBackground />
+
+    <TestIcon isEnabled={!isDark} />
 
       {/* Theme toggle button */}
       <button
