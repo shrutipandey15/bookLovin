@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import ParticlesBackground from './ParticlesBackground';
-import { Sun, Moon } from 'lucide-react';
+import DarkLightIcon from './DarkLightIcon';
 
 const Layout = ({ children }) => {
   const [isDark, setIsDark] = useState(false);
@@ -23,13 +23,9 @@ const Layout = ({ children }) => {
       {/* Theme toggle button */}
       <button
         onClick={toggleTheme}
-        className="fixed top-4 right-4 p-2 rounded-full z-20 shadow-md bg-white dark:bg-black bg-opacity-60 dark:bg-opacity-60 backdrop-blur-md"
+        className="fixed top-4 right-4 p-2 rounded-full z-20 shadow-md bg-black dark:bg-white bg-opacity-60 dark:bg-opacity-60 backdrop-blur-md"
       >
-        {isDark ? (
-          <Sun size={20} className="text-dragon-gold" />
-        ) : (
-          <Moon size={20} className="text-coffee-button" />
-        )}
+        <DarkLightIcon isDark={isDark} size={20} />
       </button>
 
       {/* Main content */}
