@@ -11,9 +11,11 @@ ET.register_namespace("", SVG_NS)  # Register a default namespace
 
 
 class AnimTypes(Enum):
-    loop = "loop"
-    click = "click"
-    control = "control"
+    """Animation flavors."""
+
+    LOOP = "loop"
+    CLICK = "click"
+    CONTROL = "control"
 
 
 # Helper function to extract a specific property value from a style string
@@ -32,7 +34,7 @@ def create_animated_svg(
     svg1_path,
     svg2_path,
     animation_duration_one_way="1s",
-    anim_type=AnimTypes.loop,
+    anim_type=AnimTypes.LOOP,
     root_id_override=None,
 ):
     try:
@@ -92,7 +94,7 @@ def create_animated_svg(
         val1,
         val2,
         duration,
-        anim_type: AnimTypes = AnimTypes.loop,
+        anim_type: AnimTypes = AnimTypes.LOOP,
         trigger_id_for_click=None,
     ):
         if val1 != val2:
@@ -102,7 +104,7 @@ def create_animated_svg(
             animate_el.set("values", f"{val1};{val2};{val1}")
             animate_el.set("dur", duration)
 
-            if anim_type == AnimTypes.control.value:  # TODO: external control
+            if anim_type == AnimTypes.CONTROL.value:  # TODO: external control
                 animate_el.set("fill", "freeze")  # Start immediately
                 animate_el.set("begin", "indefinite")  # Start immediately
             elif trigger_id_for_click:
@@ -121,7 +123,7 @@ def create_animated_svg(
     # Store one-way duration for JS access
     root1.set("data-one-way-duration", animation_duration_one_way)
 
-    click_to_animate = anim_type == AnimTypes.click.value
+    click_to_animate = anim_type == AnimTypes.CLICK.value
 
     if click_to_animate:
         trigger_event_id = f"{actual_root_id}.click"
