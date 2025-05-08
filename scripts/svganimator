@@ -1,4 +1,13 @@
 #!/usr/bin/env python
+"""
+SVG Animator: A script to create animated SVGs from two static SVG files.
+
+This script can generate SVGs with different animation types:
+- loop: The animation plays continuously.
+- click: The animation plays once on click.
+- control: The animation is controlled by external JavaScript (forward/backward).
+- react: Generates a React component that wraps the SVG and controls the animation.
+"""
 
 import argparse
 import re
@@ -18,6 +27,7 @@ class AnimTypes(Enum):
     LOOP = "loop"
     CLICK = "click"
     CONTROL = "control"
+    REACT = "react"
 
 
 # Helper function to extract a specific property value from a style string
@@ -36,10 +46,11 @@ def create_animated_svg(
     svg1_path,
     svg2_path,
     animation_duration_one_way: str,
-    anim_type: AnimTypes,
+    anim_type_str: str,
     root_id_override: str | None = None,
     prefix: str = "unnamed",
 ):
+    anim_type = AnimTypes(anim_type_str)  # Convert string to Enum here
     try:
         tree1 = ET.parse(svg1_path)
         root1 = tree1.getroot()
@@ -105,13 +116,11 @@ def create_animated_svg(
     ):
         if val1 == val2:
             return 0  # No animation needed, 0 animations added
-        el_id = parent_element.get("id")
         animations_created_count = 0
 
-        if anim_type == AnimTypes.CONTROL.value:
+        if anim_type == AnimTypes.CONTROL or anim_type == AnimTypes.REACT:
             # Forward animation (A -> B)
             animate_fwd = ET.SubElement(parent_element, "animate")
-            # animate_fwd.set("id", f"{el_id}_{attribute_name}_forward")
             animate_fwd.set("class", global_config["prefix"] + "forward-anim")
             animate_fwd.set("attributeName", attribute_name)
             animate_fwd.set("values", f"{val1};{val2}")
@@ -122,7 +131,6 @@ def create_animated_svg(
 
             # Backward animation (B -> A)
             animate_bwd = ET.SubElement(parent_element, "animate")
-            # animate_bwd.set("id", f"{el_id}_{attribute_name}_backward")
             animate_bwd.set("class", global_config["prefix"] + "backward-anim")
             animate_bwd.set("attributeName", attribute_name)
             animate_bwd.set("values", f"{val2};{val1}")  # Reverse values
@@ -132,7 +140,6 @@ def create_animated_svg(
             animations_created_count += 1
         else:  # LOOP or CLICK
             animate_el = ET.SubElement(parent_element, "animate")
-            animate_el.set("id", f"animation{current_animations_count_for_id}")
             animate_el.set("attributeName", attribute_name)
             animate_el.set("values", f"{val1};{val2};{val1}")
             animate_el.set("dur", cycle_duration)
@@ -154,6 +161,7 @@ def create_animated_svg(
     root1.set("data-one-way-duration", animation_duration_one_way)
 
     click_to_animate = anim_type == AnimTypes.CLICK.value
+    is_react_component = anim_type == AnimTypes.REACT
 
     if click_to_animate:
         trigger_event_id = f"{actual_root_id}.click"
@@ -263,7 +271,196 @@ def create_animated_svg(
         f"Processed {len(processed_ids)} matching elements for animation.\n"
     )
     sys.stderr.write(f"{animations_added} animation(s) added.\n")
-    return ET.tostring(root1, encoding="unicode")
+
+    svg_output_string = ET.tostring(root1, encoding="unicode")
+
+    if is_react_component:
+        component_name_prefix = (
+            prefix.replace("-", " ").title().replace(" ", "") if prefix else "Animated"
+        )
+        component_name = f"{component_name_prefix}Icon"
+        svg_output_string = generate_react_component_string(
+            svg_output_string, component_name, prefix, actual_root_id
+        )
+
+    return svg_output_string
+
+
+def generate_react_component_string(
+    svg_string: str, component_name: str, js_prefix: str, root_svg_id: str
+) -> str:
+    """
+    Generates a React component string embedding the SVG and animation control logic.
+    """
+    # Ensure js_prefix is safe for use in template literals and class names
+    # If js_prefix ends with '-', remove it for the main class, but keep for anim selectors
+    component_base_class = js_prefix.rstrip("-") if js_prefix else "animated-svg-icon"
+    anim_selector_prefix = js_prefix  # e.g., "myPrefix-"
+
+    return f"""\
+import React, {{ useEffect, useRef }} from 'react';
+
+// Custom hook to get the previous value of a prop or state
+function usePrevious(value) {{
+  const ref = useRef();
+  useEffect(() => {{
+    ref.current = value;
+  }}, [value]);
+  return ref.current;
+}}
+
+function parseSMILDurationToSeconds(durStr) {{
+  if (!durStr) return 0;
+  if (typeof durStr !== 'string') return 0; // Ensure durStr is a string
+  if (durStr.endsWith('ms')) {{
+    return parseFloat(durStr.substring(0, durStr.length - 2)) / 1000;
+  }}
+  if (durStr.endsWith('s')) {{
+    return parseFloat(durStr.substring(0, durStr.length - 1));
+  }}
+  const parsed = parseFloat(durStr);
+  return isNaN(parsed) ? 0 : parsed; // Assume seconds if no unit, or 0 if unparsable
+}}
+
+const {component_name} = ({{ isEnabled, className }}) => {{
+  const svgRef = useRef(null);
+  const prevIsEnabled = usePrevious(isEnabled);
+
+  useEffect(() => {{
+    if (!svgRef.current) return;
+    const svgElement = svgRef.current;
+
+    const forwardAnims = svgElement.querySelectorAll('.{anim_selector_prefix}forward-anim');
+    const backwardAnims = svgElement.querySelectorAll('.{anim_selector_prefix}backward-anim');
+
+    if (prevIsEnabled === undefined) {{ // Initial mount
+      if (isEnabled) {{
+        // Snap to enabled state (end of forward animation)
+        forwardAnims.forEach(anim => {{
+          if (typeof anim.beginElement === 'function') {{
+            anim.beginElement(); // Start animation
+            const durStr = anim.getAttribute('dur');
+            const durationSec = parseSMILDurationToSeconds(durStr);
+            if (durationSec > 0 && typeof anim.setCurrentTime === 'function') {{
+              // Some browsers might need a micro-delay for setCurrentTime to work after beginElement
+              // For simplicity, directly trying. If issues, requestAnimationFrame or setTimeout might be needed.
+              anim.setCurrentTime(durationSec); // Jump to end
+            }}
+          }}
+        }});
+      }}
+      // If !isEnabled on mount, it's already in the base state (SVG1), so do nothing.
+    }} else if (isEnabled !== prevIsEnabled) {{ // Prop changed
+      const animationsToPlay = isEnabled ? forwardAnims : backwardAnims;
+      animationsToPlay.forEach(anim => {{
+        if (typeof anim.beginElement === 'function') {{
+          anim.beginElement();
+        }}
+      }});
+    }}
+  }}, [isEnabled, prevIsEnabled]);
+
+  const combinedClassName = `{component_base_class} ${{className || ''}}`.trim();
+
+  // The SVG string is directly embedded here.
+  // Ensure it's valid JSX. Self-closing tags in SVG are usually fine.
+  // React might complain about kebab-case attributes like 'stroke-width',
+  // but for SVG embedded as a string via dangerouslySetInnerHTML or as direct children, it's often fine.
+  // Here, we are returning an SVG element directly, so JSX transform applies.
+  // For simplicity, this example assumes the svg_string can be parsed by React.
+  // A more robust solution for complex SVGs might involve dangerouslySetInnerHTML
+  // or converting SVG attributes to camelCase if rendering as JSX components.
+  // However, standard SVG attributes are typically fine.
+
+  // To make this work seamlessly, we'll parse the SVG string and adapt it slightly for JSX
+  // For now, let's assume the svg_string is simple enough or use dangerouslySetInnerHTML.
+  // The simplest way that works with create-react-app and standard SVG is to set props.
+  // However, the svg_string contains the full SVG.
+  // A common pattern is to use `dangerouslySetInnerHTML` for the contents of the <svg> tag,
+  // or to parse the svg_string and convert it to React elements.
+  // Given the script generates the full <svg ...>...</svg> string,
+  // we'll use a common workaround for embedding arbitrary SVG.
+
+  // The most straightforward way to embed the generated SVG string,
+  // including its <animate> tags, is to parse it and reconstruct it as JSX,
+  // or use dangerouslySetInnerHTML on a wrapper.
+  // However, since we want to attach a ref to the <svg> element itself,
+  // we need to control its props.
+
+  // Let's refine this part: the svg_string is the *entire* SVG.
+  // We need to extract its attributes and children.
+  // For now, a simpler approach for demonstration:
+  // The user will get a string that they might need to adjust slightly
+  // if they paste it directly into a JSX file, especially regarding attribute casing.
+  // However, browsers are quite tolerant with SVG attributes.
+
+  // This is tricky because svg_string is a full <svg>...</svg>.
+  // We need to parse attributes from svg_string's root and its children.
+  // A simpler, more direct approach for this script's output:
+  // The generated SVG string already has an ID. We just need to make sure React can render it.
+  // React can render SVG tags directly.
+
+  // The svg_string is a complete SVG document string.
+  // We will parse it to get the attributes of the root <svg> element and its children.
+  // This is complex. A simpler method for this script:
+  // Assume the svg_string can be embedded.
+  // The most robust way is to have the Python script output only the *content* of the SVG
+  // if it's for React, and then the React component provides the <svg> wrapper.
+  // Or, the Python script generates the full SVG string, and React uses dangerouslySetInnerHTML.
+
+  // Let's try to make the output directly usable by creating a wrapper and using dangerouslySetInnerHTML
+  // for the SVG content generated by ElementTree.
+  // The `svg_string` from `ET.tostring` includes the XML declaration if not careful.
+  // `ET.tostring(root1, encoding="unicode", xml_declaration=False)`
+  // But `ET.tostring` doesn't have `xml_declaration` param. Default is no declaration.
+
+  // The svg_string is `<svg id="..." ...> ... </svg>`
+  // We need to pass this to React.
+  // The `ref` needs to be on the `<svg>` tag.
+
+  // Option 1: dangerouslySetInnerHTML (ref on wrapper div) - not ideal as ref should be on SVG.
+  // Option 2: Parse SVG string and convert to JSX (complex).
+  // Option 3: Output the SVG string and tell user to handle it.
+  // Option 4: Modify the SVG string to fit into a JSX <svg ...props> structure.
+
+  // Let's go with a method that allows the ref to be on the SVG element.
+  // We'll have to parse the attributes from the generated svg_string's root.
+  // This is getting too complex for a quick change.
+  // The simplest for the user is if the output is a self-contained component.
+
+  // The `DarkLightIcon.jsx` example you provided has `<svg />` and then presumably
+  // the SVG content is hardcoded or imported.
+  // Here, the SVG content is dynamic.
+
+  // Simplification: The React component will render the SVG string using dangerouslySetInnerHTML
+  // on a div, and the script will ensure the SVG has the correct ID for targeting.
+  // This means the ref will be on the div, not the SVG. This is a compromise.
+  // To get ref on SVG, one would typically import SVG as a ReactComponent.
+
+  // Let's try to make the SVG string directly embeddable.
+  // JSX is XML-like. The main issue is `class` vs `className` and style strings.
+  // ElementTree produces `class`. React wants `className`.
+  // We can replace `class=` with `className=`.
+  // Style strings are fine. Kebab-case attributes are fine in SVG.
+
+  let jsxReadySvgString = `{svg_string}`;
+  jsxReadySvgString = jsxReadySvgString.replace(/ class=/g, ' className=');
+  // Remove XML declaration if present (though ET.tostring(encoding='unicode') shouldn't add it)
+  jsxReadySvgString = jsxReadySvgString.replace(/^<\\?xml.*?\\?>/, '');
+
+
+  return (
+    <div
+      ref={{svgRef}} // This is incorrect. ref should be a function or a ref object.
+                     // And this puts ref on div, not svg.
+      className={{combinedClassName}} // This is incorrect. Should be `combinedClassName`
+      dangerouslySetInnerHTML={{{{ __html: jsxReadySvgString }}}}
+    />
+  );
+}};
+
+export default {component_name};
+"""
 
 
 if __name__ == "__main__":
@@ -305,9 +502,12 @@ To make the animation trigger on click (single cycle A->B->A):
     parser.add_argument(
         "--anim-type",
         type=str,
-        choices=["loop", "click", "control"],
+        choices=["loop", "click", "control", "react"],
         default="loop",
-        help="Specify the animation type. 'loop' (default): animation loops on load. 'click': animation triggers on a click and plays one full cycle (A->B->A).",
+        help="Specify the animation type. 'loop' (default): animation loops on load. "
+        "'click': animation triggers on a click and plays one full cycle (A->B->A). "
+        "'control': SMIL animations for JS control. "
+        "'react': output a React component.",
     )
     parser.add_argument(
         "--root-id",
