@@ -11,9 +11,9 @@ This script can generate SVGs with different animation types:
 
 import argparse
 import re
-from enum import Enum
 import sys
 import xml.etree.ElementTree as ET
+from enum import Enum
 
 SVG_NS = "http://www.w3.org/2000/svg"
 ET.register_namespace("", SVG_NS)  # Register a default namespace
@@ -163,6 +163,9 @@ def create_animated_svg(
     click_to_animate = anim_type == AnimTypes.CLICK.value
     is_react_component = anim_type == AnimTypes.REACT
 
+    if is_react_component:
+        root1.set("ref", actual_root_id)
+
     if click_to_animate:
         trigger_event_id = f"{actual_root_id}.click"
 
@@ -272,16 +275,22 @@ def create_animated_svg(
     )
     sys.stderr.write(f"{animations_added} animation(s) added.\n")
 
-    svg_output_string = ET.tostring(root1, encoding="unicode")
-
     if is_react_component:
         component_name_prefix = (
             prefix.replace("-", " ").title().replace(" ", "") if prefix else "Animated"
         )
         component_name = f"{component_name_prefix}Icon"
-        svg_output_string = generate_react_component_string(
+
+        reactify_svg(root1)
+        svg_output_string = ET.tostring(
+            root1, encoding="unicode", method="xml", short_empty_elements=True
+        ).replace(f'ref="{actual_root_id}"', "ref={svgRef}", count=1)
+
+        return generate_react_component_string(
             svg_output_string, component_name, prefix, actual_root_id
         )
+    else:
+        ET.tostring(root1, encoding="unicode")
 
     return svg_output_string
 
@@ -292,12 +301,12 @@ def generate_react_component_string(
     """
     Generates a React component string embedding the SVG and animation control logic.
     """
-    # Ensure js_prefix is safe for use in template literals and class names
-    # If js_prefix ends with '-', remove it for the main class, but keep for anim selectors
-    component_base_class = js_prefix.rstrip("-") if js_prefix else "animated-svg-icon"
-    anim_selector_prefix = js_prefix  # e.g., "myPrefix-"
+    svg_string = svg_string.replace('class="', 'className="')
+    # replace 'style="' with 'style={{}}' for React compatibility
+    svg_string = re.sub(r'style="([^"]+)"', r"style={{\1}}", svg_string)
 
     return f"""\
+
 import React, {{ useEffect, useRef }} from 'react';
 
 // Custom hook to get the previous value of a prop or state
@@ -309,50 +318,36 @@ function usePrevious(value) {{
   return ref.current;
 }}
 
-function parseSMILDurationToSeconds(durStr) {{
-  if (!durStr) return 0;
-  if (typeof durStr !== 'string') return 0; // Ensure durStr is a string
-  if (durStr.endsWith('ms')) {{
-    return parseFloat(durStr.substring(0, durStr.length - 2)) / 1000;
-  }}
-  if (durStr.endsWith('s')) {{
-    return parseFloat(durStr.substring(0, durStr.length - 1));
-  }}
-  const parsed = parseFloat(durStr);
-  return isNaN(parsed) ? 0 : parsed; // Assume seconds if no unit, or 0 if unparsable
-}}
-
-const {component_name} = ({{ isEnabled, className }}) => {{
+const {component_name} = ({{ isEnabled }}) => {{
   const svgRef = useRef(null);
   const prevIsEnabled = usePrevious(isEnabled);
 
   useEffect(() => {{
     if (!svgRef.current) return;
     const svgElement = svgRef.current;
+    document.svg = svgElement;
 
-    const forwardAnims = svgElement.querySelectorAll('.{anim_selector_prefix}forward-anim');
-    const backwardAnims = svgElement.querySelectorAll('.{anim_selector_prefix}backward-anim');
-
-    if (prevIsEnabled === undefined) {{ // Initial mount
-      if (isEnabled) {{
-        // Snap to enabled state (end of forward animation)
-        forwardAnims.forEach(anim => {{
-          if (typeof anim.beginElement === 'function') {{
-            anim.beginElement(); // Start animation
-            const durStr = anim.getAttribute('dur');
-            const durationSec = parseSMILDurationToSeconds(durStr);
-            if (durationSec > 0 && typeof anim.setCurrentTime === 'function') {{
-              // Some browsers might need a micro-delay for setCurrentTime to work after beginElement
-              // For simplicity, directly trying. If issues, requestAnimationFrame or setTimeout might be needed.
+    // Handle initial state on mount
+    if (prevIsEnabled === undefined && isEnabled) {{
+      // Mounted with isEnabled={{true}}. Snap state.
+      const animations = svgElement.querySelectorAll('.{js_prefix}forward-anim');
+      animations.forEach(anim => {{
+        if (typeof anim.beginElement === 'function') {{
+          anim.beginElement();
+          const durStr = anim.getAttribute('dur');
+          if (durStr) {{
+            const durationSec = parseFloat(durStr); // e.g., "1s" -> 1
+            if (!isNaN(durationSec) && typeof anim.setCurrentTime === 'function') {{
               anim.setCurrentTime(durationSec); // Jump to end
             }}
           }}
-        }});
-      }}
-      // If !isEnabled on mount, it's already in the base state (SVG1), so do nothing.
-    }} else if (isEnabled !== prevIsEnabled) {{ // Prop changed
-      const animationsToPlay = isEnabled ? forwardAnims : backwardAnims;
-      animationsToPlay.forEach(anim => {{
+        }}
+      }});
+    }} else if (prevIsEnabled !== undefined && isEnabled !== prevIsEnabled) {{
+      // isEnabled prop has changed after mount
+      const animType = isEnabled ? "forward" : "backward";
+      const animationsToPlay = svgElement.querySelectorAll(`.{js_prefix}${{animType}}-anim`);
+      animationsToPlay?.forEach(anim => {{
         if (typeof anim.beginElement === 'function') {{
           anim.beginElement();
         }}
@@ -360,30 +355,12 @@ const {component_name} = ({{ isEnabled, className }}) => {{
     }}
   }}, [isEnabled, prevIsEnabled]);
 
-  const combinedClassName = `{component_base_class} ${{className || ''}}`.trim();
+return ({svg_string});
+}}
+export default {component_name};"""
 
 
-  let jsxReadySvgString = `{svg_string}`;
-  jsxReadySvgString = jsxReadySvgString.replace(/ class=/g, ' className=');
-  // Remove XML declaration if present (though ET.tostring(encoding='unicode') shouldn't add it)
-  jsxReadySvgString = jsxReadySvgString.replace(/^<\\?xml.*?\\?>/, '');
-
-
-  return (
-    <div
-      ref={{svgRef}} // This is incorrect. ref should be a function or a ref object.
-                     // And this puts ref on div, not svg.
-      className={{combinedClassName}} // This is incorrect. Should be `combinedClassName`
-      dangerouslySetInnerHTML={{{{ __html: jsxReadySvgString }}}}
-    />
-  );
-}};
-
-export default {component_name};
-"""
-
-
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(
         description="Create an SVG with toggle animations between two input SVGs.",
         formatter_class=argparse.RawTextHelpFormatter,
@@ -445,3 +422,180 @@ To make the animation trigger on click (single cycle A->B->A):
         args.name,
     )
     print(output_svg_str)
+
+
+# Namespace URIs that might be present in the input SVG
+# These are common for SVGs edited with Inkscape.
+SVG_NS = "http://www.w3.org/2000/svg"
+SODIPODI_NS = "http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+INKSCAPE_NS = "http://www.inkscape.org/namespaces/inkscape"
+XMLNS_NS = "http://www.w3.org/2000/xmlns/"  # Used by ElementTree for xmlns attributes
+
+# Mappings for attribute name conversion from ElementTree's {uri}localname
+# to the desired flattened camelCase name (e.g., sodipodiDocname).
+# This reflects the transformations seen in the JSX fix.
+ATTR_NAME_MAP = {
+    f"{{{SODIPODI_NS}}}docname": "sodipodiDocname",
+    f"{{{INKSCAPE_NS}}}version": "inkscapeVersion",
+    f"{{{INKSCAPE_NS}}}label": "inkscapeLabel",
+    f"{{{INKSCAPE_NS}}}groupmode": "inkscapeGroupmode",
+    f"{{{INKSCAPE_NS}}}transform-center-x": "inkscapeTransformCenterX",
+    f"{{{INKSCAPE_NS}}}transform-center-y": "inkscapeTransformCenterY",
+    # Add other ns1/ns2 mappings if they corresponded to other URIs/attributes
+}
+
+# Tags to be removed (using ElementTree's fully qualified {uri}tag format)
+TAGS_TO_REMOVE_QUALIFIED = {
+    f"{{{SODIPODI_NS}}}namedview",
+    f"{{{SODIPODI_NS}}}guide",
+    f"{{{INKSCAPE_NS}}}grid",
+}
+# Specific handling for empty <defs> tag
+SVG_DEFS_TAG_QUALIFIED = f"{{{SVG_NS}}}defs"
+
+# Namespace prefixes on the root SVG element that should be removed
+# (e.g., xmlns:sodipodi, xmlns:inkscape, xmlns:ns1, xmlns:ns2)
+ROOT_NS_PREFIXES_TO_REMOVE = ["sodipodi", "inkscape", "ns1", "ns2"]
+
+
+def _camel_case_css_property(name):
+    """Converts a kebab-case CSS property name to camelCase."""
+    parts = name.split("-")
+    return parts[0] + "".join(p.capitalize() for p in parts[1:])
+
+
+def _format_css_value_for_jsx_object(value_str):
+    """
+    Formats a CSS value string for inclusion in a JavaScript-like object string.
+    Numbers are unquoted; strings are single-quoted.
+    """
+    try:
+        num_val = float(value_str)
+        if num_val.is_integer():
+            return str(int(num_val))
+        else:
+            # Format float concisely, removing trailing .0 but keeping other decimals
+            return (
+                f"{num_val:.10g}".rstrip("0").rstrip(".")
+                if "." in f"{num_val:.10g}"
+                else f"{num_val:.0f}"
+            )
+
+    except ValueError:  # Not a number, treat as string
+        # Add single quotes if not already quoted
+        if not (
+            (value_str.startswith("'") and value_str.endswith("'"))
+            or (value_str.startswith('"') and value_str.endswith('"'))
+        ):
+            # Escape single quotes within the string if necessary
+            return f"'{value_str.replace("'", "\\'")}'"
+        return value_str
+
+
+def _process_element_recursive_inplace(element, is_root):
+    """
+    Recursively processes an XML element and its children in place.
+    - Removes specified namespaced tags and empty <defs>.
+    - Converts namespaced attributes to camelCase.
+    - Removes specified xmlns declarations from the root.
+    - Transforms 'style' attribute strings into a JavaScript-like object string format.
+    """
+    # 1. Process attributes of the current element
+    current_attrs = list(element.attrib.items())  # Iterate over a copy
+    new_attrs = {}
+
+    for key, value in current_attrs:
+        attr_removed_or_transformed = False
+        # Handle root xmlns attribute removal
+        if is_root:
+            # Check for xmlns:prefix attributes
+            if (
+                key.startswith("xmlns:")
+                and key.split(":", 1)[1] in ROOT_NS_PREFIXES_TO_REMOVE
+            ):
+                attr_removed_or_transformed = True
+            # Check for ElementTree's {uri}prefix representation of xmlns attributes
+            elif (
+                key.startswith(f"{{{XMLNS_NS}}}")
+                and key.split("}", 1)[1] in ROOT_NS_PREFIXES_TO_REMOVE
+            ):
+                attr_removed_or_transformed = True
+
+        if attr_removed_or_transformed:
+            continue
+
+        if key == "style":
+            style_rules_for_jsx_obj = []
+            css_declarations = [
+                decl.strip() for decl in value.split(";") if decl.strip()
+            ]
+            for part in css_declarations:
+                try:
+                    name, val_str = part.split(":", 1)
+                    name = name.strip()
+                    val_str = val_str.strip()
+
+                    camel_name = _camel_case_css_property(name)
+                    formatted_val = _format_css_value_for_jsx_object(val_str)
+                    style_rules_for_jsx_obj.append(f"{camel_name}:{formatted_val}")
+                except ValueError:
+                    # If a style part is not 'name:value', it's unusual.
+                    # For robustness, one might log this or skip. Here, we skip.
+                    pass
+            new_attrs[key] = ", ".join(style_rules_for_jsx_obj)
+            attr_removed_or_transformed = True
+        elif key in ATTR_NAME_MAP:  # Mapped namespaced attributes
+            new_attrs[ATTR_NAME_MAP[key]] = value
+            attr_removed_or_transformed = True
+
+        if not attr_removed_or_transformed:  # Keep unmapped attributes
+            new_attrs[key] = value
+
+    element.attrib.clear()
+    element.attrib.update(new_attrs)
+
+    # 2. Process children: Iterate backwards for safe removal while modifying
+    for i in range(len(element) - 1, -1, -1):
+        child = element[i]
+
+        if child.tag in TAGS_TO_REMOVE_QUALIFIED:
+            element.remove(child)
+            continue
+        if child.tag == SVG_DEFS_TAG_QUALIFIED and not list(child):  # Empty <defs>
+            element.remove(child)
+            continue
+
+        _process_element_recursive_inplace(
+            child, False
+        )  # Recurse for children that are kept
+
+
+def reactify_svg(root_element_et):
+    """
+    Takes an xml.etree.ElementTree.Element representing an SVG,
+    applies transformations inspired by JSX fixes (style attributes, namespaces),
+    and returns the modified SVG as a string.
+
+    Args:
+        root_element_et: The root Element of the SVG ElementTree.
+
+    Returns:
+        A string representation of the modified SVG.
+    """
+    if not isinstance(root_element_et, ET.Element):
+        raise TypeError("Input must be an xml.etree.ElementTree.Element")
+
+    # Deepcopy to avoid modifying the original ElementTree object passed in
+    # root_copy = copy.deepcopy(root_element_et)
+
+    _process_element_recursive_inplace(root_element_et, True)
+
+    # Serialize the modified tree to a string.
+    # method='xml' is standard. short_empty_elements=True helps ensure <tag/> for empty tags.
+    # return ET.tostring(
+    #     root_copy, encoding="unicode", method="xml", short_empty_elements=True
+    # )
+
+
+if __name__ == "__main__":
+    main()
