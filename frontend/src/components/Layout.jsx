@@ -3,7 +3,10 @@ import ParticlesBackground from './ParticlesBackground';
 import DarkLightIcon from './DarkLightIcon';
 
 const Layout = ({ children }) => {
-  const [isDark, setIsDark] = useState(false);
+
+  const [isDark, setIsDark] = useState(
+    () => window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+  );
 
   const toggleTheme = () => {
     document.documentElement.classList.toggle("dark");
@@ -11,8 +14,24 @@ const Layout = ({ children }) => {
   };
 
   useEffect(() => {
-    const isDarkActive = document.documentElement.classList.contains("dark");
-    setIsDark(isDarkActive);
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = () => {
+      setIsDark(mediaQuery.matches);
+      if (mediaQuery.matches) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+    };
+
+    // Set initial theme based on preference
+    handleChange();
+
+    // Listen for changes
+    mediaQuery.addEventListener('change', handleChange);
+
+    // Cleanup listener on unmount
+    return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
   return (
