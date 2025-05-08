@@ -1,5 +1,6 @@
-import { Sun, Moon } from 'lucide-react'; // Feather = Quill, Wings = Dragon Wing
+import { Sun, Moon } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import ParticleBackground from './ParticleBackground';
 
 const Layout = ({ children }) => {
   const [isDark, setIsDark] = useState(false);
@@ -15,22 +16,28 @@ const Layout = ({ children }) => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-coffee-bg dark:bg-dragon-bg text-coffee-text dark:text-dragon-text font-serif dark:font-fantasy transition-all duration-300 relative">
-      <button onClick={toggleTheme} className="theme-toggle-btn flex items-center gap-2">
+    <div className="min-h-screen bg-coffee-bg dark:bg-dragon-bg text-coffee-text dark:text-dragon-text font-serif dark:font-fantasy transition-all duration-300 relative overflow-hidden">
+      <ParticleBackground />
+      <button
+        onClick={toggleTheme}
+        className={`theme-toggle-btn ${isDark ? 'dark-btn' : 'light-btn'}`}
+      >
         {isDark ? (
           <>
             <Sun size={20} className="text-dragon-gold" />
-            To Light
+            <span className="label">To Light</span>
           </>
         ) : (
           <>
             <Moon size={20} className="text-coffee-button" />
-            To Shadow
+            <span className="label">To Shadow</span>
           </>
         )}
       </button>
 
-      {children}
+      <div className="relative z-10">
+        {children}
+      </div>
     </div>
   );
 };
