@@ -1,0 +1,261 @@
+#!/usr/bin/env python
+
+import argparse
+import re
+import sys
+import xml.etree.ElementTree as ET
+
+SVG_NS = "http://www.w3.org/2000/svg"
+ET.register_namespace("", SVG_NS)  # Register a default namespace
+
+
+# Helper function to extract a specific property value from a style string
+def get_style_property(style_string, property_name):
+    if not style_string:
+        return None
+    match = re.search(
+        f"{re.escape(property_name)}\\s*:\\s*([^;]+)", style_string, re.IGNORECASE
+    )
+    if match:
+        return match.group(1).strip()
+    return None
+
+
+def create_animated_svg(
+    svg1_path,
+    svg2_path,
+    animation_duration_one_way="1s",
+    click_to_animate=False,
+    root_id_override=None,
+):
+    try:
+        tree1 = ET.parse(svg1_path)
+        root1 = tree1.getroot()
+    except FileNotFoundError:
+        print(f"Error: File not found: {svg1_path}", file=sys.stderr)
+        sys.exit(1)
+    except ET.ParseError:
+        print(f"Error: Could not parse XML from {svg1_path}", file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        tree2 = ET.parse(svg2_path)
+        root2 = tree2.getroot()
+    except FileNotFoundError:
+        print(f"Error: File not found: {svg2_path}", file=sys.stderr)
+        sys.exit(1)
+    except ET.ParseError:
+        print(f"Error: Could not parse XML from {svg2_path}", file=sys.stderr)
+        sys.exit(1)
+
+    # Build dictionaries of elements keyed by ID for efficient lookup
+    # This will find all elements with an 'id' attribute, regardless of type or location
+    elements1_by_id = {el.get("id"): el for el in root1.iter() if el.get("id")}
+    elements2_by_id = {el.get("id"): el for el in root2.iter() if el.get("id")}
+
+    if not elements1_by_id and not elements2_by_id:
+        print(
+            "Warning: No elements with IDs found in the SVGs. Animations require elements to have unique IDs to match them.",
+            file=sys.stderr,
+        )
+    elif not elements1_by_id:
+        print(f"Warning: No elements with IDs found in {svg1_path}.", file=sys.stderr)
+    elif not elements2_by_id:
+        print(f"Warning: No elements with IDs found in {svg2_path}.", file=sys.stderr)
+
+    # Calculate total duration for A -> B -> A cycle
+    try:
+        val_str = animation_duration_one_way.rstrip("ms")
+        unit = animation_duration_one_way[len(val_str) :]
+        one_way_val = float(val_str)
+        total_val = one_way_val * 2
+        if total_val.is_integer():
+            total_val = int(total_val)
+        cycle_duration_str = f"{total_val}{unit}"
+    except ValueError:
+        print(
+            f"Warning: Could not parse animation_duration_one_way: {animation_duration_one_way}. Defaulting cycle duration to '2s'.",
+            file=sys.stderr,
+        )
+        cycle_duration_str = "2s"
+
+    def _add_animation_if_different(
+        parent_element,
+        attribute_name,
+        val1,
+        val2,
+        duration,
+        loop_anim,
+        trigger_id_for_click=None,
+    ):
+        if val1 != val2:
+            animate_el = ET.SubElement(parent_element, "animate")
+            animate_el.set("attributeName", attribute_name)
+            animate_el.set("values", f"{val1};{val2};{val1}")
+            animate_el.set("dur", duration)
+            if loop_anim:
+                animate_el.set("repeatCount", "indefinite")
+                animate_el.set("begin", "0s")  # Start immediately
+            elif trigger_id_for_click:
+                animate_el.set("begin", trigger_id_for_click)
+            # Default for non-looping is effectively one cycle if begin is specified.
+            return True
+        return False
+
+    animations_added = 0
+    trigger_event_id = None
+    actual_root_id = root_id_override or root1.get("id") or "animatedSvgRoot"
+    root1.set("id", actual_root_id)
+    # Store one-way duration for JS access
+    root1.set("data-one-way-duration", animation_duration_one_way)
+
+    if click_to_animate:
+        trigger_event_id = f"{actual_root_id}.click"
+
+    processed_ids = set()
+
+    for id_val, el1 in elements1_by_id.items():
+        if id_val in elements2_by_id:
+            el2 = elements2_by_id[id_val]
+            processed_ids.add(id_val)
+
+            # Animate 'd' attribute (path data) - specific to paths
+            if el1.tag == f"{{{SVG_NS}}}path" and el2.tag == f"{{{SVG_NS}}}path":
+                d1 = el1.get("d", "")
+                d2 = el2.get("d", "")
+                if _add_animation_if_different(
+                    el1,
+                    "d",
+                    d1,
+                    d2,
+                    cycle_duration_str,
+                    not click_to_animate,
+                    trigger_event_id,
+                ):
+                    animations_added += 1
+
+            # Animate 'style' attribute
+            style1 = el1.get("style", "")
+            style2 = el2.get("style", "")
+            if _add_animation_if_different(
+                el1,
+                "style",
+                style1,
+                style2,
+                cycle_duration_str,
+                not click_to_animate,
+                trigger_event_id,
+            ):
+                animations_added += 1
+
+            # Animate common presentation attributes
+            common_attrs_to_animate = {
+                "stroke": "none",
+                "stroke-width": "1",  # Default for stroke-width if not specified
+                "opacity": "1",  # Default for opacity
+                "fill": "none",  # Default for fill
+            }
+            for attr, default_val in common_attrs_to_animate.items():
+                val1_attr = el1.get(attr)
+                val1_style = get_style_property(style1, attr)
+                val1 = val1_attr or val1_style or default_val
+
+                val2_attr = el2.get(attr)
+                val2_style = get_style_property(style2, attr)
+                val2 = val2_attr or val2_style or default_val
+
+                if _add_animation_if_different(
+                    el1,
+                    attr,
+                    val1,
+                    val2,
+                    cycle_duration_str,
+                    not click_to_animate,
+                    trigger_event_id,
+                ):
+                    animations_added += 1
+
+            # Animate direct 'transform' attribute
+            t1_val = el1.get("transform", "")
+            t2_val = el2.get("transform", "")
+            if _add_animation_if_different(
+                el1,
+                "transform",
+                t1_val,
+                t2_val,
+                cycle_duration_str,
+                not click_to_animate,
+                trigger_event_id,
+            ):
+                animations_added += 1
+        else:
+            sys.stderr.write(
+                f"Info: Element with ID '{id_val}' found in first SVG but not in second. Skipping.\n"
+            )
+
+    for id_val in elements2_by_id:
+        if id_val not in processed_ids:
+            sys.stderr.write(
+                f"Info: Element with ID '{id_val}' found in second SVG but not in first. Skipping.\n"
+            )
+
+    sys.stderr.write(
+        f"{len(elements1_by_id)} elements with IDs found in {svg1_path}.\n"
+    )
+    sys.stderr.write(
+        f"{len(elements2_by_id)} elements with IDs found in {svg2_path}.\n"
+    )
+    sys.stderr.write(
+        f"Processed {len(processed_ids)} matching elements for animation.\n"
+    )
+    sys.stderr.write(f"{animations_added} animation(s) added.\n")
+    return ET.tostring(root1, encoding="unicode")
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Create an SVG with toggle animations between two input SVGs.",
+        formatter_class=argparse.RawTextHelpFormatter,
+        epilog="""
+How the animation works:
+- The script compares elements with corresponding IDs in the two SVGs.
+- For each matched pair, if attributes like 'd' (for paths), 'style', 'fill',
+  'stroke', 'stroke-width', 'opacity', or 'transform' differ,
+  SMIL <animate> elements are added to that element in the output SVG.
+- By default, animations loop indefinitely (State1 -> State2 -> State1 -> ...).
+- The duration for one way of this cycle (e.g., State1 -> State2) can be set.
+  The total cycle duration will be double this value.
+
+Example:
+  ./svg_animator_v2.py icon_play.svg icon_pause.svg --dur 300ms > animated_icon.svg
+  This creates 'animated_icon.svg' that loops between play and pause states,
+  with 300ms for play->pause and 300ms for pause->play.
+
+To make the animation trigger on click (single cycle A->B->A):
+  ./svg_animator_v2.py svg1.svg svg2.svg --click-to-animate
+""",
+    )
+    parser.add_argument("svg1_path", help="Path to the first SVG file (base state).")
+    parser.add_argument("svg2_path", help="Path to the second SVG file (target state).")
+    parser.add_argument(
+        "--dur",
+        default="1s",
+        help="Duration for one direction of the animation (e.g., '1s', '500ms'). Default: '1s'. "
+        "The full A->B->A cycle will take twice this duration.",
+    )
+    parser.add_argument(
+        "--click-to-animate",
+        action="store_true",
+        help="If set, animation triggers on a click and plays one full cycle (A->B->A) instead of looping on load.",
+    )
+    parser.add_argument(
+        "--root-id",
+        help="Specify a custom ID for the root SVG element. Defaults to 'animatedSvgRoot' or the ID from the first SVG if present.",
+    )
+
+    args = parser.parse_args()
+
+    output_svg_str = create_animated_svg(
+        args.svg1_path, args.svg2_path, args.dur, args.click_to_animate, args.root_id
+    )
+    print(output_svg_str)
