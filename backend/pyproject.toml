@@ -41,7 +41,6 @@ mypy = "^1.15.0"
 vulture = "^2.14"
 asgi-lifespan = "^2.1.0"
 
-
 [tool.poetry.group.redis.dependencies]
 redis = "^6.0.0"
 
@@ -72,6 +71,11 @@ live_mode = true
 strict = false
 exclude = [
     "booklovin/tests/*",
+]
+
+[tool.pylint.BASIC]
+good-names = [
+    "db",
 ]
 
 [build-system]
