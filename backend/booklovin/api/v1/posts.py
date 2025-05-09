@@ -34,13 +34,13 @@ async def read_all_posts(request: Request, s: int, e: int, user: User = Depends(
 
 
 @router.get("/recent", response_model=List[Post] | UserError)
-async def read_recent_posts(request: Request, user: User = Depends(get_from_token)) -> List[Post]:
+async def read_recent_posts(request: Request, user: User = Depends(get_from_token)) -> List[Post] | UserError:
     """Returns a list of recent subscribed posts"""
     return await database.post.get_recent(db=request.app.state.db, user=user)
 
 
 @router.get("/popular", response_model=List[Post] | UserError)
-async def read_popular_posts(request: Request, user: User = Depends(get_from_token)) -> List[Post]:
+async def read_popular_posts(request: Request, user: User = Depends(get_from_token)) -> List[Post] | UserError:
     """Returns a list of recent popular posts"""
     return await database.post.get_popular(db=request.app.state.db)
 

@@ -25,8 +25,8 @@ async def get_one(db: Database, post_id: str) -> Post | None:
 async def update(db: Database, post_id: str, post_data: Post) -> None | UserError:
     """Updates an existing post."""
     update_data = post_data.model_dump(exclude_unset=True)  # Only update provided fields
-    result = await db.posts.update_one({"uid": post_id}, update_data)
-    return result.modified_count
+    await db.posts.update_one({"uid": post_id}, update_data)
+    return None
 
 
 async def delete(db: Database, post_id: str) -> None | UserError:
@@ -36,7 +36,7 @@ async def delete(db: Database, post_id: str) -> None | UserError:
 
 async def get_recent(db: Database, user: User) -> List[Post] | UserError:
     """Returns a list of recent subscribed posts"""
-    result = await db.posts.find({"authorId": user["id"]}).sort("creationTime", -1).limit(RECENT_POSTS_LIMIT).to_list(length=None)
+    result = await db.posts.find({"authorId": user.email}).sort("creationTime", -1).limit(RECENT_POSTS_LIMIT).to_list(length=None)
     return result
 
 
