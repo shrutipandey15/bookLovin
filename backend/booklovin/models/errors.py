@@ -9,7 +9,9 @@ class ErrorCode(IntEnum):
     """Global website error codes"""
 
     FATAL = 1
-    USER_ALREADY_EXISTS = auto()
+    NOT_FOUND = auto()
+    INVALID_PARAMETER = auto()
+    ALREADY_EXISTS = auto()
 
 
 class UserError(BaseModel):
@@ -20,7 +22,7 @@ class UserError(BaseModel):
 
 ERROR_MESSAGES = {
     ErrorCode.FATAL: "A fatal error occurred. Please try again later.",
-    ErrorCode.USER_ALREADY_EXISTS: "A user with this email already exists.",
+    ErrorCode.ALREADY_EXISTS: "A user with this email already exists.",
 }
 
 

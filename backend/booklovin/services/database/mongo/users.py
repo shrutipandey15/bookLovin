@@ -11,6 +11,5 @@ async def get(db: Database, email: str) -> User | None:
     return None
 
 
-async def create(db: Database, user: User) -> str:
-    result = await db.users.insert_one(user.model_dump())
-    return str(result.inserted_id)
+async def create(db: Database, user: User) -> None:
+    await db.users.insert_one(user.model_dump())

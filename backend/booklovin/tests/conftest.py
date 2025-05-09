@@ -53,3 +53,13 @@ def pytest_configure():
     from booklovin.services import database
 
     database.test_setup.setup(user_data)  # type: ignore
+
+
+def assert_error(request):
+    assert request.status_code == 200
+    assert request.json()["error"]
+
+
+def assert_success(request):
+    assert request.status_code == 200
+    assert "error" not in request.json()

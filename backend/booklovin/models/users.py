@@ -11,10 +11,6 @@ class UserRole(IntEnum):
     EDITOR = auto()
 
 
-class UserId(BaseModel):
-    id: str
-
-
 class UserLogin(BaseModel):
     email: str
     password: str

@@ -3,26 +3,32 @@
 import itertools
 from typing import List
 
+from booklovin.core.settings import RECENT_POSTS_LIMIT
+from booklovin.models.post import Post
 from bson import ObjectId
 
-from booklovin.models.post import Post
 from .core import State
 
 
-async def create(db: State, post: Post) -> str:
+async def create(db: State, post: Post) -> None:
     post_id = db.posts_count
     db.posts.append(post)
     db.posts_count += 1
     db.save()
-    return str(post_id)
 
 
-async def get_all(db: State) -> List[Post]:
-    return db.posts.copy()
+async def get_all(db: State, start: int, end: int) -> List[Post]:
+    return db.posts[start:end]
 
 
-async def get_one(db: State, post_id: str) -> Post:
-    return db.posts[int(post_id)]
+async def get_recent(db: State, user: str) -> List[Post]:
+    return db.posts[:RECENT_POSTS_LIMIT]  # Mocked recent posts
+
+
+async def get_one(db: State, post_id: str) -> Post | None:
+    for post in db.posts:
+        if post.uid == post_id:
+            return post
 
 
 async def update(db: State, post_id: str, post_data: Post) -> int:
@@ -39,13 +45,13 @@ async def update(db: State, post_id: str, post_data: Post) -> int:
     return next(count)
 
 
-async def delete(db: State, post_id: str) -> int:
+async def delete(db: State, post_id: str) -> bool:
     """Deletes a post by its ID."""
     post = await get_one(db, post_id)
     try:
         db.posts.remove(post)
     except ValueError:
-        return 0
+        return False
     else:
         db.save()
-    return 1
+        return True

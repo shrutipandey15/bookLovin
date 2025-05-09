@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 from booklovin.core.config import ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM, SECRET_KEY, pwd_context
 from booklovin.models.errors import ErrorCode, UserError, gen_error
-from booklovin.models.users import NewUser, User, UserId
+from booklovin.models.users import NewUser, User
 from booklovin.services import database
 from booklovin.utils.user_token import get_from_token
 from fastapi import APIRouter, Depends, Request, HTTPException, status
@@ -25,14 +25,13 @@ async def me_page(user: User = Depends(get_from_token)) -> User:
 
 
 @router.post("/register")
-async def register(request: Request, user: NewUser, response_model=UserId | UserError) -> UserId | UserError:
+async def register(request: Request, user: NewUser, response_model=None | UserError) -> None | UserError:
     existing_user = await database.users.get(db=request.app.state.db, email=user.email)
     if existing_user:
-        return gen_error(ErrorCode.USER_ALREADY_EXISTS)
+        return gen_error(ErrorCode.ALREADY_EXISTS)
     passwd = pwd_context.hash(user.password)
     new_user = User(name=user.username, email=user.email, password=passwd)
-    user_id = await database.users.create(db=request.app.state.db, user=new_user)
-    return UserId(id=user_id)
+    await database.users.create(db=request.app.state.db, user=new_user)
 
 
 @router.post("/login", response_model=dict)
