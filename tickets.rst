@@ -1,7 +1,7 @@
 Tickets
 =======
 
-:total-count: 3
+:total-count: 4
 
 --------------------------------------------------------------------------------
 
@@ -18,3 +18,12 @@ See https://www.notion.so/1db4cee15df381e19c04c0641da536b4?v=1db4cee15df381fa8ce
   returns a list of recent posts from 1) your "followed" 2) most popular posts
 - /getPopular
   returns a semi-random list of currently popular posts
+
+--------------------------------------------------------------------------------
+
+Move protocols to an interface file
+===================================
+
+:bugid: 4
+:created: 2025-05-09T23:32:54
+:priority: 0
