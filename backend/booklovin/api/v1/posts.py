@@ -11,6 +11,9 @@ from fastapi import APIRouter, Depends, Request
 
 router = APIRouter(tags=["posts"])
 
+ABUSIVE_USAGE = gen_error(ErrorCode.INVALID_PARAMETER, details="Abusive usage")
+NOT_FOUND = gen_error(ErrorCode.NOT_FOUND, details="Post not found")
+
 
 # create
 @router.post("/", response_model=Post | UserError)
@@ -29,7 +32,7 @@ async def read_all_posts(request: Request, s: int, e: int, user: User = Depends(
     """Get a range of posts (from most recent to oldest)"""
     assert e > s
     if e - s > 40:
-        return gen_error(ErrorCode.INVALID_PARAMETER)
+        return ABUSIVE_USAGE
     return await database.post.get_all(db=request.app.state.db, start=s, end=e)
 
 
@@ -50,9 +53,7 @@ async def read_popular_posts(request: Request, user: User = Depends(get_from_tok
 async def read_one_post(request: Request, post_id: str, user: User = Depends(get_from_token)) -> Post | UserError:
     "Get one specific post"
     post = await database.post.get_one(db=request.app.state.db, post_id=post_id)
-    if post:
-        return post
-    return gen_error(ErrorCode.NOT_FOUND)
+    return post or NOT_FOUND
 
 
 # update
@@ -74,7 +75,7 @@ async def like_post(request: Request, post_id: str, user: User = Depends(get_fro
 async def delete_post(request: Request, post_id: str, user: User = Depends(get_from_token)) -> None:
     "delete a specific post"
 
-    await database.post.delete(
+    return await database.post.delete(
         db=request.app.state.db,
         post_id=post_id,
     )

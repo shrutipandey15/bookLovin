@@ -12,6 +12,9 @@ from jose import jwt
 
 router = APIRouter(tags=["auth"])
 
+NOT_FOUND = gen_error(ErrorCode.NOT_FOUND, details="User not found")
+ALREADY_EXISTS = gen_error(ErrorCode.ALREADY_EXISTS, details="User already exists")
+
 # Use a generic error message to avoid revealing whether username exists
 credentials_exception = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -29,7 +32,7 @@ async def me_page(user: User = Depends(get_from_token)) -> User:
 async def register(request: Request, user: NewUser, response_model=None | UserError) -> None | UserError:
     existing_user = await database.users.get(db=request.app.state.db, email=user.email)
     if existing_user:
-        return gen_error(ErrorCode.ALREADY_EXISTS)
+        return ALREADY_EXISTS
     passwd = pwd_context.hash(user.password)
     new_user = User(name=user.username, email=user.email, password=passwd)
     await database.users.create(db=request.app.state.db, user=new_user)
@@ -40,7 +43,7 @@ async def register(request: Request, user: NewUser, response_model=None | UserEr
 async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
     user = await database.users.get(db=request.app.state.db, email=form_data.username)
     if not user:
-        return gen_error(ErrorCode.NOT_FOUND, details="User not found")
+        return NOT_FOUND
 
     if not user:
         raise credentials_exception
