@@ -19,13 +19,13 @@ def explain_mismatch(a1, a2):
     # compute differences between the two dicts:
     missing_keys = set(a1.keys()).symmetric_difference(set(a2.keys()))
     if missing_keys:
-        text.append(f"missing keys: {missing_keys}")
+        text.append(f"      /!\ missing keys: {missing_keys}")
     for k, v in a1.items():
         if v is Any:
             continue
         v2 = a2.get(k)
         if v != v2:
-            text.append(f"mismatch for key '{k}': {v} != {v2}")
+            text.append(f"        '{k}' ==> {v} != {v2}")
     return "\n".join(text)
 
 
@@ -54,7 +54,9 @@ def get_protocol_compliance_issues(
         ref_a = inspect.get_annotations(v)
         ref_b = inspect.get_annotations(v2)
         if ref_a != ref_b:
-            issues.append(f"Mismatch for '{k}':\n{explain_mismatch(ref_a, ref_b)}")
+            mismatch = explain_mismatch(ref_a, ref_b)
+            if mismatch:
+                issues.append(f"   {k}:\n{mismatch}")
 
     return issues
 
@@ -64,14 +66,19 @@ if __name__ == "__main__":
 
     protocols = (PostService, UserService)
     for engine in reversed(AVAILABLE_DB_ENGINES):
-        print(engine, "###########################################")
         user_module = importlib.import_module(
             f"booklovin.services.database.{engine}.users"
         )
-        for issue in get_protocol_compliance_issues(user_module, UserService):
-            print(f"UserService {engine}: {issue}")
+        issues = get_protocol_compliance_issues(user_module, UserService)
+        if issues:
+            print(" ", engine, ":: UserService  ")
+            for issue in issues:
+                print(issue)
         post_module = importlib.import_module(
             f"booklovin.services.database.{engine}.post"
         )
-        for issue in get_protocol_compliance_issues(post_module, PostService):
-            print(f"PostService {engine}: {issue}")
+        issues = get_protocol_compliance_issues(post_module, PostService)
+        if issues:
+            print(" ", engine, ":: PostService  ")
+            for issue in issues:
+                print(issue)
