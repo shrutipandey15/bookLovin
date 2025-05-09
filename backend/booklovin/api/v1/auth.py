@@ -46,20 +46,22 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
     if not user:
         raise CREDENTIALS_EXCEPTION
 
-    hashed_password = user.password
-    verification_passed = pwd_context.verify(form_data.password, hashed_password)
+    verification_passed = pwd_context.verify(form_data.password, user.password)
 
-    if not hashed_password or not verification_passed:
+    if not verification_passed:
         raise CREDENTIALS_EXCEPTION
 
-    # The 'sub' (subject) claim is typically the user identifier (e.g., username or user ID)
-    access_token = _create_access_token(data={"sub": form_data.username})
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {
+        "access_token": _create_access_token(form_data.username),
+        "token_type": "bearer",
+    }
 
 
-def _create_access_token(data: dict, expires_delta: timedelta = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)):
-    to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + expires_delta
-    to_encode.update({"exp": expire, "iat": datetime.now(timezone.utc)})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+def _create_access_token(userId: str, expires_delta: timedelta = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)):
+    ref = datetime.now(timezone.utc)
+    data = {
+        "sub": userId,
+        "exp": ref + expires_delta,
+        "iat": ref,
+    }
+    return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)
