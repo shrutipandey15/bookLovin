@@ -22,7 +22,9 @@ class UserError(BaseModel):
 
 ERROR_MESSAGES = {
     ErrorCode.FATAL: "A fatal error occurred. Please try again later.",
-    ErrorCode.ALREADY_EXISTS: "A user with this email already exists.",
+    ErrorCode.ALREADY_EXISTS: "Existing entity.",
+    ErrorCode.NOT_FOUND: "Entity not found.",
+    ErrorCode.INVALID_PARAMETER: "Invalid parameter provided.",
 }
 
 
