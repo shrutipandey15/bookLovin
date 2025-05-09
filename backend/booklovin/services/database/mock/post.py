@@ -4,13 +4,14 @@ import itertools
 from typing import List
 
 from booklovin.core.settings import RECENT_POSTS_LIMIT
+from booklovin.models.errors import ErrorCode, UserError, gen_error
 from booklovin.models.post import Post
 from bson import ObjectId
 
 from .core import State
 
 
-async def create(db: State, post: Post) -> None:
+async def create(db: State, post: Post) -> None | UserError:
     post_id = db.posts_count
     db.posts.append(post)
     db.posts_count += 1
@@ -45,13 +46,12 @@ async def update(db: State, post_id: str, post_data: Post) -> int:
     return next(count)
 
 
-async def delete(db: State, post_id: str) -> bool:
+async def delete(db: State, post_id: str) -> None | UserError:
     """Deletes a post by its ID."""
     post = await get_one(db, post_id)
     try:
         db.posts.remove(post)
     except ValueError:
-        return False
+        return gen_error(ErrorCode.NOT_FOUND, details="Post not found")
     else:
         db.save()
-        return True

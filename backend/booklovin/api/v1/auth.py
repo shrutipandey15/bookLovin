@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
+from booklovin.core.utils import isError
 from booklovin.core.config import ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM, SECRET_KEY, pwd_context
 from booklovin.models.errors import ErrorCode, UserError, gen_error
 from booklovin.models.users import NewUser, User
@@ -34,9 +35,11 @@ async def register(request: Request, user: NewUser, response_model=None | UserEr
     await database.users.create(db=request.app.state.db, user=new_user)
 
 
-@router.post("/login", response_model=dict)
+@router.post("/login", response_model=dict | UserError)
 async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
     user = await database.users.get(db=request.app.state.db, email=form_data.username)
+    if isError(user):
+        return user
 
     if not user:
         raise credentials_exception
