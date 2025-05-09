@@ -1,5 +1,6 @@
 """Database helper for mongo: Users"""
 
+from booklovin.models.errors import UserError
 from booklovin.models.users import User
 from pymongo.asynchronous.database import AsyncDatabase as Database
 
@@ -11,5 +12,5 @@ async def get(db: Database, email: str) -> User | None:
     return None
 
 
-async def create(db: Database, user: User) -> None:
+async def create(db: Database, user: User) -> None | UserError:
     await db.users.insert_one(user.model_dump())

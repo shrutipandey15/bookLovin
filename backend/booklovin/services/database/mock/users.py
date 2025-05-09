@@ -13,8 +13,7 @@ async def create(db: State, user: User) -> None | UserError:
     db.save()
 
 
-async def get(db: State, email: str) -> User | UserError:
+async def get(db: State, email: str) -> User | None:
     for user in db.users:
         if user.email == email:
             return User.model_validate(user)
-    return gen_error(ErrorCode.NOT_FOUND, details="User not found")

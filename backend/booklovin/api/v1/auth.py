@@ -38,8 +38,8 @@ async def register(request: Request, user: NewUser, response_model=None | UserEr
 @router.post("/login", response_model=dict | UserError)
 async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
     user = await database.users.get(db=request.app.state.db, email=form_data.username)
-    if isError(user):
-        return user
+    if not user:
+        return gen_error(ErrorCode.NOT_FOUND, details="User not found")
 
     if not user:
         raise credentials_exception

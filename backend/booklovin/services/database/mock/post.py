@@ -1,11 +1,11 @@
 """Database helpers for mocked db: Posts"""
 
-import itertools
 from typing import List
 
 from booklovin.core.settings import RECENT_POSTS_LIMIT
 from booklovin.models.errors import ErrorCode, UserError, gen_error
 from booklovin.models.post import Post
+from booklovin.models.users import User
 from bson import ObjectId
 
 from .core import State
@@ -22,7 +22,7 @@ async def get_all(db: State, start: int, end: int) -> List[Post]:
     return db.posts[start:end]
 
 
-async def get_recent(db: State, user: str) -> List[Post]:
+async def get_recent(db: State, user: User) -> List[Post] | UserError:
     return db.posts[:RECENT_POSTS_LIMIT]  # Mocked recent posts
 
 
@@ -32,18 +32,15 @@ async def get_one(db: State, post_id: str) -> Post | None:
             return post
 
 
-async def update(db: State, post_id: str, post_data: Post) -> int:
+async def update(db: State, post_id: str, post_data: Post) -> None | UserError:
     """Updates an existing post."""
     update_data = post_data.model_dump(exclude_unset=True)  # Only update provided fields
-    count = itertools.count()
     post = db.posts[int(post_id)]
     model = post.model_dump()
     for key, value in model.items():
         if getattr(post, key) == value:
-            next(count)
             setattr(post, key, value)
     db.save()
-    return next(count)
 
 
 async def delete(db: State, post_id: str) -> None | UserError:
