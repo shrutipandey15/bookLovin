@@ -19,13 +19,13 @@ def explain_mismatch(a1, a2):
     # compute differences between the two dicts:
     missing_keys = set(a1.keys()).symmetric_difference(set(a2.keys()))
     if missing_keys:
-        text.append(f"      /!\ missing keys: {missing_keys}")
+        text.append(f"      ❌missing parameters: {', '.join(missing_keys)}")
     for k, v in a1.items():
         if v is Any:
             continue
         v2 = a2.get(k)
         if v != v2:
-            text.append(f"        '{k}' ==> {v} != {v2}")
+            text.append(f"      󰕚 '{k}' is {v2}\n                 expecting {v}")
     return "\n".join(text)
 
 
@@ -49,7 +49,7 @@ def get_protocol_compliance_issues(
     for k, v in ref_members.items():
         v2 = inspected_members.get(k)
         if v2 is None:
-            issues.append(f"Missing function: '{k}'")
+            issues.append(f"   ❌ '{k}' not found")
             continue
         ref_a = inspect.get_annotations(v)
         ref_b = inspect.get_annotations(v2)
@@ -64,6 +64,10 @@ def get_protocol_compliance_issues(
 if __name__ == "__main__":
     from booklovin.models.types import PostService, UserService
 
+    def _header(engine, name):
+        print("_" * 80)
+        print(" ", engine, ":: %s  " % name)
+
     protocols = (PostService, UserService)
     for engine in reversed(AVAILABLE_DB_ENGINES):
         user_module = importlib.import_module(
@@ -71,7 +75,7 @@ if __name__ == "__main__":
         )
         issues = get_protocol_compliance_issues(user_module, UserService)
         if issues:
-            print(" ", engine, ":: UserService  ")
+            _header(engine, "USER")
             for issue in issues:
                 print(issue)
         post_module = importlib.import_module(
@@ -79,6 +83,6 @@ if __name__ == "__main__":
         )
         issues = get_protocol_compliance_issues(post_module, PostService)
         if issues:
-            print(" ", engine, ":: PostService  ")
+            _header(engine, "POST")
             for issue in issues:
                 print(issue)
