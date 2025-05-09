@@ -27,14 +27,3 @@ Move protocols to an interface file
 :bugid: 4
 :created: 2025-05-09T23:32:54
 :priority: 0
-
---------------------------------------------------------------------------------
-
-post.delete: pass post object to model
-======================================
-
-:bugid: 5
-:created: 2025-05-09T23:44:13
-:priority: 0
-
-and move error handling to the API layer
