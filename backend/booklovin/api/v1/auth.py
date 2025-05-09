@@ -14,9 +14,7 @@ router = APIRouter(tags=["auth"])
 
 NOT_FOUND = gen_error(ErrorCode.NOT_FOUND, details="User not found")
 ALREADY_EXISTS = gen_error(ErrorCode.ALREADY_EXISTS, details="User already exists")
-
-# Use a generic error message to avoid revealing whether username exists
-credentials_exception = HTTPException(
+CREDENTIALS_EXCEPTION = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
     detail="Incorrect username or password",
     headers={"WWW-Authenticate": "Bearer"},
@@ -46,13 +44,13 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
         return NOT_FOUND
 
     if not user:
-        raise credentials_exception
+        raise CREDENTIALS_EXCEPTION
 
     hashed_password = user.password
     verification_passed = pwd_context.verify(form_data.password, hashed_password)
 
     if not hashed_password or not verification_passed:
-        raise credentials_exception
+        raise CREDENTIALS_EXCEPTION
 
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     # The 'sub' (subject) claim is typically the user identifier (e.g., username or user ID)
