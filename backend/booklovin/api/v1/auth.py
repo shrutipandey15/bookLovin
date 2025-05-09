@@ -12,7 +12,6 @@ from jose import jwt
 
 router = APIRouter(tags=["auth"])
 
-NOT_FOUND = gen_error(ErrorCode.NOT_FOUND, details="User not found")
 ALREADY_EXISTS = gen_error(ErrorCode.ALREADY_EXISTS, details="User already exists")
 CREDENTIALS_EXCEPTION = HTTPException(
     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -40,8 +39,6 @@ async def register(request: Request, user: NewUser, response_model=None | UserEr
 @router.post("/login", response_model=dict | UserError)
 async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
     user = await database.users.get(db=request.app.state.db, email=form_data.username)
-    if not user:
-        return NOT_FOUND
 
     if not user:
         raise CREDENTIALS_EXCEPTION

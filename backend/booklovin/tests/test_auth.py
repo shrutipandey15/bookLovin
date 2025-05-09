@@ -35,8 +35,7 @@ async def test_login_failure_incorrect_username(client):
         "/api/v1/auth/login",  # Adjust URL prefix if needed
         data={"username": "nonexistent@user.com", "password": "password"},
     )
-    assert response.status_code == 200
-    assert response.json()["error"]
+    assert response.status_code == 401
 
 
 @pytest.mark.asyncio
