@@ -33,6 +33,7 @@ async def register(request: Request, user: NewUser, response_model=None | UserEr
     passwd = pwd_context.hash(user.password)
     new_user = User(name=user.username, email=user.email, password=passwd)
     await database.users.create(db=request.app.state.db, user=new_user)
+    return None
 
 
 @router.post("/login", response_model=dict | UserError)

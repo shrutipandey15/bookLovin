@@ -10,6 +10,8 @@ from bson import ObjectId
 
 from .core import State
 
+POST_NOT_FOUND = gen_error(ErrorCode.NOT_FOUND, details="Post not found")
+
 
 async def create(db: State, post: Post) -> None | UserError:
     post_id = db.posts_count
@@ -46,9 +48,11 @@ async def update(db: State, post_id: str, post_data: Post) -> None | UserError:
 async def delete(db: State, post_id: str) -> None | UserError:
     """Deletes a post by its ID."""
     post = await get_one(db, post_id)
+    if not post:
+        return POST_NOT_FOUND
     try:
         db.posts.remove(post)
     except ValueError:
-        return gen_error(ErrorCode.NOT_FOUND, details="Post not found")
+        return POST_NOT_FOUND
     else:
         db.save()
