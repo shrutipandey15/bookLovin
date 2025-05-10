@@ -1,7 +1,5 @@
 """Database helpers for mongo: posts"""
 
-from typing import List
-
 from booklovin.core.settings import RECENT_POSTS_LIMIT
 from booklovin.models.errors import UserError
 from booklovin.models.post import Post
@@ -14,7 +12,7 @@ async def create(db: Database, post: Post) -> None | UserError:
     await db.posts.insert_one(new_post)
 
 
-async def get_all(db: Database, start: int, end: int) -> List[Post]:
+async def get_all(db: Database, start: int, end: int) -> list[Post]:
     return await db.posts.find({}).sort("creationTime", -1).skip(start).limit(end - start).to_list(length=None)
 
 
@@ -34,11 +32,11 @@ async def delete(db: Database, post_id: str) -> None | UserError:
     await db.posts.delete_one({"uid": post_id})
 
 
-async def get_recent(db: Database, user: User) -> List[Post] | UserError:
+async def get_recent(db: Database, user: User) -> list[Post] | UserError:
     """Returns a list of recent subscribed posts"""
     result = await db.posts.find({"authorId": user.email}).sort("creationTime", -1).limit(RECENT_POSTS_LIMIT).to_list(length=None)
     return result
 
 
-async def get_popular(db: Database) -> List[Post] | UserError:
+async def get_popular(db: Database) -> list[Post] | UserError:
     return await db.posts.find({}).sort("lastLike", -1).limit(RECENT_POSTS_LIMIT).to_list(length=None)

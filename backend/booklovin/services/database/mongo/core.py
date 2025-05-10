@@ -1,6 +1,4 @@
-import contextlib
-from fastapi import FastAPI, Request
-import typing
+from fastapi import FastAPI
 
 import pymongo
 from booklovin.core.config import DB_NAME, MONGO_SERVER
