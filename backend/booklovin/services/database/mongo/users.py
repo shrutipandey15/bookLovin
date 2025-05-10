@@ -14,3 +14,4 @@ async def get(db: Database, email: str) -> User | None:
 
 async def create(db: Database, user: User) -> None | UserError:
     await db.users.insert_one(user.model_dump())
+    return None

@@ -17,6 +17,7 @@ async def _addLikes(db: Database, post: dict) -> dict:
 async def create(db: Database, post: Post) -> None | UserError:
     new_post = post.model_dump()
     await db.posts.insert_one(new_post)
+    return None
 
 
 async def get_all(db: Database, start: int, end: int) -> list[Post]:
@@ -40,6 +41,7 @@ async def update(db: Database, post_id: str, post_data: Post) -> None | UserErro
 async def delete(db: Database, post_id: str) -> None | UserError:
     """Deletes a post by its ID."""
     await db.posts.delete_one({"uid": post_id})
+    return None
 
 
 async def get_recent(db: Database, user: User) -> list[Post] | UserError:
