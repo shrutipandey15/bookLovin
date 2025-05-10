@@ -25,8 +25,7 @@ async def delete(db: Redis, post_id: str) -> None | UserError:
 async def get_one(db: Redis, post_id: str) -> Post | None:
     data = await db.get(f"posts:{post_id}")
     if data:
-        post = loads(data)
-        model = Post.model_validate(post)
+        model = Post.deserialize(data)
         model.likes = await db.scard(f"likes:{post_id}")
         return model
     return None
@@ -38,7 +37,8 @@ async def get_all(db: Redis, start: int, end: int) -> list[Post]:
     for key in keys:
         post_data = await db.get(key)
         if post_data:
-            posts.append(Post.model_validate(loads(post_data)))
+            post = Post.deserialize(post_data)
+            posts.append(post)
     return posts
 
 
@@ -47,7 +47,7 @@ async def like(db: Redis, post_id: str, user_id: str) -> None | UserError:
     post = await get_one(db, post_id)
     if not post:
         return errors.POST_NOT_FOUND
-    like = await db.sadd(f"likes:{post_id}", user_id)
+    await db.sadd(f"likes:{post_id}", user_id)
     return None
 
 
@@ -83,10 +83,9 @@ async def update(db: Redis, post_id: str, post_data: Post) -> None | UserError:
     """Updates an existing post."""
     update_data = post_data.model_dump(exclude_unset=True)  # Only update provided fields
     post = await get_one(db, post_id)
+
     if post:
-        for key, value in update_data.items():
-            if getattr(post, key) != value:
-                setattr(post, key, value)
+        post.update(update_data)
         await db.set(f"posts:{post_id}", dumps(post.model_dump()))
     else:
         return errors.POST_NOT_FOUND
