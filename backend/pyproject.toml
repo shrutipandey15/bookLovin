@@ -79,6 +79,14 @@ ignore_names = [
     "response_model",
 ]
 
+[tool.pylint."MESSAGES CONTROL"]
+disable = [
+    "R0903",
+    "W0603",
+    "C0116",
+    "C0411",
+]
+
 [tool.pylint.BASIC]
 good-names = [
     "db",

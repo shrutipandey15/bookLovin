@@ -1,5 +1,9 @@
 """Database helpers for mongo: posts"""
 
+from contextlib import suppress
+from datetime import datetime, timedelta, timezone
+
+import pymongo.errors
 from booklovin.core.settings import RECENT_POSTS_LIMIT
 from booklovin.models.errors import UserError
 from booklovin.models.post import Post
@@ -7,10 +11,8 @@ from booklovin.models.users import User
 from pymongo.asynchronous.database import AsyncDatabase as Database
 
 
-async def _addLikes(db: Database, post: dict) -> dict:
-    liked_by = await db.likes.find_one({"uid": post["uid"]})
-    if liked_by:
-        post["likes"] = len(liked_by["users"])
+async def _add_likes(db: Database, post: dict) -> dict:
+    post["likes"] = await db.likes.count_documents({"post_id": post["uid"]})
     return post
 
 
@@ -27,7 +29,7 @@ async def get_all(db: Database, start: int, end: int) -> list[Post]:
 async def get_one(db: Database, post_id: str) -> Post | None:
     post = await db.posts.find_one({"uid": post_id})
     if post:
-        await _addLikes(db, post)
+        await _add_likes(db, post)
     return post
 
 
@@ -54,21 +56,52 @@ async def get_recent(db: Database, user: User) -> list[Post] | UserError:
         )
         .sort("creationTime", -1)
         .limit(RECENT_POSTS_LIMIT)
-        .to_list(length=None)
+        .to_list()
     )
     return result
 
 
 async def get_popular(db: Database) -> list[Post] | UserError:
-    """get most popular posts"""
-    return await db.posts.find({}).sort("lastLike", -1).limit(RECENT_POSTS_LIMIT).to_list(length=None)
+    """
+    Retrieves the most popular posts within the last 'days_period' days.
+    """
+    days_period = 1
+
+    cutoff_date = datetime.now(timezone.utc) - timedelta(days=days_period)
+
+    pipeline = [
+        {"$match": {"liked_at": {"$gte": cutoff_date}}},
+        {"$group": {"_id": "$post_id", "likes": {"$sum": 1}}},
+        {"$sort": {"likes": -1}},
+        {"$limit": RECENT_POSTS_LIMIT},
+        {
+            "$lookup": {
+                "from": "posts",  # Name of your posts collection
+                "localField": "post_id",  # id in likes
+                "foreignField": "uid",  # id in posts
+                "as": "post_details",
+            }
+        },
+        {
+            # If post_details is an array (even of 1), unwind it.
+            # If a post was deleted after being liked, this will filter it out.
+            "$unwind": "$post_details"
+        },
+        {
+            # Promote the post_details to the root of the document
+            "$replaceRoot": {"newRoot": "$post_details"}
+        },
+    ]
+
+    cursor = await db.likes.aggregate(pipeline, batchSize=RECENT_POSTS_LIMIT)
+
+    popular_post_docs = await cursor.to_list(length=RECENT_POSTS_LIMIT)
+
+    return [Post(**doc) for doc in popular_post_docs]
 
 
 async def like(db: Database, post_id: str, user_id: str) -> None | UserError:
-    """Likes a post by its ID."""
-    likes = await db.likes.find_one({"uid": post_id})
-    if not likes:
-        await db.likes.insert_one({"uid": post_id, "users": [user_id]})
-    else:
-        await db.likes.update_one({"uid": post_id}, {"$addToSet": {"users": user_id}})
-    return None
+    """Likes a post by its ID, storing the timestamp of the like."""
+    like_document = {"post_id": post_id, "user_id": user_id, "liked_at": datetime.now(timezone.utc)}
+    with suppress(pymongo.errors.DuplicateKeyError):
+        await db.likes.insert_one(like_document)
