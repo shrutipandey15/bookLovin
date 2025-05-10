@@ -1,8 +1,7 @@
 """Database helper for mock db: Users"""
 
-from json import dumps, loads
-
 from booklovin.core import settings
+from booklovin.core.utils import loads
 from booklovin.models.errors import UserError
 from booklovin.models.post import Post
 from booklovin.models.users import User
@@ -11,8 +10,8 @@ from redis.asyncio import Redis
 
 
 async def create(db: Redis, post: Post) -> None | UserError:
-    new_post = post.model_dump()
-    await db.set(f"posts:{post.uid}", dumps(new_post))
+    new_post = post.to_json()
+    await db.set(f"posts:{post.uid}", new_post)
     return None
 
 
@@ -86,7 +85,7 @@ async def update(db: Redis, post_id: str, post_data: Post) -> None | UserError:
 
     if post:
         post.update(update_data)
-        await db.set(f"posts:{post_id}", dumps(post.model_dump()))
+        await db.set(f"posts:{post_id}", post.to_json())
     else:
         return errors.POST_NOT_FOUND
     return None

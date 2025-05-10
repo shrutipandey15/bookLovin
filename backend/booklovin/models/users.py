@@ -1,6 +1,8 @@
-from typing import Optional
-from pydantic import BaseModel
 from enum import IntEnum, auto
+from typing import Optional
+
+from booklovin.models.base import FlexModel
+from pydantic import BaseModel
 
 
 class UserRole(IntEnum):
@@ -11,7 +13,7 @@ class UserRole(IntEnum):
     EDITOR = auto()
 
 
-class UserLogin(BaseModel):
+class UserLogin(FlexModel):
     email: str
     password: str
 
@@ -20,7 +22,7 @@ class NewUser(UserLogin):
     username: str
 
 
-class User(BaseModel):
+class User(FlexModel):
     name: str
     password: str
     email: str

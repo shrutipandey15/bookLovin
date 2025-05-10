@@ -1,7 +1,6 @@
 """Database helper for mock db: Users"""
 
-from json import dumps, loads
-
+from booklovin.core.utils import dumps, loads
 from booklovin.models.errors import UserError
 from booklovin.models.users import User
 from redis.asyncio import Redis
@@ -10,8 +9,7 @@ from .core import get_user_key
 
 
 async def create(db: Redis, user: User) -> None | UserError:
-    model = user.model_dump()
-    await db.set(get_user_key(user.email), dumps(model))
+    await db.set(get_user_key(user.email), dumps(user.model_dump()))
     return None
 
 

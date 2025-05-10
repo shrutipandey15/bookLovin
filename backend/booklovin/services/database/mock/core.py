@@ -1,34 +1,14 @@
-import json
 import os
 from collections import defaultdict
 from dataclasses import dataclass, field
 
+from booklovin.core.utils import dumps, loads, red
 from booklovin.models.post import Post
 from booklovin.models.users import User
 from booklovin.services.interfaces import ServiceSetup
 from fastapi import FastAPI
 
 DB_FILE = "/tmp/booklovin_mock.db"
-
-
-def red(txt):
-    "return a ANSI colored string"
-    return f"\033[91m{txt}\033[0m"
-
-
-def blue(txt):
-    "return a ANSI colored string"
-    return f"\033[94m{txt}\033[0m"
-
-
-def green(txt):
-    "return a ANSI colored string"
-    return f"\033[92m{txt}\033[0m"
-
-
-def yellow(txt):
-    "return a ANSI colored string"
-    return f"\033[93m{txt}\033[0m"
 
 
 @dataclass
@@ -53,7 +33,7 @@ class State:
     def save(self, db=None):
         if not DB_FILE:
             return
-        json_str = json.dumps(
+        json_str = dumps(
             {
                 "posts": [p.model_dump() for p in self.posts],
                 "posts_count": self.posts_count,
@@ -67,7 +47,7 @@ class State:
 
     def load(self):
         if DB_FILE and os.path.exists(DB_FILE):
-            data = json.loads(open(DB_FILE).read())
+            data = loads(open(DB_FILE).read())
             self.posts_count = data["posts_count"]
             self.users_count = data["users_count"]
             self.users = [User.model_validate(user) for user in data["users"]]

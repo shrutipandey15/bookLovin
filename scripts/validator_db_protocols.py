@@ -4,33 +4,14 @@ import inspect
 from typing import Any, Callable, List, Protocol, Type, get_type_hints
 
 from booklovin.core.settings import AVAILABLE_DB_ENGINES
-
-
-def red(txt):
-    "return a ANSI colored string"
-    return f"\033[91m{txt}\033[0m"
-
-
-def blue(txt):
-    "return a ANSI colored string"
-    return f"\033[94m{txt}\033[0m"
-
-
-def green(txt):
-    "return a ANSI colored string"
-    return f"\033[92m{txt}\033[0m"
-
-
-def yellow(txt):
-    "return a ANSI colored string"
-    return f"\033[93m{txt}\033[0m"
+from booklovin.core.utils import red, blue, green, yellow
 
 
 def extract_members(obj):
     return {
         k: v
         for k, v in inspect.getmembers(obj)
-        if not k.startswith("_") and isinstance(v, Callable)
+        if not k.startswith("_") and isinstance(v, Callable)  # type: ignore
     }
 
 

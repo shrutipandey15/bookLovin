@@ -1,6 +1,5 @@
-from json import dumps
-
 import redis
+from booklovin.core.utils import dumps
 
 from .core import DB_NAME, REDIS_SERVER, get_user_key
 
