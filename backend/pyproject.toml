@@ -73,6 +73,12 @@ exclude = [
     "booklovin/tests/*",
 ]
 
+[tool.vulture]
+min_confidence = 61
+ignore_names = [
+    "response_model",
+]
+
 [tool.pylint.BASIC]
 good-names = [
     "db",
