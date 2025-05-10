@@ -92,24 +92,12 @@ async def add_comment_to_post(
     if not post:
         return errors.NOT_FOUND
 
-    result = await database.post.add_comment(
+    return await database.post.add_comment(
         db=request.app.state.db,
         post_id=post_id,
         user_id=user.email,
         comment=comment_body.content,
     )
-    if isinstance(result, UserError):
-        return result
-
-    # Assuming successful creation, construct and return the comment object.
-    # The service method `add_comment` returns `None`, so we create the response.
-    # A more robust solution would involve the service returning the created comment ID or object.
-    new_comment = Comment(
-        postId=post_id,
-        authorId=user.email,
-        content=comment_body.content,
-    )
-    return new_comment
 
 
 @router.get("/{post_id}/comments", response_model=list[Comment] | UserError, summary="Get all comments for a post")
@@ -123,27 +111,11 @@ async def get_comments_for_post(request: Request, post_id: str, user: User = Dep
     Currently, if the service call succeeds (returns None without error), this returns [].
     """
     # Ensure post exists
-    post = await database.post.get_one(db=request.app.state.db, post_id=post_id)
-    if not post:
-        return errors.NOT_FOUND
 
     # The service method `get_comment` is expected to fetch comments for `post_id`.
     # However, its defined return type is `None | UserError`.
     # We are calling it and interpreting a `None` return (without UserError) as "no comments" or "success but no data returned by service".
-    service_result = await database.post.get_comment(db=request.app.state.db, post_id=post_id)
-
-    if isinstance(service_result, UserError):
-        return service_result
-
-    if service_result is None:
-        # This branch is hit if the service method succeeds as per its current interface (returns None).
-        # Ideally, the service should return list of comments.
-        return []
-
-    # If the service method were to be changed to return list[Comment], this part would handle it:
-    # return service_result # Assuming service_result is list[Comment]
-    # For now, stick to the current behavior based on the interface:
-    return []
+    return await database.post.get_comment(db=request.app.state.db, post_id=post_id) or errors.NOT_FOUND
 
 
 @router.delete("/{post_id}/comments", response_model=None | UserError, summary="Delete all comments for a post")
@@ -159,9 +131,8 @@ async def delete_all_comments_for_post(request: Request, post_id: str, user: Use
     if not post_to_modify:
         return errors.NOT_FOUND
 
-    # Add authorization check here if needed, e.g.:
-    # if post_to_modify.authorId != user.email:
-    #     raise HTTPException(status_code=403, detail="Not authorized to delete comments for this post")
+    if post_to_modify.authorId != user.email:
+        return errors.FORBIDDEN
 
     result = await database.post.delete_comment(db=request.app.state.db, post=post_to_modify)
     if isinstance(result, UserError):
