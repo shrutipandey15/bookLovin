@@ -40,7 +40,7 @@ docs:
 
 # check everything
 checkall:
-    just test
+    ./scripts/run_backend_unit_tests_allbackends
     just checkcoverage
     just checkprotocols
     just checktypes

@@ -1,0 +1,13 @@
+#!/bin/sh
+
+cd $(dirname "$0")/../backend
+
+export ENV_MODE=dev
+
+for DB_TYPE in mock mongo redis ; do
+    export DB_TYPE
+    echo "========================================================================================="
+    echo $DB_TYPE
+    echo "========================================================================================="
+    poetry run pytest booklovin/tests/
+done
