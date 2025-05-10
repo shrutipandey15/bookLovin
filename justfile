@@ -16,6 +16,7 @@ serve:
 
 # run tests
 test args='':
+    cd frontend && npm run test_once
     cd backend && poetry run pytest -v booklovin/tests {{args}}
 
 # run tests and throw gdb on error
@@ -41,6 +42,7 @@ docs:
 # check everything
 checkall:
     just checkprotocols
+    cd frontend && npm run test_once
     ./scripts/run_backend_unit_tests_allbackends
     just checkcoverage
     just checktypes

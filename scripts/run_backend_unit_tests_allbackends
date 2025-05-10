@@ -6,8 +6,6 @@ export ENV_MODE=dev
 
 for DB_TYPE in mock mongo redis ; do
     export DB_TYPE
-    echo "========================================================================================="
-    echo $DB_TYPE
-    echo "========================================================================================="
+    echo $DB_TYPE | tr 'a-z' 'A-Z'
     poetry run pytest booklovin/tests/
 done
