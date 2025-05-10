@@ -8,7 +8,14 @@ from booklovin.services.interfaces import ServiceSetup
 class MongoSetup(ServiceSetup):
     async def setup(self, app: FastAPI):
         app.state.client = pymongo.AsyncMongoClient(*MONGO_SERVER)
-        app.state.db = app.state.client[DB_NAME]
+        db = app.state.client[DB_NAME]
+        app.state.db = db
+        # ensure indexes
+        await db.likes.create_index([("post_id", 1), ("user_id", 1)], unique=True)
+        await db.likes.create_index([("liked_at", -1), ("post_id", 1)])
+        await db.users.create_index([("email", 1)], unique=True)
+        await db.posts.create_index([("created_at", -1)])
+        await db.posts.create_index([("uid", 1)], unique=True)
 
     async def teardown(self, app: FastAPI):
         await app.state.client.close()
