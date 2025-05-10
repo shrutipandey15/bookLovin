@@ -6,6 +6,26 @@ from typing import Any, Callable, List, Protocol, Type, get_type_hints
 from booklovin.core.settings import AVAILABLE_DB_ENGINES
 
 
+def red(txt):
+    "return a ANSI colored string"
+    return f"\033[91m{txt}\033[0m"
+
+
+def blue(txt):
+    "return a ANSI colored string"
+    return f"\033[94m{txt}\033[0m"
+
+
+def green(txt):
+    "return a ANSI colored string"
+    return f"\033[92m{txt}\033[0m"
+
+
+def yellow(txt):
+    "return a ANSI colored string"
+    return f"\033[93m{txt}\033[0m"
+
+
 def extract_members(obj):
     return {
         k: v
@@ -17,15 +37,19 @@ def extract_members(obj):
 def explain_mismatch(a1, a2):
     text = []
     # compute differences between the two dicts:
-    missing_keys = set(a1.keys()).symmetric_difference(set(a2.keys()))
+    missing_keys = set(a1.keys()).difference(set(a2.keys()))
+    extra_keys = set(a2.keys()).difference(set(a1.keys()))
     if missing_keys:
-        text.append(f"      ❌missing parameters: {', '.join(missing_keys)}")
+        text.append(f"      ❌missing parameter: {', '.join(missing_keys)}")
+    if extra_keys:
+        text.append(f"      ✂️extra parameter: {', '.join(extra_keys)}")
     for k, v in a1.items():
         if v is Any:
             continue
         v2 = a2.get(k)
         if v != v2:
-            text.append(f"      󰕚 '{k}' is {v2}\n                 expecting {v}")
+            klen = len(k)
+            text.append(f"      󰕚 '{blue(k)}' == {v2}\n     {' ' * klen}      != {v}")
     return "\n".join(text)
 
 
@@ -49,14 +73,14 @@ def get_protocol_compliance_issues(
     for k, v in ref_members.items():
         v2 = inspected_members.get(k)
         if v2 is None:
-            issues.append(f"   ❌ '{k}' not found")
+            issues.append(f"   {red(k)}: not implemented")
             continue
         ref_a = inspect.get_annotations(v)
         ref_b = inspect.get_annotations(v2)
         if ref_a != ref_b:
             mismatch = explain_mismatch(ref_a, ref_b)
             if mismatch:
-                issues.append(f"   {k}:\n{mismatch}")
+                issues.append(f"   {red(k)}:\n{mismatch}")
 
     return issues
 
@@ -65,8 +89,8 @@ if __name__ == "__main__":
     from booklovin.models.types import PostService, UserService
 
     def _header(engine, name):
-        print("_" * 80)
-        print(" ", engine, ":: %s  " % name)
+        # print(yellow(" " * 40))
+        print(yellow(f"  {green(engine.upper())}.{blue(name)}"))
 
     protocols = (PostService, UserService)
     for engine in reversed(AVAILABLE_DB_ENGINES):
