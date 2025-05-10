@@ -37,3 +37,10 @@ checkprotocols:
 # generate static docs
 docs:
     cd backend && poetry run pdoc -d google booklovin -o docs
+
+# check everything
+checkall:
+    just test
+    just checkcoverage
+    just checkprotocols
+    just checktypes
