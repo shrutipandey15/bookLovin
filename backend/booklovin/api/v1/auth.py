@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta, timezone
 
-from booklovin.core.utils import isError
 from booklovin.core.config import ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM, SECRET_KEY, pwd_context
 from booklovin.models.errors import ErrorCode, UserError, gen_error
 from booklovin.models.users import NewUser, User

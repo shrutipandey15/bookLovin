@@ -3,7 +3,7 @@
 from typing import List
 
 from booklovin.models.errors import ErrorCode, UserError, gen_error
-from booklovin.models.post import Count, NewPost, Post
+from booklovin.models.post import NewPost, Post
 from booklovin.models.users import User
 from booklovin.services import database
 from booklovin.utils.user_token import get_from_token

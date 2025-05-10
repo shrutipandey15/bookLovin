@@ -1,12 +1,9 @@
 """Database helpers for mocked db: Posts"""
 
-from typing import List
-
 from booklovin.core.settings import RECENT_POSTS_LIMIT
 from booklovin.models.errors import ErrorCode, UserError, gen_error
 from booklovin.models.post import Post
 from booklovin.models.users import User
-from bson import ObjectId
 
 from .core import State
 
@@ -21,7 +18,7 @@ async def create(db: State, post: Post) -> None | UserError:
     return None
 
 
-async def get_all(db: State, start: int, end: int) -> List[Post]:
+async def get_all(db: State, start: int, end: int) -> list[Post]:
     return db.posts[start:end]
 
 
@@ -34,11 +31,11 @@ async def like(db: State, post_id: str, user_id: str) -> None | UserError:
     return None
 
 
-async def get_recent(db: State, user: User) -> List[Post] | UserError:
+async def get_recent(db: State, user: User) -> list[Post] | UserError:
     return db.posts[:RECENT_POSTS_LIMIT]  # Mocked recent posts
 
 
-async def get_popular(db: State) -> List[Post] | UserError:
+async def get_popular(db: State) -> list[Post] | UserError:
     """Returns the most popular posts."""
     sorted_likes = sorted(db.likes.items(), key=lambda x: len(x[1]), reverse=True)
     top_likes = sorted_likes[:RECENT_POSTS_LIMIT]
