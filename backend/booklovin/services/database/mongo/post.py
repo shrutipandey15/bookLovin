@@ -44,11 +44,21 @@ async def delete(db: Database, post_id: str) -> None | UserError:
 
 async def get_recent(db: Database, user: User) -> list[Post] | UserError:
     """Returns a list of recent subscribed posts"""
-    result = await db.posts.find({"authorId": user.email}).sort("creationTime", -1).limit(RECENT_POSTS_LIMIT).to_list(length=None)
+    result = (
+        await db.posts.find(
+            {
+                "authorId": user.email,
+            }
+        )
+        .sort("creationTime", -1)
+        .limit(RECENT_POSTS_LIMIT)
+        .to_list(length=None)
+    )
     return result
 
 
 async def get_popular(db: Database) -> list[Post] | UserError:
+    """get most popular posts"""
     return await db.posts.find({}).sort("lastLike", -1).limit(RECENT_POSTS_LIMIT).to_list(length=None)
 
 
