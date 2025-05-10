@@ -2,6 +2,7 @@
 
 from contextlib import suppress
 from datetime import datetime, timedelta, timezone
+from typing import cast, Sequence, Mapping
 
 import pymongo.errors
 from booklovin.core.settings import RECENT_POSTS_LIMIT
@@ -93,7 +94,8 @@ async def get_popular(db: Database) -> list[Post] | UserError:
         },
     ]
 
-    cursor = await db.likes.aggregate(pipeline, batchSize=RECENT_POSTS_LIMIT)
+    workaround = cast(Sequence[Mapping], pipeline)
+    cursor = await db.likes.aggregate(workaround, batchSize=RECENT_POSTS_LIMIT)
 
     popular_post_docs = await cursor.to_list(length=RECENT_POSTS_LIMIT)
 
@@ -105,3 +107,4 @@ async def like(db: Database, post_id: str, user_id: str) -> None | UserError:
     like_document = {"post_id": post_id, "user_id": user_id, "liked_at": datetime.now(timezone.utc)}
     with suppress(pymongo.errors.DuplicateKeyError):
         await db.likes.insert_one(like_document)
+    return None

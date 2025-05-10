@@ -43,7 +43,7 @@ async def get_popular(db: State) -> list[Post] | UserError:
     top_likes = sorted_likes[:RECENT_POSTS_LIMIT]
     results = [await get_one(db, post_id) for post_id, _ in top_likes]
     assert None not in results
-    return results
+    return results  # type: ignore
 
 
 async def get_one(db: State, post_id: str) -> Post | None:

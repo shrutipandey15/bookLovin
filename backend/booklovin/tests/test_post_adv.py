@@ -1,5 +1,5 @@
 import pytest
-from conftest import assert_error, assert_success
+from booklovin.tests.conftest import assert_error, assert_success
 
 
 @pytest.mark.asyncio

@@ -24,7 +24,7 @@ debug args='':
 
 # run type checking
 checktypes:
-    cd backend && poetry run mypy -p booklovin
+    cd backend && poetry run mypy --install-types -p booklovin
 
 # check for dead code using vulture
 checkcoverage:

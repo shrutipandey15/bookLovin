@@ -26,7 +26,7 @@ async def get_one(db: Redis, post_id: str) -> Post | None:
     data = await db.get(f"posts:{post_id}")
     if data:
         model = Post.deserialize(data)
-        model.likes = await db.scard(f"likes:{post_id}")
+        model.likes = await db.scard(f"likes:{post_id}")  # type: ignore
         return model
     return None
 
@@ -47,7 +47,7 @@ async def like(db: Redis, post_id: str, user_id: str) -> None | UserError:
     post = await get_one(db, post_id)
     if not post:
         return errors.POST_NOT_FOUND
-    await db.sadd(f"likes:{post_id}", user_id)
+    await db.sadd(f"likes:{post_id}", user_id)  # type: ignore
     return None
 
 
@@ -59,7 +59,7 @@ async def get_popular(db: Redis) -> list[Post] | UserError:
         post_data = await db.get(key)
         if post_data:
             post = Post.model_validate(loads(post_data))
-            post.likes = await db.scard(f"likes:{post.uid}")
+            post.likes = await db.scard(f"likes:{post.uid}")  # type: ignore
             posts.append(post)
     posts.sort(key=lambda x: x.likes, reverse=True)
     return posts[: settings.RECENT_POSTS_LIMIT]

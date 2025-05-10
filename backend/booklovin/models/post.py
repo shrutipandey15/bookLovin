@@ -1,6 +1,5 @@
 from datetime import datetime, timezone
 from json import loads
-from time import time
 from uuid import uuid4
 
 from pydantic import BaseModel, Field, SerializationInfo, field_serializer
@@ -26,16 +25,16 @@ class Post(NewPost):
                 setattr(self, prop, data[prop])
 
     @classmethod
-    def deserialize(kls, post_data: str):
+    def deserialize(kls, post_data: str) -> "Post":
         return kls.from_json(loads(post_data))
 
     @classmethod
-    def from_json(kls, post: dict):
+    def from_json(kls, post: dict) -> "Post":
         post["creationTime"] = datetime.fromtimestamp(post["creationTime"], tz=timezone.utc)
         return Post.model_validate(post)
 
     @field_serializer("creationTime")
-    def serialize_creationTime(self, v: datetime, info: SerializationInfo) -> float:
+    def serialize_creationTime(self, v: datetime, _: SerializationInfo) -> float:
         return v.timestamp()
 
 
