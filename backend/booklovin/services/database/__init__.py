@@ -3,7 +3,7 @@
 import importlib
 
 from booklovin.core import config
-from booklovin.models.types import PostService, ServiceSetup, UserService
+from booklovin.services.interfaces import PostService, ServiceSetup, UserService
 
 sub_services = ["post", "users"]
 if config.DEBUG:

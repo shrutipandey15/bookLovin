@@ -1,19 +1,10 @@
 from typing import Any, Protocol, runtime_checkable
 
-from booklovin.models.errors import ErrorCode, UserError, gen_error
+from booklovin.models.errors import UserError
+from booklovin.models.post import Post
+from booklovin.models.users import User
 from fastapi import FastAPI
-from pydantic import BaseModel, Field
-
-from .post import NewPost, Post
-from .users import User
-
-
-class ServiceSetup(BaseModel):
-    async def setup(self, app: FastAPI):
-        pass
-
-    async def teardown(self, app: FastAPI):
-        pass
+from pydantic import BaseModel
 
 
 @runtime_checkable
@@ -32,3 +23,11 @@ class PostService(Protocol):
 class UserService(Protocol):
     async def get(self, db: Any, email: str) -> User | None: ...
     async def create(self, db: Any, user: User) -> None | UserError: ...
+
+
+class ServiceSetup(BaseModel):
+    async def setup(self, app: FastAPI):
+        pass
+
+    async def teardown(self, app: FastAPI):
+        pass

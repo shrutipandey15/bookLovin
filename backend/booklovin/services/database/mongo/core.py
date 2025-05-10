@@ -4,7 +4,7 @@ import typing
 
 import pymongo
 from booklovin.core.config import DB_NAME, MONGO_SERVER
-from booklovin.models.types import ServiceSetup
+from booklovin.services.interfaces import ServiceSetup
 
 
 class MongoSetup(ServiceSetup):

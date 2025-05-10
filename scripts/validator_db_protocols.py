@@ -86,7 +86,7 @@ def get_protocol_compliance_issues(
 
 
 if __name__ == "__main__":
-    from booklovin.models.types import PostService, UserService
+    from booklovin.services.interfaces import PostService, UserService
 
     def _header(engine, name):
         # print(yellow(" " * 40))

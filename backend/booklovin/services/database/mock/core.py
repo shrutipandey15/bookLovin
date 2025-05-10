@@ -1,11 +1,11 @@
 import json
 import os
-from dataclasses import dataclass, field
 from collections import defaultdict
+from dataclasses import dataclass, field
 
 from booklovin.models.post import Post
-from booklovin.models.types import ServiceSetup
 from booklovin.models.users import User
+from booklovin.services.interfaces import ServiceSetup
 from fastapi import FastAPI
 
 DB_FILE = "/tmp/booklovin_mock.db"

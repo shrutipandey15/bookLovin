@@ -1,6 +1,6 @@
 import redis.asyncio as redis
 from booklovin.core.config import DB_NAME, REDIS_SERVER
-from booklovin.models.types import ServiceSetup
+from booklovin.services.interfaces import ServiceSetup
 from fastapi import FastAPI
 
 
