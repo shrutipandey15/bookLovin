@@ -18,6 +18,7 @@ async def create(db: State, post: Post) -> None | UserError:
     db.posts.append(post)
     db.posts_count += 1
     db.save()
+    return None
 
 
 async def get_all(db: State, start: int, end: int) -> List[Post]:
@@ -27,9 +28,10 @@ async def get_all(db: State, start: int, end: int) -> List[Post]:
 async def like(db: State, post_id: str, user_id: str) -> None | UserError:
     post = await get_one(db, post_id)
     if not post:
-        return UserError(**POST_NOT_FOUND)
+        return POST_NOT_FOUND
     db.likes[post_id].add(user_id)
     db.save()
+    return None
 
 
 async def get_recent(db: State, user: User) -> List[Post] | UserError:
@@ -51,17 +53,22 @@ async def get_one(db: State, post_id: str) -> Post | None:
             if post_id in db.likes:
                 post.likes = len(db.likes[post_id])
             return post
+    return None
 
 
 async def update(db: State, post_id: str, post_data: Post) -> None | UserError:
     """Updates an existing post."""
     update_data = post_data.model_dump(exclude_unset=True)  # Only update provided fields
     post = await get_one(db, post_id)
-    model = post.model_dump()
-    for key, value in update_data.items():
-        if getattr(post, key) != value:
-            setattr(post, key, value)
-    db.save()
+    if post:
+        model = post.model_dump()
+        for key, value in update_data.items():
+            if getattr(post, key) != value:
+                setattr(post, key, value)
+        db.save()
+    else:
+        return POST_NOT_FOUND
+    return None
 
 
 async def delete(db: State, post_id: str) -> None | UserError:
@@ -78,3 +85,4 @@ async def delete(db: State, post_id: str) -> None | UserError:
     else:
         db.posts_count -= 1
         db.save()
+    return None
