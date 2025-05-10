@@ -33,6 +33,7 @@ async def like(db: State, post_id: str, user_id: str) -> None | UserError:
 
 
 async def get_recent(db: State, user: User) -> list[Post] | UserError:
+    """Returns a list of recent subscribed posts"""
     return db.posts[:RECENT_POSTS_LIMIT]  # Mocked recent posts
 
 

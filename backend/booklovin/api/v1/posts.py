@@ -67,7 +67,7 @@ async def like_post(request: Request, post_id: str, user: User = Depends(get_fro
 
 # delete
 @router.delete("/{post_id}", response_model=None | UserError)
-async def delete_post(request: Request, post_id: str, user: User = Depends(get_from_token)) -> None:
+async def delete_post(request: Request, post_id: str, user: User = Depends(get_from_token)) -> None | UserError:
     "delete a specific post"
 
     return await database.post.delete(

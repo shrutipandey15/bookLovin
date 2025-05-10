@@ -2,6 +2,7 @@
 
 from json import dumps, loads
 
+from booklovin.core import settings
 from booklovin.models.errors import UserError
 from booklovin.models.post import Post
 from booklovin.models.users import User
@@ -16,15 +17,23 @@ async def create(db: Redis, post: Post) -> None | UserError:
 
 
 async def delete(db: Redis, post_id: str) -> None | UserError:
-    await db.delete(f"posts:{post_id}")
+    for name in [f"likes:{post_id}", f"posts:{post_id}"]:
+        await db.delete(name)
+    return None
 
 
 async def get_one(db: Redis, post_id: str) -> Post | None:
-    return Post.model_validate(loads(await db.get(f"posts:{post_id}")))
+    data = await db.get(f"posts:{post_id}")
+    if data:
+        post = loads(data)
+        model = Post.model_validate(post)
+        model.likes = await db.scard(f"likes:{post_id}")
+        return model
+    return None
 
 
 async def get_all(db: Redis, start: int, end: int) -> list[Post]:
-    keys = await db.keys("posts:*")[start:end]
+    _, keys = await db.scan(match="posts:*", cursor=start, count=end - start)
     posts = []
     for key in keys:
         post_data = await db.get(key)
@@ -38,20 +47,47 @@ async def like(db: Redis, post_id: str, user_id: str) -> None | UserError:
     post = await get_one(db, post_id)
     if not post:
         return errors.POST_NOT_FOUND
-    if not user_id in post.liked_by:
-        post.liked_by.append(user_id)
-        await db.set(f"posts:{post_id}", dumps(post.model_dump()))
+    like = await db.sadd(f"likes:{post_id}", user_id)
     return None
 
 
 async def get_popular(db: Redis) -> list[Post] | UserError:
     """get most popular posts"""
-    ...
+    keys = await db.keys("posts:*")
+    posts = []
+    for key in keys:
+        post_data = await db.get(key)
+        if post_data:
+            post = Post.model_validate(loads(post_data))
+            post.likes = await db.scard(f"likes:{post.uid}")
+            posts.append(post)
+    posts.sort(key=lambda x: x.likes, reverse=True)
+    return posts[: settings.RECENT_POSTS_LIMIT]
 
 
 async def get_recent(db: Redis, user: User) -> list[Post] | UserError:
-    pass
+    """Returns a list of recent subscribed posts"""
+    keys = await db.keys("posts:*")
+    posts = []
+    for key in keys:
+        post_data = await db.get(key)
+        if post_data:
+            post = Post.model_validate(loads(post_data))
+            if post.authorId == user.email:
+                posts.append(post)
+    posts.sort(key=lambda x: x.creationTime, reverse=True)
+    return posts[: settings.RECENT_POSTS_LIMIT]
 
 
 async def update(db: Redis, post_id: str, post_data: Post) -> None | UserError:
-    pass
+    """Updates an existing post."""
+    update_data = post_data.model_dump(exclude_unset=True)  # Only update provided fields
+    post = await get_one(db, post_id)
+    if post:
+        for key, value in update_data.items():
+            if getattr(post, key) != value:
+                setattr(post, key, value)
+        await db.set(f"posts:{post_id}", dumps(post.model_dump()))
+    else:
+        return errors.POST_NOT_FOUND
+    return None
