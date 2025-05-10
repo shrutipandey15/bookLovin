@@ -62,4 +62,7 @@ def assert_error(request):
 
 def assert_success(request):
     assert request.status_code == 200
+    if request.text == "null":  # for APIs returning None
+        return
+
     assert "error" not in request.json()

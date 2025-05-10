@@ -7,7 +7,6 @@ from .core import State
 
 
 async def create(db: State, user: User) -> None | UserError:
-    uid = db.users_count
     db.users_count += 1
     db.users.append(user)
     db.save()

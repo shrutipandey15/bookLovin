@@ -15,6 +15,7 @@ class Post(NewPost):
     creationTime: int = Field(default_factory=lambda: int(time()))
     authorId: str
     lastLike: int = 0
+    likes: int = 0
 
 
 class Count(BaseModel):

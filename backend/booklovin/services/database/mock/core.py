@@ -1,6 +1,7 @@
 import json
 import os
 from dataclasses import dataclass, field
+from collections import defaultdict
 
 from booklovin.models.post import Post
 from booklovin.models.types import ServiceSetup
@@ -10,12 +11,44 @@ from fastapi import FastAPI
 DB_FILE = "/tmp/booklovin_mock.db"
 
 
+def red(txt):
+    "return a ANSI colored string"
+    return f"\033[91m{txt}\033[0m"
+
+
+def blue(txt):
+    "return a ANSI colored string"
+    return f"\033[94m{txt}\033[0m"
+
+
+def green(txt):
+    "return a ANSI colored string"
+    return f"\033[92m{txt}\033[0m"
+
+
+def yellow(txt):
+    "return a ANSI colored string"
+    return f"\033[93m{txt}\033[0m"
+
+
 @dataclass
 class State:
     posts: list[Post] = field(default_factory=list)
     posts_count: int = 0
     users: list[User] = field(default_factory=list)
     users_count: int = 0
+    likes: dict[str, set[str]] = field(default_factory=lambda: defaultdict(set))
+
+    def debug(self):
+        def _show_list(title, item):
+            print(red(title))
+            for i in item:
+                print(" ", i)
+
+        _show_list("Posts", self.posts)
+        _show_list("Users", self.users)
+        _show_list("Likes", self.likes)
+        print(f"Users: {self.users_count}, Posts: {self.posts_count}")
 
     def save(self, db=None):
         if not DB_FILE:
@@ -26,6 +59,7 @@ class State:
                 "posts_count": self.posts_count,
                 "users": [p.model_dump() for p in self.users],
                 "users_count": self.users_count,
+                "likes": {k: list(v) for k, v in self.likes.items()},
             }
         )
         with open(DB_FILE, "w") as f:
@@ -38,6 +72,8 @@ class State:
             self.users_count = data["users_count"]
             self.users = [User.model_validate(user) for user in data["users"]]
             self.posts = [Post.model_validate(post) for post in data["posts"]]
+            self.likes = defaultdict(set)
+            self.likes.update({k: set(v) for k, v in data["likes"].items()})
 
 
 class MockSetup(ServiceSetup):

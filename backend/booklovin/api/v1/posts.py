@@ -66,7 +66,7 @@ async def update_post(request: Request, post_id: str, post: Post, user: User = D
 @router.put("/{post_id}/like", response_model=None | UserError)
 async def like_post(request: Request, post_id: str, user: User = Depends(get_from_token)) -> None:
     "Like a specific post"
-    await database.post.like(db=request.app.state.db, post_id=post_id)
+    await database.post.like(db=request.app.state.db, post_id=post_id, user_id=user.email)
     return None
 
 
