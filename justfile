@@ -40,9 +40,9 @@ docs:
 
 # check everything
 checkall:
+    just checkprotocols
     ./scripts/run_backend_unit_tests_allbackends
     just checkcoverage
-    just checkprotocols
     just checktypes
 
 # populate the database
