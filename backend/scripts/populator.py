@@ -1,13 +1,13 @@
 #!/bin/env python
-import timeit
-import asyncio
 import random
+import timeit
 from contextlib import asynccontextmanager
+
 import httpx
-from lorem_text import lorem
 from asgi_lifespan import LifespanManager
 from booklovin.main import booklovin as app
 from httpx import ASGITransport
+from lorem_text import lorem
 
 users = [
     ["test@test.com", "test", "John doe"],

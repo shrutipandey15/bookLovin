@@ -47,4 +47,4 @@ checkall:
 
 # populate the database
 populate:
-    cd backend && poetry run ./scripts/populator.py
+    cd backend && poetry run ./scripts/populator2.py
