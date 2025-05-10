@@ -6,8 +6,8 @@ DEBUG = "ENV_MODE" in os.environ and os.environ["ENV_MODE"] == "dev"
 
 # DB
 DB_TYPE = os.environ.get("DB_TYPE", "mongo")  # mongo or mock
-print(f"Using {DB_TYPE} database")
 DB_NAME = "booklovin_test" if DEBUG else "booklovin"
+print(f"Database: {DB_TYPE.upper()}::{DB_NAME}")
 # MONGO
 MONGO_SERVER = (os.environ.get("MONGO_HOST", "localhost"), int(os.environ.get("MONGO_PORT", "27017")))
 # REDIS

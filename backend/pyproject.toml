@@ -43,6 +43,7 @@ vulture = "^2.14"
 asgi-lifespan = "^2.1.0"
 pynvim = "^0.5.2"
 pylsp-mypy = "^0.7.0"
+lorem-text = "^3.0"
 
 [tool.poetry.group.redis.dependencies]
 redis = "^6.0.0"

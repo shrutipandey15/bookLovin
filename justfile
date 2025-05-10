@@ -44,3 +44,7 @@ checkall:
     just checkcoverage
     just checkprotocols
     just checktypes
+
+# populate the database
+populate:
+    cd backend && poetry run ./scripts/populator.py
