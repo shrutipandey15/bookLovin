@@ -1,6 +1,6 @@
 """Database helper for mock db: Users"""
 
-from booklovin.models.errors import ErrorCode, UserError, gen_error
+from booklovin.models.errors import UserError
 from booklovin.models.users import User
 
 from .core import State

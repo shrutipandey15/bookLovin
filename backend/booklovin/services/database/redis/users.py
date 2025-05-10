@@ -2,16 +2,17 @@
 
 from json import dumps, loads
 
+from booklovin.models.errors import UserError
 from booklovin.models.users import User
-
-from .core import get_user_key
 from redis.asyncio import Redis
 
+from .core import get_user_key
 
-async def create(db: Redis, user: User) -> str:
+
+async def create(db: Redis, user: User) -> None | UserError:
     model = user.model_dump()
     await db.set(get_user_key(user.email), dumps(model))
-    return user.email
+    return None
 
 
 async def get(db: Redis, email: str) -> User | None:

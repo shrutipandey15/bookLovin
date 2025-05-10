@@ -1,18 +1,13 @@
 """Routes for /posts"""
 
-from typing import List
-
 from booklovin.models.errors import ErrorCode, UserError, gen_error
 from booklovin.models.post import NewPost, Post
 from booklovin.models.users import User
-from booklovin.services import database
+from booklovin.services import database, errors
 from booklovin.utils.user_token import get_from_token
 from fastapi import APIRouter, Depends, Request
 
 router = APIRouter(tags=["posts"])
-
-ABUSIVE_USAGE = gen_error(ErrorCode.INVALID_PARAMETER, details="Abusive usage")
-NOT_FOUND = gen_error(ErrorCode.NOT_FOUND, details="Post not found")
 
 
 # create
@@ -27,23 +22,23 @@ async def create_post(request: Request, post: NewPost, user: User = Depends(get_
 
 
 # list all, deprecated
-@router.get("/", response_model=List[Post] | UserError)
-async def read_all_posts(request: Request, s: int, e: int, user: User = Depends(get_from_token)) -> List[Post] | UserError:
+@router.get("/", response_model=list[Post] | UserError)
+async def read_all_posts(request: Request, s: int, e: int, user: User = Depends(get_from_token)) -> list[Post] | UserError:
     """Get a range of posts (from most recent to oldest)"""
     assert e > s
     if e - s > 40:
-        return ABUSIVE_USAGE
+        return errors.ABUSIVE_USAGE
     return await database.post.get_all(db=request.app.state.db, start=s, end=e)
 
 
-@router.get("/recent", response_model=List[Post] | UserError)
-async def read_recent_posts(request: Request, user: User = Depends(get_from_token)) -> List[Post] | UserError:
+@router.get("/recent", response_model=list[Post] | UserError)
+async def read_recent_posts(request: Request, user: User = Depends(get_from_token)) -> list[Post] | UserError:
     """Returns a list of recent subscribed posts"""
     return await database.post.get_recent(db=request.app.state.db, user=user)
 
 
-@router.get("/popular", response_model=List[Post] | UserError)
-async def read_popular_posts(request: Request, user: User = Depends(get_from_token)) -> List[Post] | UserError:
+@router.get("/popular", response_model=list[Post] | UserError)
+async def read_popular_posts(request: Request, user: User = Depends(get_from_token)) -> list[Post] | UserError:
     """Returns a list of recent popular posts"""
     return await database.post.get_popular(db=request.app.state.db)
 
@@ -53,7 +48,7 @@ async def read_popular_posts(request: Request, user: User = Depends(get_from_tok
 async def read_one_post(request: Request, post_id: str, user: User = Depends(get_from_token)) -> Post | UserError:
     "Get one specific post"
     post = await database.post.get_one(db=request.app.state.db, post_id=post_id)
-    return post or NOT_FOUND
+    return post or errors.NOT_FOUND
 
 
 # update
