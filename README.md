@@ -6,6 +6,10 @@ To list main commands, just type:
 just --list
 ```
 
+## Setup
+
+Type `just install`
+
 ## Start all
 
 Type `just`
