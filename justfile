@@ -2,7 +2,7 @@ set dotenv-required
 
 # Run both servers
 all:
-    cd backend && just &
+    just serve &
     cd frontend && npm run dev
 
 # Setup frontend & backend
