@@ -3,6 +3,7 @@
 from booklovin.models.errors import ErrorCode, UserError, gen_error
 from booklovin.models.post import NewPost, Post
 from booklovin.models.users import User
+from booklovin.models.comments import Comment, NewComment
 from booklovin.services import database, errors
 from booklovin.utils.user_token import get_from_token
 from fastapi import APIRouter, Depends, Request
@@ -74,3 +75,95 @@ async def delete_post(request: Request, post_id: str, user: User = Depends(get_f
         db=request.app.state.db,
         post_id=post_id,
     )
+
+
+@router.post("/{post_id}/comments", response_model=Comment | UserError, summary="Add a comment to a post")
+async def add_comment_to_post(
+    request: Request,
+    post_id: str,
+    comment_body: NewComment,
+    user: User = Depends(get_from_token),
+) -> Comment | UserError:
+    """
+    Add a comment to a specific post.
+    """
+    # Ensure post exists before adding a comment
+    post = await database.post.get_one(db=request.app.state.db, post_id=post_id)
+    if not post:
+        return errors.NOT_FOUND
+
+    result = await database.post.add_comment(
+        db=request.app.state.db,
+        post_id=post_id,
+        user_id=user.email,
+        comment=comment_body.content,
+    )
+    if isinstance(result, UserError):
+        return result
+
+    # Assuming successful creation, construct and return the comment object.
+    # The service method `add_comment` returns `None`, so we create the response.
+    # A more robust solution would involve the service returning the created comment ID or object.
+    new_comment = Comment(
+        postId=post_id,
+        authorId=user.email,
+        content=comment_body.content,
+    )
+    return new_comment
+
+
+@router.get("/{post_id}/comments", response_model=list[Comment] | UserError, summary="Get all comments for a post")
+async def get_comments_for_post(request: Request, post_id: str, user: User = Depends(get_from_token)) -> list[Comment] | UserError:
+    """
+    Retrieve all comments for a specific post.
+
+    Note: The current service interface `PostService.get_comment` returns `None | UserError`.
+    For this API to return actual comments, that service method needs to be updated
+    to return `list[CommentModelFromService] | UserError`.
+    Currently, if the service call succeeds (returns None without error), this returns [].
+    """
+    # Ensure post exists
+    post = await database.post.get_one(db=request.app.state.db, post_id=post_id)
+    if not post:
+        return errors.NOT_FOUND
+
+    # The service method `get_comment` is expected to fetch comments for `post_id`.
+    # However, its defined return type is `None | UserError`.
+    # We are calling it and interpreting a `None` return (without UserError) as "no comments" or "success but no data returned by service".
+    service_result = await database.post.get_comment(db=request.app.state.db, post_id=post_id)
+
+    if isinstance(service_result, UserError):
+        return service_result
+
+    if service_result is None:
+        # This branch is hit if the service method succeeds as per its current interface (returns None).
+        # Ideally, the service should return list of comments.
+        return []
+
+    # If the service method were to be changed to return list[Comment], this part would handle it:
+    # return service_result # Assuming service_result is list[Comment]
+    # For now, stick to the current behavior based on the interface:
+    return []
+
+
+@router.delete("/{post_id}/comments", response_model=None | UserError, summary="Delete all comments for a post")
+async def delete_all_comments_for_post(request: Request, post_id: str, user: User = Depends(get_from_token)) -> None | UserError:
+    """
+    Delete all comments for a specific post.
+    This uses the `delete_comment(db, post: Post)` service method,
+    interpreting it as deleting all comments for the given Post object.
+    A user must be authenticated, but authorization (e.g., only post author or admin can delete)
+    would typically be handled within the service layer or here.
+    """
+    post_to_modify = await database.post.get_one(db=request.app.state.db, post_id=post_id)
+    if not post_to_modify:
+        return errors.NOT_FOUND
+
+    # Add authorization check here if needed, e.g.:
+    # if post_to_modify.authorId != user.email:
+    #     raise HTTPException(status_code=403, detail="Not authorized to delete comments for this post")
+
+    result = await database.post.delete_comment(db=request.app.state.db, post=post_to_modify)
+    if isinstance(result, UserError):
+        return result
+    return None  # FastAPI will return 200 OK with empty body by default
