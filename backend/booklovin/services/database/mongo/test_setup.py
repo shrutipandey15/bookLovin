@@ -6,9 +6,8 @@ def setup(user_data):
     mymongo: pymongo.MongoClient = pymongo.MongoClient(*MONGO_SERVER)
     db = mymongo[DB_NAME]
 
-    users_collection = db["users"]
-    users_collection.delete_many({})
-    db["posts"].delete_many({})
+    for name in ("posts", "likes", "users"):
+        db[name].delete_many({})
 
-    users_collection.insert_one(user_data)
+    db["users"].insert_one(user_data)
     mymongo.close()
