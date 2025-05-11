@@ -1,4 +1,5 @@
-from booklovin.core.config import oauth2_scheme, SECRET_KEY, ALGORITHM
+from booklovin.core.config import oauth2_scheme
+from booklovin.core.settings import SECRET_KEY, ALGORITHM
 from booklovin.models.users import User
 from booklovin.services.database import users
 from fastapi import Depends, HTTPException, Request, status

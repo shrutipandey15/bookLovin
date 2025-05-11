@@ -10,7 +10,7 @@ from redis.asyncio import Redis
 
 
 async def create(db: Redis, post: Post) -> None | UserError:
-    new_post = post.to_json()
+    new_post = post.serialize()
     await db.set(f"posts:{post.uid}", new_post)
     return None
 
@@ -57,7 +57,7 @@ async def get_popular(db: Redis) -> list[Post] | UserError:
     for key in keys:
         post_data = await db.get(key)
         if post_data:
-            post = Post.model_validate(loads(post_data))
+            post = Post.deserialize(post_data)
             post.likes = await db.scard(f"likes:{post.uid}")  # type: ignore
             posts.append(post)
     posts.sort(key=lambda x: x.likes, reverse=True)
@@ -71,7 +71,7 @@ async def get_recent(db: Redis, user: User) -> list[Post] | UserError:
     for key in keys:
         post_data = await db.get(key)
         if post_data:
-            post = Post.model_validate(loads(post_data))
+            post = Post.deserialize(post_data)
             if post.authorId == user.email:
                 posts.append(post)
     posts.sort(key=lambda x: x.creationTime, reverse=True)
@@ -85,7 +85,7 @@ async def update(db: Redis, post_id: str, post_data: Post) -> None | UserError:
 
     if post:
         post.update(update_data)
-        await db.set(f"posts:{post_id}", post.to_json())
+        await db.set(f"posts:{post_id}", post.serialize())
     else:
         return errors.POST_NOT_FOUND
     return None

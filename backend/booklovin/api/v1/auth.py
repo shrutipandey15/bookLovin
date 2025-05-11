@@ -1,11 +1,12 @@
 from datetime import datetime, timedelta, timezone
 
-from booklovin.core.config import ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM, SECRET_KEY, pwd_context
+from booklovin.core.config import pwd_context, APIResponse
+from booklovin.core.settings import ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM, SECRET_KEY
 from booklovin.models.errors import ErrorCode, UserError, gen_error
 from booklovin.models.users import NewUser, User
 from booklovin.services import database
 from booklovin.utils.user_token import get_from_token
-from fastapi import APIRouter, Depends, Request, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import jwt
 
@@ -19,12 +20,12 @@ CREDENTIALS_EXCEPTION = HTTPException(
 )
 
 
-@router.get("/me")
+@router.get("/me", response_class=APIResponse)
 async def me_page(user: User = Depends(get_from_token)) -> User:
     return user
 
 
-@router.post("/register")
+@router.post("/register", response_class=APIResponse)
 async def register(request: Request, user: NewUser, response_model=None | UserError) -> None | UserError:
     existing_user = await database.users.get(db=request.app.state.db, email=user.email)
     if existing_user:
@@ -35,7 +36,7 @@ async def register(request: Request, user: NewUser, response_model=None | UserEr
     return None
 
 
-@router.post("/login", response_model=dict | UserError)
+@router.post("/login", response_model=dict | UserError, response_class=APIResponse)
 async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends()):
     user = await database.users.get(db=request.app.state.db, email=form_data.username)
 
@@ -53,7 +54,7 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
     }
 
 
-def _create_access_token(userId: str, expires_delta: timedelta = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)):
+def _create_access_token(userId: str, expires_delta: timedelta = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)) -> str:
     ref = datetime.now(timezone.utc)
     data = {
         "sub": userId,

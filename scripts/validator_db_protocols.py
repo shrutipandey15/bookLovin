@@ -3,7 +3,7 @@ import importlib
 import inspect
 from typing import Any, Callable, List, Protocol, Type, get_type_hints
 
-from booklovin.core.settings import AVAILABLE_DB_ENGINES
+from booklovin.core.config import AVAILABLE_DB_ENGINES
 from booklovin.core.utils import red, blue, green, yellow
 
 

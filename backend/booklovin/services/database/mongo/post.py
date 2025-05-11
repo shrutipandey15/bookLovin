@@ -18,8 +18,7 @@ async def _add_likes(db: Database, post: dict) -> dict:
 
 
 async def create(db: Database, post: Post) -> None | UserError:
-    new_post = post.model_dump()
-    await db.posts.insert_one(new_post)
+    await db.posts.insert_one(post.model_dump())
     return None
 
 

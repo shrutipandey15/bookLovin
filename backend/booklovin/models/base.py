@@ -15,7 +15,7 @@ class FlexModel(BaseModel):
             if prop in data:
                 setattr(self, prop, data[prop])
 
-    def to_json(self: FM) -> str:
+    def serialize(self: FM) -> str:
         """Returns a JSON string"""
         return dumps(self.model_dump())
 
@@ -25,7 +25,11 @@ class FlexModel(BaseModel):
         return kls.from_json(loads(post_data))
 
     @classmethod
-    def from_json(kls: Type[FM], post: dict) -> FM:
+    def from_json(kls: Type[FM], post: dict, validate=True) -> FM:
         """Get a new instance from an Object"""
-        post["creationTime"] = datetime.fromtimestamp(post["creationTime"], tz=timezone.utc)
-        return kls.model_validate(post)
+        if "creationTime" in post:
+            post["creationTime"] = datetime.fromtimestamp(post["creationTime"], tz=timezone.utc)
+        if validate:
+            return kls.model_validate(post)
+        else:
+            return kls.model_construct(post)

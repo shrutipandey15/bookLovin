@@ -50,7 +50,7 @@ class State:
             data = loads(open(DB_FILE).read())
             self.posts_count = data["posts_count"]
             self.users_count = data["users_count"]
-            self.users = [User.model_validate(user) for user in data["users"]]
+            self.users = [User.from_json(user) for user in data["users"]]
             self.posts = [Post.from_json(post) for post in data["posts"]]
             self.likes = defaultdict(set)
             self.likes.update({k: set(v) for k, v in data["likes"].items()})

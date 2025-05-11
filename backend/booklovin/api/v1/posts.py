@@ -1,9 +1,10 @@
 """Routes for /posts"""
 
-from booklovin.models.errors import ErrorCode, UserError, gen_error
+from booklovin.core.config import APIResponse
+from booklovin.models.comments import Comment, NewComment
+from booklovin.models.errors import UserError
 from booklovin.models.post import NewPost, Post
 from booklovin.models.users import User
-from booklovin.models.comments import Comment, NewComment
 from booklovin.services import database, errors
 from booklovin.utils.user_token import get_from_token
 from fastapi import APIRouter, Depends, Request
@@ -12,7 +13,7 @@ router = APIRouter(tags=["posts"])
 
 
 # create
-@router.post("/", response_model=Post | UserError)
+@router.post("/", response_model=Post | UserError, response_class=APIResponse)
 async def create_post(request: Request, post: NewPost, user: User = Depends(get_from_token)) -> Post:
     """Create one post"""
     model = post.model_dump()
@@ -23,7 +24,7 @@ async def create_post(request: Request, post: NewPost, user: User = Depends(get_
 
 
 # list all, deprecated
-@router.get("/", response_model=list[Post] | UserError)
+@router.get("/", response_model=list[Post] | UserError, response_class=APIResponse)
 async def read_all_posts(request: Request, s: int, e: int, user: User = Depends(get_from_token)) -> list[Post] | UserError:
     """Get a range of posts (from most recent to oldest)"""
     assert e > s
@@ -32,20 +33,20 @@ async def read_all_posts(request: Request, s: int, e: int, user: User = Depends(
     return await database.post.get_all(db=request.app.state.db, start=s, end=e)
 
 
-@router.get("/recent", response_model=list[Post] | UserError)
+@router.get("/recent", response_model=list[Post] | UserError, response_class=APIResponse)
 async def read_recent_posts(request: Request, user: User = Depends(get_from_token)) -> list[Post] | UserError:
     """Returns a list of recent subscribed posts"""
     return await database.post.get_recent(db=request.app.state.db, user=user)
 
 
-@router.get("/popular", response_model=list[Post] | UserError)
+@router.get("/popular", response_model=list[Post] | UserError, response_class=APIResponse)
 async def read_popular_posts(request: Request, user: User = Depends(get_from_token)) -> list[Post] | UserError:
     """Returns a list of recent popular posts"""
     return await database.post.get_popular(db=request.app.state.db)
 
 
 # get one
-@router.get("/{post_id}", response_model=Post | UserError)
+@router.get("/{post_id}", response_model=Post | UserError, response_class=APIResponse)
 async def read_one_post(request: Request, post_id: str, user: User = Depends(get_from_token)) -> Post | UserError:
     "Get one specific post"
     post = await database.post.get_one(db=request.app.state.db, post_id=post_id)
@@ -53,13 +54,13 @@ async def read_one_post(request: Request, post_id: str, user: User = Depends(get
 
 
 # update
-@router.put("/{post_id}", response_model=None | UserError)
+@router.put("/{post_id}", response_model=None | UserError, response_class=APIResponse)
 async def update_post(request: Request, post_id: str, post: Post, user: User = Depends(get_from_token)) -> None:
     "Update a specific post"
     await database.post.update(db=request.app.state.db, post_id=post_id, post_data=post)
 
 
-@router.put("/{post_id}/like", response_model=None | UserError)
+@router.put("/{post_id}/like", response_model=None | UserError, response_class=APIResponse)
 async def like_post(request: Request, post_id: str, user: User = Depends(get_from_token)) -> None:
     "Like a specific post"
     await database.post.like(db=request.app.state.db, post_id=post_id, user_id=user.email)
@@ -67,7 +68,7 @@ async def like_post(request: Request, post_id: str, user: User = Depends(get_fro
 
 
 # delete
-@router.delete("/{post_id}", response_model=None | UserError)
+@router.delete("/{post_id}", response_model=None | UserError, response_class=APIResponse)
 async def delete_post(request: Request, post_id: str, user: User = Depends(get_from_token)) -> None | UserError:
     "delete a specific post"
 
@@ -77,13 +78,13 @@ async def delete_post(request: Request, post_id: str, user: User = Depends(get_f
     )
 
 
-@router.post("/{post_id}/comments", response_model=Comment | UserError, summary="Add a comment to a post")
+@router.post("/{post_id}/comments", response_model=Comment | UserError, summary="Add a comment to a post", response_class=APIResponse)
 async def add_comment_to_post(
     request: Request,
     post_id: str,
     comment_body: NewComment,
     user: User = Depends(get_from_token),
-) -> Comment | UserError:
+) -> None | UserError:
     """
     Add a comment to a specific post.
     """
@@ -96,11 +97,13 @@ async def add_comment_to_post(
         db=request.app.state.db,
         post_id=post_id,
         user_id=user.email,
-        comment=comment_body.content,
+        comment=NewComment(content=comment_body.content),
     )
 
 
-@router.get("/{post_id}/comments", response_model=list[Comment] | UserError, summary="Get all comments for a post")
+@router.get(
+    "/{post_id}/comments", response_model=list[Comment] | UserError, summary="Get all comments for a post", response_class=APIResponse
+)
 async def get_comments_for_post(request: Request, post_id: str, user: User = Depends(get_from_token)) -> list[Comment] | UserError:
     """
     Retrieve all comments for a specific post.
@@ -115,10 +118,10 @@ async def get_comments_for_post(request: Request, post_id: str, user: User = Dep
     # The service method `get_comment` is expected to fetch comments for `post_id`.
     # However, its defined return type is `None | UserError`.
     # We are calling it and interpreting a `None` return (without UserError) as "no comments" or "success but no data returned by service".
-    return await database.post.get_comment(db=request.app.state.db, post_id=post_id) or errors.NOT_FOUND
+    return await database.post.get_comments(db=request.app.state.db, post_id=post_id) or errors.NOT_FOUND
 
 
-@router.delete("/{post_id}/comments", response_model=None | UserError, summary="Delete all comments for a post")
+@router.delete("/{post_id}/comments", response_model=None | UserError, summary="Delete all comments for a post", response_class=APIResponse)
 async def delete_all_comments_for_post(request: Request, post_id: str, user: User = Depends(get_from_token)) -> None | UserError:
     """
     Delete all comments for a specific post.
