@@ -112,7 +112,7 @@ def create_animated_svg(
         cycle_duration: str,
         anim_type: AnimTypes,
         current_animations_count_for_id: int,  # Used for ID generation in loop/click
-        trigger_event_id_for_click: str = None,  # For click-triggered animations
+        trigger_event_id_for_click: str | None = None,  # For click-triggered animations
     ):
         if val1 == val2:
             return 0  # No animation needed, 0 animations added
@@ -144,9 +144,9 @@ def create_animated_svg(
             animate_el.set("values", f"{val1};{val2};{val1}")
             animate_el.set("dur", cycle_duration)
 
-            if anim_type == AnimTypes.CLICK.value and trigger_event_id_for_click:
+            if anim_type == AnimTypes.CLICK and trigger_event_id_for_click:
                 animate_el.set("begin", trigger_event_id_for_click)
-            elif anim_type == AnimTypes.LOOP.value:
+            elif anim_type == AnimTypes.LOOP:
                 animate_el.set("repeatCount", "indefinite")
                 animate_el.set("begin", "0s")  # Start immediately
             # Default for non-looping is effectively one cycle if begin is specified.
@@ -290,9 +290,7 @@ def create_animated_svg(
             svg_output_string, component_name, prefix, actual_root_id
         )
     else:
-        ET.tostring(root1, encoding="unicode")
-
-    return svg_output_string
+        return ET.tostring(root1, encoding="unicode")
 
 
 def generate_react_component_string(
