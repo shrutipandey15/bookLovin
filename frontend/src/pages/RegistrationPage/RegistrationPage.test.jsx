@@ -2,10 +2,10 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { vi, beforeEach, test, expect } from 'vitest'
 import RegistrationPage from './RegistrationPage'
-import axiosInstance from '../../api/axiosInstance'
+import axiosInstance from '@api/axiosInstance'
 
 // Mock axiosInstance
-vi.mock('../../api/axiosInstance')
+vi.mock('@api/axiosInstance')
 
 beforeEach(() => {
   vi.resetAllMocks()

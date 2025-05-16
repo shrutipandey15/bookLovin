@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import ParticlesBackground from './ParticlesBackground';
 import DarkLightIcon from './DarkLightIcon';
-import TestIcon from './TestIcon';
+// import TestIcon from './TestIcon';
 
 const Layout = ({ children }) => {
 
@@ -40,7 +40,7 @@ const Layout = ({ children }) => {
       {/* Background particles */}
       <ParticlesBackground />
 
-    <TestIcon isEnabled={!isDark} />
+    {/* <TestIcon isEnabled={!isDark} /> */}
 
       {/* Theme toggle button */}
       <button

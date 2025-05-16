@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import axiosInstance from '@/api/axiosInstance'
+import axiosInstance from '@api/axiosInstance'
 
 const RegistrationPage = () => {
   const [username, setUsername] = useState('')
@@ -25,6 +25,8 @@ const RegistrationPage = () => {
 
       const data = response.data
 
+      console.log(response.data)
+
       if (data?.id) {
         setSuccess(true)
         console.log('User registered:', data)
@@ -34,6 +36,7 @@ const RegistrationPage = () => {
       } else if (data?.error_code === 'USER_ALREADY_EXISTS') {
         setError('A tale with that Pen name already exists. Try entering the realm.')
       } else {
+        console.log('Unexpected response:', response)
         setError('The scroll was not sealed. Check your runes')
       }
     } catch (err) {
