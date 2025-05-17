@@ -50,7 +50,7 @@ redis = "^6.0.0"
 
 [tool.ruff]
 line-length = 140
-preview = false
+preview = true
 src = [
     "booklovin",
 ]
