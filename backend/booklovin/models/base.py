@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from typing import Type, TypeVar
+from typing import Type, TypeVar, Any
 
 from booklovin.core.utils import dumps, loads
 from pydantic import BaseModel
@@ -25,7 +25,7 @@ class FlexModel(BaseModel):
         return kls.from_json(loads(post_data))
 
     @classmethod
-    def from_json(kls: Type[FM], post: dict, validate=True) -> FM:
+    def from_json(kls: Type[FM], post: dict[str, Any], validate=True) -> FM:
         """Get a new instance from an Object"""
         if "creationTime" in post:
             post["creationTime"] = datetime.fromtimestamp(post["creationTime"], tz=timezone.utc)
