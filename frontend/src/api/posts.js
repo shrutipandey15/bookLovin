@@ -3,7 +3,12 @@ import axiosInstance from './axiosInstance';
 const postsService = {
   getAllPosts: async () => {
     try {
-      const response = await axiosInstance.get('/posts');
+      const response = await axiosInstance.get('/posts', {
+        params: {
+          s: 0,
+          e: 10,
+        }
+      });
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Failed to fetch posts');
