@@ -6,6 +6,7 @@ from fastapi.responses import ORJSONResponse, Response
 
 DEBUG = "ENV_MODE" in os.environ and os.environ["ENV_MODE"] == "dev"
 
+print(f"debug mode: {DEBUG}")
 # DB
 AVAILABLE_DB_ENGINES = ("mock", "mongo", "redis")
 DB_TYPE = os.environ.get("DB_TYPE", "mongo")  # mongo or mock
