@@ -1,6 +1,9 @@
-from datetime import datetime, timedelta, timezone
+"""User authentication and registration endpoints."""
 
-from booklovin.core.config import pwd_context, APIResponse
+from datetime import datetime, timedelta, timezone
+from typing import cast
+
+from booklovin.core.config import APIResponse, pwd_context
 from booklovin.core.settings import ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM, SECRET_KEY
 from booklovin.models.errors import ErrorCode, UserError, gen_error
 from booklovin.models.users import NewUser, User
@@ -18,6 +21,11 @@ CREDENTIALS_EXCEPTION = HTTPException(
     detail="Incorrect username or password",
     headers={"WWW-Authenticate": "Bearer"},
 )
+
+
+@router.get("/null", response_class=APIResponse)
+async def null_page() -> None:
+    return None
 
 
 @router.get("/me", response_class=APIResponse)
@@ -54,11 +62,11 @@ async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends
     }
 
 
-def _create_access_token(userId: str, expires_delta: timedelta = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)) -> str:
+def _create_access_token(user_id: str, expires_delta: timedelta = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)) -> str:
     ref = datetime.now(timezone.utc)
     data = {
-        "sub": userId,
+        "sub": user_id,
         "exp": ref + expires_delta,
         "iat": ref,
     }
-    return jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM)
+    return cast(str, jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM))
