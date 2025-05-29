@@ -2,7 +2,7 @@ import os
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import ORJSONResponse, Response
+from fastapi.responses import ORJSONResponse
 
 DEBUG = "ENV_MODE" in os.environ and os.environ["ENV_MODE"] == "dev"
 
