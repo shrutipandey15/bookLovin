@@ -19,6 +19,9 @@ test args='':
     cd frontend && npm run test_once
     cd backend && poetry run pytest -v booklovin/tests {{args}}
 
+profile:
+    cd backend && poetry run python -m cProfile -s cumtime -m pytest booklovin/tests
+
 # run tests and throw gdb on error
 debug args='':
     cd backend && poetry run pytest -v booklovin/tests --pdb {{args}}
