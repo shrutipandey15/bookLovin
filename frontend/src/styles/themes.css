@@ -1,16 +1,30 @@
-/* themes.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Mood-Based Variables (Default values) */
+:root {
+  --mood-primary: #8B5A7C;
+  --mood-secondary: #A67E94;
+  --mood-bg: #f7f3f6;
+  --mood-text: #2D1B29;
+  --mood-font: 'Playfair Display', serif;
+  --mood-contrast: #FFFFFF;
+}
+
+/* Mood-driven theming on root */
 html {
-  @apply bg-coffee-bg text-coffee-text font-serif;
+  background-color: var(--mood-bg);
+  color: var(--mood-text);
+  font-family: var(--mood-font);
+  transition: background-color 0.3s ease, color 0.3s ease, font-family 0.3s ease;
 }
 
-html.dark {
-  @apply bg-dragon-bg text-dragon-text font-fantasy;
+body {
+  background-color: transparent;
 }
 
+/* Theme toggle button styling */
 .theme-toggle-btn {
   position: absolute;
   top: 1rem;
@@ -80,34 +94,4 @@ html.dark .theme-toggle-btn:hover {
   background-color: #111827;
   box-shadow: 2px 4px 12px rgba(250, 204, 21, 0.6);
   transform: scale(1.02);
-}
-
-@layer utilities {
-  /* Keep these */
-  .perspective-1000 {
-    perspective: 1000px;
-  }
-    .transform-style-preserve-3d {
-    transform-style: preserve-3d;
-  }
-  .font-cinzel {
-    font-family: 'Cinzel Decorative', cursive;
-  }
-  .stroke-2 {
-    -webkit-text-stroke: 2px;
-    text-stroke: 2px;
-  }
-  .backdrop-blur-sm {
-    backdrop-filter: blur(4px);
-  }
-  .drop-shadow-lg {
-    filter: drop-shadow(0 4px 3px rgb(0 0 0 / 0.07)) drop-shadow(0 2px 2px rgb(0 0 0 / 0.06));
-  }
-  .text-9xl {
-    font-size: 8rem;
-    line-height: 1;
-  }
-  .rotate-90 {
-    transform: rotate(90deg);
-  }
 }

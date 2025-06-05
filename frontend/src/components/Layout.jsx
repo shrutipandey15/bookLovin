@@ -1,55 +1,55 @@
 import { useEffect, useState } from 'react';
 import ParticlesBackground from './ParticlesBackground';
 import DarkLightIcon from './DarkLightIcon';
+import MoodSelector from '@components/MoodSelector'; // ✅ Import MoodSelector
+import { useMood } from '@components/MoodContext';       // ✅ Access theme from context
 
 const Layout = ({ children }) => {
-
-  const [isDark, setIsDark] = useState(
-    () => window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-  );
+  const { theme, setTheme } = useMood(); // ✅ get & set current theme (coffee/dragon)
+  const [isDark, setIsDark] = useState(() => theme === 'dragon');
 
   const toggleTheme = () => {
-    document.documentElement.classList.toggle("dark");
+    const newTheme = isDark ? 'coffee' : 'dragon';
+    setTheme(newTheme);
     setIsDark(!isDark);
+    document.documentElement.classList.toggle('dark', newTheme === 'dragon');
   };
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = () => {
-      setIsDark(mediaQuery.matches);
-      if (mediaQuery.matches) {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
-    };
-
-    // Set initial theme based on preference
-    handleChange();
-
-    // Listen for changes
-    mediaQuery.addEventListener('change', handleChange);
-
-    // Cleanup listener on unmount
-    return () => mediaQuery.removeEventListener('change', handleChange);
+    // Apply stored or preferred theme on mount
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const initialTheme = prefersDark ? 'dragon' : 'coffee';
+    document.documentElement.classList.toggle('dark', initialTheme === 'dragon');
+    setIsDark(initialTheme === 'dragon');
   }, []);
 
   return (
-    <div className="min-h-screen bg-coffee-bg dark:bg-dragon-bg text-coffee-text dark:text-dragon-text font-serif dark:font-fantasy transition-all duration-300 relative">
-      {/* Background particles */}
+    <div
+      className="min-h-screen transition-all duration-300 relative"
+      style={{
+        backgroundColor: 'var(--mood-bg)',
+        color: 'var(--mood-text)',
+        fontFamily: 'var(--mood-font)',
+      }}
+    >
+      {/* ✨ Background particles */}
       <ParticlesBackground />
 
-    {/* <TestIcon isEnabled={!isDark} /> */}
-
-      {/* Theme toggle button */}
+      {/* 🌗 Theme toggle */}
       <button
         onClick={toggleTheme}
         className="fixed top-4 right-4 p-1 rounded-full z-20 shadow-md bg-sky-700"
+        aria-label="Toggle theme"
       >
         <DarkLightIcon isDark={isDark} size={24} />
       </button>
 
-      {/* Main content */}
+      {/* 🎭 Mood selector */}
+      <div className="pt-6 px-4 text-center">
+        <MoodSelector />
+      </div>
+
+      {/* 📄 Main content */}
       <div className="relative z-10">
         {children}
       </div>
