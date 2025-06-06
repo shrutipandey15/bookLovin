@@ -8,6 +8,7 @@ import './App.css';
 import './styles/themes.css';
 import Layout from '@components/Layout';
 import { MoodProvider } from '@components/MoodContext';
+import JournalPage from '@pages/JournalPage/JournalPage';
 
 function App() {
   const [_isLoggedIn, setIsLoggedIn] = useState(false);
@@ -47,6 +48,12 @@ function App() {
               <div className="w-full max-w-3xl mx-auto px-4 py-8">
                 <h1 className="text-4xl font-fantasy text-center mb-8 tracking-wide">BookLovin</h1>
                 <CreatePost />
+              </div>
+            } />
+            <Route path="/journal" element={
+              <div className="w-full max-w-3xl mx-auto px-4 py-8">
+                <h1 className="text-4xl font-fantasy text-center mb-8 tracking-wide">BookLovin</h1>
+                <JournalPage />
               </div>
             } />
           </Routes>
