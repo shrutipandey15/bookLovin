@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import ParticlesBackground from './ParticlesBackground';
 import DarkLightIcon from './DarkLightIcon';
 import MoodSelector from '@components/MoodSelector';
@@ -6,21 +6,18 @@ import { useMood } from '@components/MoodContext';
 
 const Layout = ({ children }) => {
   const { theme, setTheme } = useMood();
-  const [isDark, setIsDark] = useState(() => theme === 'dragon');
+  const isDark = theme === 'dragon';
 
   const toggleTheme = () => {
     const newTheme = isDark ? 'coffee' : 'dragon';
     setTheme(newTheme);
-    setIsDark(!isDark);
-    document.documentElement.classList.toggle('dark', newTheme === 'dragon');
   };
 
   useEffect(() => {
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const initialTheme = prefersDark ? 'dragon' : 'coffee';
-    document.documentElement.classList.toggle('dark', initialTheme === 'dragon');
-    setIsDark(initialTheme === 'dragon');
-  }, []);
+    setTheme(initialTheme);
+  }, [setTheme]);
 
   return (
     <div
@@ -33,7 +30,7 @@ const Layout = ({ children }) => {
     >
       <ParticlesBackground />
 
-      {/* 🌗 Theme toggle */}
+      {/* Theme toggle */}
       <button
         onClick={toggleTheme}
         className="fixed top-4 right-4 p-1 rounded-full z-20 shadow-md bg-sky-700"
@@ -42,12 +39,12 @@ const Layout = ({ children }) => {
         <DarkLightIcon isDark={isDark} size={24} />
       </button>
 
-      {/* 🎭 Mood selector */}
+      {/* Mood selector */}
       <div className="pt-6 px-4 text-center">
         <MoodSelector />
       </div>
 
-      {/* 📄 Main content */}
+      {/* Main content */}
       <div className="relative z-10">
         {children}
       </div>
