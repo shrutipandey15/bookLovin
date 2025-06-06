@@ -1,8 +1,7 @@
 import os
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer
-from fastapi.encoders import jsonable_encoder
-from fastapi.responses import ORJSONResponse
+from fastapi.responses import ORJSONResponse, JSONResponse
 
 DEBUG = "ENV_MODE" in os.environ and os.environ["ENV_MODE"] == "dev"
 
@@ -34,9 +33,4 @@ def get_test_password():
 REACT_DEV_SERVER = "http://localhost:5173"
 
 
-class ValidatedResponse(ORJSONResponse):
-    def __init__(self, content: dict, **kw):
-        super().__init__(content=jsonable_encoder(content), **kw)
-
-
-APIResponse = ValidatedResponse if DEBUG else ORJSONResponse
+APIResponse = JSONResponse if DEBUG else ORJSONResponse
