@@ -78,6 +78,7 @@ if __name__ == "__main__":
         "journal": JournalService,
     }
     for engine in reversed(AVAILABLE_DB_ENGINES):
+        print("-" * 80)
         for route, protocol in api_items.items():
             try:
                 module = importlib.import_module(
