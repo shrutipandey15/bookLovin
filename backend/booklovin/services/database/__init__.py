@@ -3,15 +3,16 @@
 import importlib
 
 from booklovin.core import config
-from booklovin.services.interfaces import PostService, ServiceSetup, UserService
+from booklovin.services.interfaces import PostService, ServiceSetup, UserService, JournalService
 
-sub_services = ["post", "users"]
+sub_services = ["post", "users", "journal"]
 if config.DEBUG:
     sub_services.append("test_setup")
 
 
 post: PostService
 users: UserService
+journal: JournalService
 
 
 def init(backend: str) -> ServiceSetup:

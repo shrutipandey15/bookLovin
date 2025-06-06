@@ -1,8 +1,9 @@
 from datetime import datetime, timezone
 from typing import Type, TypeVar, Any
 
+from pydantic import BaseModel, Field, SerializationInfo, field_serializer
 from booklovin.core.utils import dumps, loads
-from pydantic import BaseModel
+from uuid import uuid4
 
 FM = TypeVar("FM", bound="FlexModel")
 
@@ -33,3 +34,13 @@ class FlexModel(BaseModel):
             return kls.model_validate(post)
         else:
             return kls.model_construct(post)
+
+
+class UserObject:
+    uid: str = Field(default_factory=lambda: uuid4().hex)
+    creationTime: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    authorId: str
+
+    @field_serializer("creationTime")
+    def serialize_creationTime(self, v: datetime, _: SerializationInfo) -> float:
+        return v.timestamp()

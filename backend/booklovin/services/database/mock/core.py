@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from booklovin.core.utils import dumps, loads, red
 from booklovin.models.post import Post
 from booklovin.models.users import User
+from booklovin.models.journals import JournalEntry
 from booklovin.services.interfaces import ServiceSetup
 from fastapi import FastAPI
 
@@ -18,6 +19,7 @@ class State:
     users: list[User] = field(default_factory=list)
     users_count: int = 0
     likes: dict[str, set[str]] = field(default_factory=lambda: defaultdict(set))
+    journal_entries: dict[str, list[JournalEntry]] = field(default_factory=lambda: defaultdict(list))
 
     def debug(self):
         def _show_list(title, item):
@@ -33,15 +35,14 @@ class State:
     def save(self, db=None):
         if not DB_FILE:
             return
-        json_str = dumps(
-            {
-                "posts": [p.model_dump() for p in self.posts],
-                "posts_count": self.posts_count,
-                "users": [p.model_dump() for p in self.users],
-                "users_count": self.users_count,
-                "likes": {k: list(v) for k, v in self.likes.items()},
-            }
-        )
+        json_str = dumps({
+            "posts": [p.model_dump() for p in self.posts],
+            "posts_count": self.posts_count,
+            "users": [p.model_dump() for p in self.users],
+            "users_count": self.users_count,
+            "journal_entries": {k: [je.model_dump() for je in v] for k, v in self.journal_entries.items()},
+            "likes": {k: list(v) for k, v in self.likes.items()},
+        })
         with open(DB_FILE, "w") as f:
             f.write(json_str)
 

@@ -53,3 +53,7 @@ checkall:
 # populate the database
 populate:
     cd backend && poetry run ./scripts/populator2.py
+
+# print Javascript representation backend Enumerated types
+api_enums:
+    cd backend && poetry run ./scripts/dump_enums.py

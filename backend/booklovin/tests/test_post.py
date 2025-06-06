@@ -16,7 +16,9 @@ async def test_create_post(aclient):
     response = await aclient.post("/api/v1/posts/", json=payload)
 
     assert_success(response)
-    assert "uid" in response.json()
+    data = response.json()
+    assert "uid" in data
+    assert data["creationTime"]
 
 
 @pytest.mark.asyncio

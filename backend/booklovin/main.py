@@ -8,7 +8,7 @@ from booklovin.services import database
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-providers = ("posts", "auth")
+providers = ("auth", "posts", "journal")
 database_config = database.init(config.DB_TYPE)
 
 
@@ -28,8 +28,10 @@ for api_provider in providers:
         booklovin.include_router(module.router, prefix=f"/api/v1/{api_provider}")
     except ModuleNotFoundError as e:
         print(f"Error: Module booklovin.api.v1.{api_provider} not found: {e}")
-    except AttributeError:
+        raise e
+    except AttributeError as e:
         print(f"Error: {api_provider} module does not contain a 'router' attribute.")
+        raise e
 
 if config.DEBUG:
     booklovin.add_middleware(

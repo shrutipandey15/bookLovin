@@ -4,8 +4,19 @@ from booklovin.models.errors import UserError
 from booklovin.models.post import Post
 from booklovin.models.comments import Comment, NewComment
 from booklovin.models.users import User
+from booklovin.models.journals import JournalEntry, Mood
 from fastapi import FastAPI
 from pydantic import BaseModel
+
+
+@runtime_checkable
+class JournalService(Protocol):
+    async def create(self, db: Any, entry: JournalEntry) -> None | UserError: ...
+    async def delete(self, db: Any, entry_id: str) -> None | UserError: ...
+    async def update(self, db: Any, journal_entry: JournalEntry) -> None | UserError: ...
+    async def list(
+        self, db: Any, user_id: str, mood: Mood | None = None, search: str | None = None, favorite: bool | None = None
+    ) -> None | UserError: ...
 
 
 @runtime_checkable

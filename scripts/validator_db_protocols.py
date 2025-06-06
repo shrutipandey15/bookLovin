@@ -1,7 +1,6 @@
-import argparse
 import importlib
 import inspect
-from typing import Any, Callable, List, Protocol, Type, get_type_hints
+from typing import Any, Callable, List, Protocol
 
 from booklovin.core.config import AVAILABLE_DB_ENGINES
 from booklovin.core.utils import red, blue, green, yellow
@@ -67,27 +66,28 @@ def get_protocol_compliance_issues(
 
 
 if __name__ == "__main__":
-    from booklovin.services.interfaces import PostService, UserService
+    from booklovin.services.interfaces import PostService, UserService, JournalService
 
-    def _header(engine, name):
+    def _header(engine, name, suffix=""):
         # print(yellow(" " * 40))
-        print(yellow(f"  {green(engine.upper())}.{blue(name)}"))
+        print(yellow(f"  {green(engine.upper())}.{blue(name)} {suffix}"))
 
-    protocols = (PostService, UserService)
+    api_items = {
+        "users": UserService,
+        "post": PostService,
+        "journal": JournalService,
+    }
     for engine in reversed(AVAILABLE_DB_ENGINES):
-        user_module = importlib.import_module(
-            f"booklovin.services.database.{engine}.users"
-        )
-        issues = get_protocol_compliance_issues(user_module, UserService)
-        if issues:
-            _header(engine, "USER")
-            for issue in issues:
-                print(issue)
-        post_module = importlib.import_module(
-            f"booklovin.services.database.{engine}.post"
-        )
-        issues = get_protocol_compliance_issues(post_module, PostService)
-        if issues:
-            _header(engine, "POST")
-            for issue in issues:
-                print(issue)
+        for route, protocol in api_items.items():
+            try:
+                module = importlib.import_module(
+                    f"booklovin.services.database.{engine}.{route}"
+                )
+            except ImportError:
+                _header(engine, route, "IMPLEMENTATION IS MISSING")
+            else:
+                issues = get_protocol_compliance_issues(module, protocol)
+                if issues:
+                    _header(engine, route)
+                    for issue in issues:
+                        print(issue)
