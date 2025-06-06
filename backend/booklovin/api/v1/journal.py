@@ -37,8 +37,10 @@ async def update_journal_entry(
     request: Request, entry_id: str, entry: NewJournalEntry, user: User = Depends(get_from_token)
 ) -> None | UserError:
     """Update an existing journal entry."""
+    model = entry.model_dump()
+    journal_entry = NewJournalEntry(**model)
 
-    result = await database.journal.update(db=request.app.state.db, journal_entry=entry)
+    result = await database.journal.update(db=request.app.state.db, author_id=user.email, entry_id=entry_id, journal_entry=journal_entry)
     if isinstance(result, UserError):
         return result
     return None

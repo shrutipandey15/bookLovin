@@ -1,5 +1,5 @@
 from booklovin.models.errors import UserError, gen_error, ErrorCode
-from booklovin.models.journals import JournalEntry, Mood
+from booklovin.models.journals import JournalEntry, NewJournalEntry, Mood
 
 
 from .core import State
@@ -29,9 +29,8 @@ async def delete(db: State, entry_id: str) -> None | UserError:
     return gen_error(ErrorCode.NOT_FOUND, f"Journal entry with ID {entry_id} not found.")
 
 
-async def update(db: State, journal_entry: JournalEntry) -> None | UserError:
+async def update(db: State, author_id: str, entry_id: str, journal_entry: NewJournalEntry) -> None | UserError:
     """Update an existing journal entry."""
-    author_id = journal_entry.authorId
 
     # Check if user exists
     if author_id not in db.journal_entries:
@@ -39,9 +38,9 @@ async def update(db: State, journal_entry: JournalEntry) -> None | UserError:
 
     # Find the entry to update
     for i, entry in enumerate(db.journal_entries[author_id]):
-        if entry.uid == journal_entry.uid:
+        if entry.uid == entry_id:
             # Replace the entry
-            db.journal_entries[author_id][i] = journal_entry
+            db.journal_entries[author_id][i].update(journal_entry.model_construct())
             db.save()
             return None
 
