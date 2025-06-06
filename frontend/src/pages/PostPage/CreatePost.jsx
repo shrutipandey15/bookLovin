@@ -14,7 +14,7 @@ const CreatePost = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     await dispatch(createPost({ title, content, imageUrl }));
-    navigate('/posts'); // or navigate('/') if home is your feed
+    navigate('/posts');
   };
 
   return (

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import axiosInstance from '@api/axiosInstance'
 import { fetchCurrentUser } from '@components/auth'
+import { useMood } from '@components/MoodContext'
 
 const LoginPage = () => {
   const [email, setEmail] = useState('')
@@ -14,6 +15,8 @@ const LoginPage = () => {
   const [loginAttempts, setLoginAttempts] = useState(0)
   const [isBlocked, setIsBlocked] = useState(false)
   const [blockEndTime, setBlockEndTime] = useState(null)
+
+  const { getMoodLabel } = useMood()
 
   const navigate = useNavigate()
   const location = useLocation()
@@ -262,13 +265,49 @@ const LoginPage = () => {
   // Show success message instead of redirecting
   if (isLoggedIn && user) {
     return (
-      <div className="flex items-center justify-center min-h-screen px-4 text-coffee-text dark:text-dragon-text transition-colors duration-300">
-        <div className="w-full max-w-md p-8 bg-coffee-card dark:bg-dragon-card rounded-2xl shadow-md text-center">
-          <h2 className="text-2xl font-bold mb-4 text-green-600 dark:text-green-400">Welcome back!</h2>
-          <p className="mb-4">Successfully logged in as: <strong>{user.email || email}</strong></p>
-          <p className="text-sm text-gray-600 dark:text-gray-400">You can now navigate to other parts of the application.</p>
+      <div
+        className="flex items-center justify-center min-h-screen px-4 transition-colors duration-300"
+        style={{
+          backgroundColor: 'var(--mood-bg)',
+          color: 'var(--mood-text)',
+          fontFamily: 'var(--mood-font)'
+        }}
+      >
+        <div
+          className="w-full max-w-md p-8 rounded-2xl shadow-md text-center transition-colors duration-300"
+          style={{
+            backgroundColor: 'var(--mood-contrast)',
+            color: 'var(--mood-text)',
+            border: '1px solid var(--mood-primary)',
+            fontFamily: 'var(--mood-font)'
+          }}
+        >
+          <h2
+            className="text-2xl font-bold mb-4"
+            style={{
+              color: 'var(--mood-primary)',
+              fontFamily: 'var(--mood-font)'
+            }}
+          >
+            Welcome back!
+          </h2>
+          <p className="mb-4" style={{ color: 'var(--mood-text)' }}>
+            Successfully logged in as: <strong>{user.email || email}</strong>
+          </p>
+          <p
+            className="text-sm mb-4"
+            style={{ color: 'var(--mood-secondary)' }}
+          >
+            You can now navigate to other parts of the application.
+          </p>
+          <p
+            className="text-xs mb-4 italic"
+            style={{ color: 'var(--mood-secondary)' }}
+          >
+            Current mood: {getMoodLabel()}
+          </p>
 
-          {/* Optional: Add a logout button */}
+          {/* Logout button with mood styling */}
           <button
             onClick={() => {
               localStorage.removeItem('token')
@@ -277,7 +316,13 @@ const LoginPage = () => {
               setEmail('')
               setPassword('')
             }}
-            className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors duration-200"
+            className="mt-4 px-4 py-2 rounded hover:opacity-80 transition-all duration-200"
+            style={{
+              backgroundColor: 'var(--mood-primary)',
+              color: 'var(--mood-contrast)',
+              fontFamily: 'var(--mood-font)',
+              border: '1px solid var(--mood-primary)'
+            }}
           >
             Logout
           </button>
@@ -287,13 +332,43 @@ const LoginPage = () => {
   }
 
   return (
-    <div className="flex items-center justify-center min-h-screen px-4 text-coffee-text dark:text-dragon-text transition-colors duration-300">
-      <div className="w-full max-w-md p-8 bg-coffee-card dark:bg-dragon-card rounded-2xl shadow-md">
-        <h1 className="text-2xl font-bold mb-6 text-center">Enter the Realm</h1>
+    <div
+      className="flex items-center justify-center min-h-screen px-4 transition-colors duration-300"
+      style={{
+        backgroundColor: 'var(--mood-bg)',
+        color: 'var(--mood-text)',
+        fontFamily: 'var(--mood-font)'
+      }}
+    >
+      <div
+        className="w-full max-w-md p-8 rounded-2xl shadow-md transition-colors duration-300"
+        style={{
+          backgroundColor: 'var(--mood-contrast)',
+          color: 'var(--mood-text)',
+          border: '1px solid var(--mood-primary)',
+          fontFamily: 'var(--mood-font)'
+        }}
+      >
+        <h1
+          className="text-2xl font-bold mb-6 text-center"
+          style={{
+            color: 'var(--mood-primary)',
+            fontFamily: 'var(--mood-font)'
+          }}
+        >
+          Enter the Realm
+        </h1>
 
         <form onSubmit={handleLogin} className="space-y-4" noValidate>
           <div>
-            <label htmlFor="email" className="block mb-1 font-semibold text-center">
+            <label
+              htmlFor="email"
+              className="block mb-1 font-semibold text-center"
+              style={{
+                color: 'var(--mood-text)',
+                fontFamily: 'var(--mood-font)'
+              }}
+            >
               Ravenmail
             </label>
             <input
@@ -307,13 +382,28 @@ const LoginPage = () => {
               autoComplete="email"
               autoCapitalize="none"
               spellCheck="false"
-              className="w-full px-4 py-2 border border-gray-300 rounded-md dark:bg-dragon-bg dark:border-gray-600 dark:text-dragon-text focus:outline-none focus:ring-2 focus:ring-coffee-accent dark:focus:ring-dragon-gold disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-2 rounded-md focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              style={{
+                backgroundColor: 'var(--mood-bg)',
+                color: 'var(--mood-text)',
+                border: '1px solid var(--mood-secondary)',
+                fontFamily: 'var(--mood-font)'
+              }}
+              onFocus={(e) => e.target.style.borderColor = 'var(--mood-primary)'}
+              onBlur={(e) => e.target.style.borderColor = 'var(--mood-secondary)'}
               aria-describedby={error ? "error-message" : undefined}
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block mb-1 font-semibold text-center">
+            <label
+              htmlFor="password"
+              className="block mb-1 font-semibold text-center"
+              style={{
+                color: 'var(--mood-text)',
+                fontFamily: 'var(--mood-font)'
+              }}
+            >
               Secret Rune
             </label>
             <div className="relative">
@@ -326,14 +416,23 @@ const LoginPage = () => {
                 required
                 disabled={loading || isBlocked}
                 autoComplete="current-password"
-                className="w-full px-4 py-2 pr-12 border border-gray-300 rounded-md dark:bg-dragon-bg dark:border-gray-600 dark:text-dragon-text focus:outline-none focus:ring-2 focus:ring-coffee-accent dark:focus:ring-dragon-gold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-2 pr-12 rounded-md focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                style={{
+                  backgroundColor: 'var(--mood-bg)',
+                  color: 'var(--mood-text)',
+                  border: '1px solid var(--mood-secondary)',
+                  fontFamily: 'var(--mood-font)'
+                }}
+                onFocus={(e) => e.target.style.borderColor = 'var(--mood-primary)'}
+                onBlur={(e) => e.target.style.borderColor = 'var(--mood-secondary)'}
                 aria-describedby={error ? "error-message" : undefined}
               />
               <button
                 type="button"
                 onClick={togglePasswordVisibility}
                 disabled={loading || isBlocked}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 disabled:opacity-50"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 hover:opacity-70 disabled:opacity-50 transition-opacity duration-200"
+                style={{ color: 'var(--mood-secondary)' }}
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? "🙈" : "👁️"}
@@ -345,14 +444,28 @@ const LoginPage = () => {
             <div
               id="error-message"
               role="alert"
-              className="p-3 text-sm text-coffee-error dark:text-red-400 font-medium bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md"
+              className="p-3 text-sm font-medium rounded-md border transition-colors duration-200"
+              style={{
+                color: 'var(--mood-primary)',
+                backgroundColor: 'var(--mood-bg)',
+                borderColor: 'var(--mood-primary)',
+                fontFamily: 'var(--mood-font)'
+              }}
             >
               {error}
             </div>
           )}
 
           {isBlocked && (
-            <div className="p-3 text-sm text-yellow-700 dark:text-yellow-300 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
+            <div
+              className="p-3 text-sm rounded-md border transition-colors duration-200"
+              style={{
+                color: 'var(--mood-secondary)',
+                backgroundColor: 'var(--mood-bg)',
+                borderColor: 'var(--mood-secondary)',
+                fontFamily: 'var(--mood-font)'
+              }}
+            >
               Account temporarily blocked. Try again in {formatBlockTime()}.
             </div>
           )}
@@ -360,17 +473,33 @@ const LoginPage = () => {
           <button
             type="submit"
             disabled={loading || isBlocked || !email || !password}
-            className="w-full px-4 py-2 mt-2 bg-coffee-button dark:bg-dragon-blue text-white rounded hover:bg-coffee-hover dark:hover:bg-dragon-blueHover transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-coffee-accent dark:focus:ring-dragon-gold"
+            className="w-full px-4 py-2 mt-2 rounded hover:opacity-80 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2"
+            style={{
+              backgroundColor: 'var(--mood-primary)',
+              color: 'var(--mood-contrast)',
+              fontFamily: 'var(--mood-font)',
+              border: '1px solid var(--mood-primary)'
+            }}
           >
             {loading ? 'Opening scrolls...' : 'Unlock the Tome'}
           </button>
         </form>
 
-        <p className="mt-4 text-sm text-center">
+        <p
+          className="mt-4 text-sm text-center"
+          style={{
+            color: 'var(--mood-text)',
+            fontFamily: 'var(--mood-font)'
+          }}
+        >
           New to the realm?{' '}
           <Link
             to="/register"
-            className="underline text-coffee-accent dark:text-dragon-gold hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-coffee-accent dark:focus:ring-dragon-gold rounded"
+            className="underline hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-1 rounded transition-opacity duration-200"
+            style={{
+              color: 'var(--mood-primary)',
+              fontFamily: 'var(--mood-font)'
+            }}
           >
             Begin your chapter
           </Link>
@@ -380,4 +509,4 @@ const LoginPage = () => {
   )
 }
 
-export default LoginPage
+export default LoginPage;

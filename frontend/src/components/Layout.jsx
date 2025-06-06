@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import ParticlesBackground from './ParticlesBackground';
 import DarkLightIcon from './DarkLightIcon';
-import MoodSelector from '@components/MoodSelector'; // ✅ Import MoodSelector
-import { useMood } from '@components/MoodContext';       // ✅ Access theme from context
+import MoodSelector from '@components/MoodSelector';
+import { useMood } from '@components/MoodContext';
 
 const Layout = ({ children }) => {
-  const { theme, setTheme } = useMood(); // ✅ get & set current theme (coffee/dragon)
+  const { theme, setTheme } = useMood();
   const [isDark, setIsDark] = useState(() => theme === 'dragon');
 
   const toggleTheme = () => {
@@ -16,7 +16,6 @@ const Layout = ({ children }) => {
   };
 
   useEffect(() => {
-    // Apply stored or preferred theme on mount
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const initialTheme = prefersDark ? 'dragon' : 'coffee';
     document.documentElement.classList.toggle('dark', initialTheme === 'dragon');
@@ -32,7 +31,6 @@ const Layout = ({ children }) => {
         fontFamily: 'var(--mood-font)',
       }}
     >
-      {/* ✨ Background particles */}
       <ParticlesBackground />
 
       {/* 🌗 Theme toggle */}

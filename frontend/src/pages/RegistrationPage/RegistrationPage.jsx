@@ -346,24 +346,54 @@ const RegistrationPage = () => {
   const passwordStrength = getPasswordStrength(password)
 
   return (
-    <div className="flex items-center justify-center min-h-screen px-4 text-coffee-text dark:text-dragon-text transition-colors duration-300">
-      <div className="w-full max-w-md p-8 bg-coffee-card dark:bg-dragon-card rounded-2xl shadow-md">
-        <h1 className="text-2xl font-bold mb-6 text-center">Begin Your Chapter</h1>
+    <div
+      className="flex items-center justify-center min-h-screen px-4 transition-colors duration-300"
+      style={{
+        color: 'var(--mood-text)',
+        fontFamily: 'var(--mood-font)'
+      }}
+    >
+      <div
+        className="w-full max-w-md p-8 rounded-2xl shadow-md transition-colors duration-300"
+        style={{
+          backgroundColor: 'var(--mood-bg)',
+          border: '1px solid var(--mood-secondary)'
+        }}
+      >
+        <h1
+          className="text-2xl font-bold mb-6 text-center"
+          style={{
+            color: 'var(--mood-primary)',
+            fontFamily: 'var(--mood-font)'
+          }}
+        >
+          Begin Your Chapter
+        </h1>
 
         {success ? (
           <div className="text-center">
-            <div className="text-green-600 dark:text-green-400 text-4xl mb-4">✓</div>
-            <p className="font-medium text-green-600 dark:text-green-400 mb-2">
+            <div className="text-4xl mb-4" style={{ color: 'var(--mood-primary)' }}>✓</div>
+            <p
+              className="font-medium mb-2"
+              style={{ color: 'var(--mood-primary)' }}
+            >
               Your legend begins, {username}!
             </p>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p
+              className="text-sm"
+              style={{ color: 'var(--mood-secondary)' }}
+            >
               Redirecting you to login in 3 seconds...
             </p>
           </div>
         ) : (
           <form onSubmit={handleRegister} className="space-y-4" noValidate>
             <div>
-              <label htmlFor="username" className="block mb-1 font-semibold text-center">
+              <label
+                htmlFor="username"
+                className="block mb-1 font-semibold text-center"
+                style={{ color: 'var(--mood-text)' }}
+              >
                 Pen Name
               </label>
               <input
@@ -375,18 +405,28 @@ const RegistrationPage = () => {
                 required
                 disabled={loading || isBlocked}
                 autoComplete="username"
-                className="w-full px-4 py-2 border border-gray-300 rounded-md dark:bg-dragon-bg dark:border-gray-600 dark:text-dragon-text focus:outline-none focus:ring-2 focus:ring-coffee-accent dark:focus:ring-dragon-gold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-300"
+                style={{
+                  backgroundColor: 'var(--mood-bg)',
+                  borderColor: 'var(--mood-secondary)',
+                  color: 'var(--mood-text)',
+                  focusRingColor: 'var(--mood-primary)'
+                }}
                 aria-describedby="username-error"
               />
               {validationErrors.username && (
-                <p id="username-error" className="mt-1 text-xs text-red-600 dark:text-red-400">
+                <p id="username-error" className="mt-1 text-xs text-red-600">
                   {validationErrors.username}
                 </p>
               )}
             </div>
 
             <div>
-              <label htmlFor="email" className="block mb-1 font-semibold text-center">
+              <label
+                htmlFor="email"
+                className="block mb-1 font-semibold text-center"
+                style={{ color: 'var(--mood-text)' }}
+              >
                 Ravenmail
               </label>
               <input
@@ -400,18 +440,27 @@ const RegistrationPage = () => {
                 autoComplete="email"
                 autoCapitalize="none"
                 spellCheck="false"
-                className="w-full px-4 py-2 border border-gray-300 rounded-md dark:bg-dragon-bg dark:border-gray-600 dark:text-dragon-text focus:outline-none focus:ring-2 focus:ring-coffee-accent dark:focus:ring-dragon-gold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-300"
+                style={{
+                  backgroundColor: 'var(--mood-bg)',
+                  borderColor: 'var(--mood-secondary)',
+                  color: 'var(--mood-text)'
+                }}
                 aria-describedby="email-error"
               />
               {validationErrors.email && (
-                <p id="email-error" className="mt-1 text-xs text-red-600 dark:text-red-400">
+                <p id="email-error" className="mt-1 text-xs text-red-600">
                   {validationErrors.email}
                 </p>
               )}
             </div>
 
             <div>
-              <label htmlFor="password" className="block mb-1 font-semibold text-center">
+              <label
+                htmlFor="password"
+                className="block mb-1 font-semibold text-center"
+                style={{ color: 'var(--mood-text)' }}
+              >
                 Secret Rune
               </label>
               <div className="relative">
@@ -424,14 +473,20 @@ const RegistrationPage = () => {
                   required
                   disabled={loading || isBlocked}
                   autoComplete="new-password"
-                  className="w-full px-4 py-2 pr-12 border border-gray-300 rounded-md dark:bg-dragon-bg dark:border-gray-600 dark:text-dragon-text focus:outline-none focus:ring-2 focus:ring-coffee-accent dark:focus:ring-dragon-gold disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-2 pr-12 border rounded-md focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-300"
+                  style={{
+                    backgroundColor: 'var(--mood-bg)',
+                    borderColor: 'var(--mood-secondary)',
+                    color: 'var(--mood-text)'
+                  }}
                   aria-describedby="password-error password-strength"
                 />
                 <button
                   type="button"
                   onClick={() => togglePasswordVisibility('password')}
                   disabled={loading || isBlocked}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 disabled:opacity-50"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 hover:opacity-70 disabled:opacity-50 transition-opacity duration-200"
+                  style={{ color: 'var(--mood-secondary)' }}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? "🙈" : "👁️"}
@@ -440,27 +495,37 @@ const RegistrationPage = () => {
               {password && (
                 <div id="password-strength" className="mt-2">
                   <div className="flex items-center space-x-2">
-                    <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className="flex-1 h-2 rounded-full overflow-hidden"
+                      style={{ backgroundColor: 'var(--mood-secondary)' }}
+                    >
                       <div
                         className={`h-full transition-all duration-300 ${passwordStrength.color}`}
                         style={{ width: `${(passwordStrength.strength / 5) * 100}%` }}
                       />
                     </div>
-                    <span className="text-xs text-gray-600 dark:text-gray-400">
+                    <span
+                      className="text-xs"
+                      style={{ color: 'var(--mood-secondary)' }}
+                    >
                       {passwordStrength.label}
                     </span>
                   </div>
                 </div>
               )}
               {validationErrors.password && (
-                <p id="password-error" className="mt-1 text-xs text-red-600 dark:text-red-400">
+                <p id="password-error" className="mt-1 text-xs text-red-600">
                   {validationErrors.password}
                 </p>
               )}
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block mb-1 font-semibold text-center">
+              <label
+                htmlFor="confirmPassword"
+                className="block mb-1 font-semibold text-center"
+                style={{ color: 'var(--mood-text)' }}
+              >
                 Confirm Secret Rune
               </label>
               <div className="relative">
@@ -473,21 +538,27 @@ const RegistrationPage = () => {
                   required
                   disabled={loading || isBlocked}
                   autoComplete="new-password"
-                  className="w-full px-4 py-2 pr-12 border border-gray-300 rounded-md dark:bg-dragon-bg dark:border-gray-600 dark:text-dragon-text focus:outline-none focus:ring-2 focus:ring-coffee-accent dark:focus:ring-dragon-gold disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-2 pr-12 border rounded-md focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-300"
+                  style={{
+                    backgroundColor: 'var(--mood-bg)',
+                    borderColor: 'var(--mood-secondary)',
+                    color: 'var(--mood-text)'
+                  }}
                   aria-describedby="confirm-password-error"
                 />
                 <button
                   type="button"
                   onClick={() => togglePasswordVisibility('confirmPassword')}
                   disabled={loading || isBlocked}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 disabled:opacity-50"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 hover:opacity-70 disabled:opacity-50 transition-opacity duration-200"
+                  style={{ color: 'var(--mood-secondary)' }}
                   aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
                 >
                   {showConfirmPassword ? "🙈" : "👁️"}
                 </button>
               </div>
               {validationErrors.confirmPassword && (
-                <p id="confirm-password-error" className="mt-1 text-xs text-red-600 dark:text-red-400">
+                <p id="confirm-password-error" className="mt-1 text-xs text-red-600">
                   {validationErrors.confirmPassword}
                 </p>
               )}
@@ -496,14 +567,26 @@ const RegistrationPage = () => {
             {error && (
               <div
                 role="alert"
-                className="p-3 text-sm text-coffee-error dark:text-red-400 font-medium bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-md"
+                className="p-3 text-sm font-medium border rounded-md"
+                style={{
+                  color: '#DC2626',
+                  backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                  borderColor: 'rgba(220, 38, 38, 0.3)'
+                }}
               >
                 {error}
               </div>
             )}
 
             {isBlocked && (
-              <div className="p-3 text-sm text-yellow-700 dark:text-yellow-300 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md">
+              <div
+                className="p-3 text-sm border rounded-md"
+                style={{
+                  color: '#D97706',
+                  backgroundColor: 'rgba(217, 119, 6, 0.1)',
+                  borderColor: 'rgba(217, 119, 6, 0.3)'
+                }}
+              >
                 Registration temporarily blocked. Try again in {formatBlockTime()}.
               </div>
             )}
@@ -511,7 +594,12 @@ const RegistrationPage = () => {
             <button
               type="submit"
               disabled={loading || isBlocked || !username || !email || !password || !confirmPassword || Object.keys(validationErrors).length > 0}
-              className="w-full px-4 py-2 mt-2 bg-coffee-button dark:bg-dragon-blue text-white rounded hover:bg-coffee-hover dark:hover:bg-dragon-blueHover transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-coffee-accent dark:focus:ring-dragon-gold"
+              className="w-full px-4 py-2 mt-2 text-white rounded hover:opacity-90 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2"
+              style={{
+                backgroundColor: 'var(--mood-primary)',
+                color: 'var(--mood-contrast)',
+                fontFamily: 'var(--mood-font)'
+              }}
             >
               {loading ? 'Inscribing...' : 'Scribe Me In'}
             </button>
@@ -519,11 +607,15 @@ const RegistrationPage = () => {
         )}
 
         {!success && (
-          <p className="mt-4 text-sm text-center">
+          <p className="mt-4 text-sm text-center" style={{ color: 'var(--mood-text)' }}>
             Already have an account?{' '}
             <Link
               to="/login"
-              className="underline text-coffee-accent dark:text-dragon-gold hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-coffee-accent dark:focus:ring-dragon-gold rounded"
+              className="underline hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-offset-1 rounded transition-opacity duration-200"
+              style={{
+                color: 'var(--mood-primary)',
+                fontFamily: 'var(--mood-font)'
+              }}
             >
               Enter the realm
             </Link>
