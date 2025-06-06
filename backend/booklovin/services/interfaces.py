@@ -4,7 +4,7 @@ from booklovin.models.errors import UserError
 from booklovin.models.post import Post
 from booklovin.models.comments import Comment, NewComment
 from booklovin.models.users import User
-from booklovin.models.journals import JournalEntry, Mood
+from booklovin.models.journals import JournalEntry, NewJournalEntry, Mood
 from fastapi import FastAPI
 from pydantic import BaseModel
 
@@ -13,8 +13,8 @@ from pydantic import BaseModel
 class JournalService(Protocol):
     async def create(self, db: Any, entry: JournalEntry) -> None | UserError: ...
     async def delete(self, db: Any, entry_id: str) -> None | UserError: ...
-    async def update(self, db: Any, journal_entry: JournalEntry) -> None | UserError: ...
-    async def list(
+    async def update(self, db: Any, journal_entry: NewJournalEntry) -> None | UserError: ...
+    async def query(
         self, db: Any, user_id: str, mood: Mood | None = None, search: str | None = None, favorite: bool | None = None
     ) -> None | UserError: ...
 

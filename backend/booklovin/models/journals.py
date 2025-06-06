@@ -15,6 +15,7 @@ class NewJournalEntry(FlexModel):
     title: str = ""
     writingTime: int = 0  # time spent to write the journal entry
     tags: list[str] = Field(default_factory=list)
+    favorite: bool = False
 
 
 class JournalEntry(NewJournalEntry, UserObject): ...

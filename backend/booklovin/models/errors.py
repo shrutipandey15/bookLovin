@@ -12,6 +12,7 @@ class ErrorCode(IntEnum):
     NOT_FOUND = auto()
     INVALID_PARAMETER = auto()
     ALREADY_EXISTS = auto()
+    PERMISSION_DENIED = auto()
 
 
 class UserError(BaseModel):
