@@ -18,10 +18,10 @@ const fillRegistrationForm = ({ username, email, password, confirmPassword }) =>
   fireEvent.change(screen.getByLabelText(/ravenmail/i), {
     target: { value: email },
   })
-  fireEvent.change(screen.getByLabelText(/secret rune/i), {
+  fireEvent.change(screen.getByLabelText(/^secret rune$/i), {
     target: { value: password },
   })
-  fireEvent.change(screen.getByLabelText('Confirm Secret Rune'), {
+  fireEvent.change(screen.getByLabelText(/^confirm secret rune$/i), {
     target: { value: confirmPassword || password },
   })
 }
