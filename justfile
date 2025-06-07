@@ -16,7 +16,13 @@ serve:
 
 # run tests
 test args='':
-    cd frontend && npm run test_once
+    just frontend_test
+    just backend_test
+
+frontend_test args='':
+    cd frontend && npm run test_once {{args}}
+
+backend_test args='':
     cd backend && poetry run pytest -v booklovin/tests {{args}}
 
 profile:
