@@ -52,7 +52,7 @@ async def read_popular_posts(request: Request, user: User = Depends(get_from_tok
 async def read_one_post(request: Request, post_id: str, user: User = Depends(get_from_token)) -> Post | UserError:
     "Get one specific post"
     post = await database.post.get_one(db=request.app.state.db, post_id=post_id)
-    return post or errors.NOT_FOUND
+    return post or errors.POST_NOT_FOUND
 
 
 # update
@@ -89,7 +89,7 @@ async def add_comment_to_post(
     """Add a comment to a specific post."""
 
     if not await database.post.exists(db=request.app.state.db, post_id=comment.postId):
-        return errors.NOT_FOUND
+        return errors.POST_NOT_FOUND
 
     model = comment.model_dump()
     new_comment = Comment(authorId=user.uid, **model)
@@ -103,7 +103,7 @@ async def add_comment_to_post(
 async def get_comments_for_post(request: Request, post_id: str, user: User = Depends(get_from_token)) -> list[Comment] | UserError:
     """Retrieve all comments for a specific post."""
     if not await database.post.exists(db=request.app.state.db, post_id=post_id):
-        return errors.NOT_FOUND
+        return errors.POST_NOT_FOUND
     return await database.post.get_comments(db=request.app.state.db, post_id=post_id) or []
 
 
@@ -119,7 +119,7 @@ async def delete_a_comments_for_post(
     """Delete one comment."""
     post_to_modify = await database.post.get_one(db=request.app.state.db, post_id=post_id)
     if not post_to_modify:
-        return errors.NOT_FOUND
+        return errors.POST_NOT_FOUND
 
     if post_to_modify.authorId != user.uid:
         return errors.FORBIDDEN

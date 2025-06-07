@@ -1,11 +1,9 @@
 """Database helpers for mongo: posts"""
 
-from booklovin.models.errors import UserError, gen_error, ErrorCode
+from booklovin.models.errors import UserError
 from booklovin.models.journals import JournalEntry, NewJournalEntry, Mood
 from pymongo.asynchronous.database import AsyncDatabase as Database
-
-
-NOT_FOUND_ERROR = gen_error(ErrorCode.NOT_FOUND, "Journal entry not found.")
+from booklovin.services import errors
 
 
 async def create(db: Database, entry: JournalEntry) -> None | UserError:
@@ -17,7 +15,7 @@ async def delete(db: Database, entry_id: str) -> None | UserError:
     """Delete a journal entry by ID."""
     result = await db.journals.delete_one({"uid": entry_id})
     if result.deleted_count == 0:
-        return NOT_FOUND_ERROR
+        return errors.NOT_FOUND
     return None
 
 
@@ -26,7 +24,7 @@ async def update(db: Database, author_id: str, entry_id: str, journal_entry: New
     update_data = journal_entry.model_dump(exclude_unset=True)  # Only update provided fields
     result = await db.journals.update_one({"uid": entry_id, "authorId": author_id}, {"$set": update_data})
     if result.matched_count == 0:
-        return NOT_FOUND_ERROR
+        return errors.NOT_FOUND
     return None
 
 
