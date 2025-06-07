@@ -24,7 +24,7 @@ async def create(db: Database, post: Post) -> None | UserError:
 
 
 async def get_all(db: Database, start: int, end: int) -> list[Post]:
-    return await db.posts.find({}).sort("creationTime", -1).skip(start).limit(end - start).to_list(length=None)
+    return [Post(**p) for p in await db.posts.find({}).sort("creationTime", -1).skip(start).limit(end - start).to_list(length=None)]
 
 
 async def exists(db: Database, post_id: str) -> bool:
