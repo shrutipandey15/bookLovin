@@ -29,12 +29,15 @@ users = [
 
 
 async def real_main():
-    backend = database.init("mock")
+    backend = database.init("mongo")
     await backend.setup(booklovin)
     db = booklovin.state.db
     for user in users:
         u = User(name=user[2], email=user[0], password=user[1])
-        await database.users.create(db, u)
+        try:
+            await database.users.create(db, u)
+        except Exception as e:
+            print(f"E: {e}")
 
         # create some posts
         for n in range(random.randint(USER_POSTS_MIN, USER_POSTS_MAX)):
