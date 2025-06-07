@@ -58,3 +58,6 @@ async def list_journal_entries(
     if isinstance(result, UserError):
         return result
     return result or []
+
+
+routers = [router]

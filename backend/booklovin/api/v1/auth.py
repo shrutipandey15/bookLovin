@@ -14,6 +14,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from jose import jwt
 
 router = APIRouter(tags=["auth"])
+debug_router = APIRouter(tags=["test"])
 
 ALREADY_EXISTS = gen_error(ErrorCode.ALREADY_EXISTS, details="User already exists")
 CREDENTIALS_EXCEPTION = HTTPException(
@@ -23,12 +24,12 @@ CREDENTIALS_EXCEPTION = HTTPException(
 )
 
 
-@router.get("/null", response_class=APIResponse)
+@debug_router.get("/null", response_class=APIResponse)
 async def null_page() -> None:
     return None
 
 
-@router.get("/me", response_class=APIResponse)
+@debug_router.get("/me", response_class=APIResponse)
 async def me_page(user: User = Depends(get_from_token)) -> User:
     return user
 
@@ -70,3 +71,6 @@ def _create_access_token(user_id: str, expires_delta: timedelta = timedelta(minu
         "iat": ref,
     }
     return cast(str, jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM))
+
+
+routers = (router, debug_router)

@@ -11,6 +11,8 @@ from fastapi import APIRouter, Depends, Request
 
 router = APIRouter(tags=["posts"])
 
+crouter = APIRouter(tags=["comments"])
+
 
 # create
 @router.post("/", response_model=Post | UserError, response_class=APIResponse)
@@ -78,7 +80,7 @@ async def delete_post(request: Request, post_id: str, user: User = Depends(get_f
     )
 
 
-@router.post("/{post_id}/comments", response_model=None | UserError, summary="Add a comment to a post", response_class=APIResponse)
+@crouter.post("/{post_id}/comments", response_model=None | UserError, summary="Add a comment to a post", response_class=APIResponse)
 async def add_comment_to_post(
     request: Request,
     comment: NewComment,
@@ -95,20 +97,20 @@ async def add_comment_to_post(
     return await database.post.add_comment(db=request.app.state.db, comment=new_comment)
 
 
-@router.get(
+@crouter.get(
     "/{post_id}/comments", response_model=list[Comment] | UserError, summary="Get all comments for a post", response_class=APIResponse
 )
 async def get_comments_for_post(request: Request, post_id: str, user: User = Depends(get_from_token)) -> list[Comment] | UserError:
     """Retrieve all comments for a specific post."""
     if not await database.post.exists(db=request.app.state.db, post_id=post_id):
         return errors.NOT_FOUND
-    return await database.post.get_comments(db=request.app.state.db, post_id=post_id)
+    return await database.post.get_comments(db=request.app.state.db, post_id=post_id) or []
 
 
-@router.delete(
+@crouter.delete(
     "/{post_id}/comments/{comment_id}",
     response_model=None | UserError,
-    summary="Delete all comments for a post",
+    summary="Delete a comment from a post",
     response_class=APIResponse,
 )
 async def delete_a_comments_for_post(
@@ -126,3 +128,6 @@ async def delete_a_comments_for_post(
     if isinstance(result, UserError):
         return result
     return None
+
+
+routers = [router, crouter]

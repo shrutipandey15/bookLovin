@@ -25,7 +25,8 @@ booklovin = FastAPI(lifespan=lifespan)
 for api_provider in providers:
     try:
         module = importlib.import_module(f"booklovin.api.v1.{api_provider}")
-        booklovin.include_router(module.router, prefix=f"/api/v1/{api_provider}")
+        for router in module.routers:
+            booklovin.include_router(router, prefix=f"/api/v1/{api_provider}")
     except ModuleNotFoundError as e:
         print(f"Error: Module booklovin.api.v1.{api_provider} not found: {e}")
         raise e

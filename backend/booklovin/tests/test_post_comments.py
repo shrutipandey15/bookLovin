@@ -70,7 +70,6 @@ async def test_delete_one_comments_for_post(aclient, newpost):
     get_response = (await aclient.get(f"/api/v1/posts/{newpost}/comments")).json()
     comment_id = get_response[0]["uid"]
 
-    # Delete all comments
     delete_response = await aclient.delete(f"/api/v1/posts/{newpost}/comments/{comment_id}")
     assert_success(delete_response)
 
