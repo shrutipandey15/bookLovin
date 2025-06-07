@@ -14,6 +14,12 @@ repos:
         entry: ./scripts/run_backend_unit_tests
         files: \.(py)$
         language: system
+      - id: fronttest
+        name: run unit tests (backend)
+        entry: cd frontend && npm run test_once
+        files: \.(jsx?)$
+        language: system
+
       # - id: mypy
       #   name: run mypy (backend)
       #   entry: ./scripts/run_backend_typing_tests
