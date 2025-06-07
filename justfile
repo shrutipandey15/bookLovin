@@ -56,4 +56,4 @@ populate:
 
 # print Javascript representation backend Enumerated types
 api_enums:
-    cd backend && poetry run ./scripts/dump_enums.py
+    cd backend && poetry run ./scripts/dump_enums.py | tee ../frontend/src/constants/enumTypes.js | pygmentize -l js

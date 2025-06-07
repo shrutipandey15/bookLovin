@@ -11,3 +11,4 @@ for t in enumTypes:
     for e in t:
         print(f"  {e.name.lower()}: {e.value},")
     print("}")
+print(f"\nexport default {{ {', '.join(t.__name__ + 'Types' for t in enumTypes)} }}")
