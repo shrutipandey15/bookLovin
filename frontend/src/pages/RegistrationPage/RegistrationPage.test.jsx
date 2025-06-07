@@ -11,7 +11,7 @@ beforeEach(() => {
   vi.resetAllMocks()
 })
 
-const fillRegistrationForm = ({ username, email, password }) => {
+const fillRegistrationForm = ({ username, email, password, confirmPassword }) => {
   fireEvent.change(screen.getByLabelText(/pen name/i), {
     target: { value: username },
   })
@@ -20,6 +20,9 @@ const fillRegistrationForm = ({ username, email, password }) => {
   })
   fireEvent.change(screen.getByLabelText(/secret rune/i), {
     target: { value: password },
+  })
+  fireEvent.change(screen.getByLabelText('Confirm Secret Rune'), {
+    target: { value: confirmPassword || password },
   })
 }
 
@@ -37,7 +40,8 @@ test('registers successfully with correct details', async () => {
   fillRegistrationForm({
     username: 'newuser',
     email: 'newuser@example.com',
-    password: 'newpassword123',
+    password: 'Password123!',
+    confirmPassword: 'Password123!'
   })
 
   fireEvent.click(screen.getByRole('button', { name: /scribe me in/i }))
@@ -61,12 +65,13 @@ test('shows error with invalid details', async () => {
   fillRegistrationForm({
     username: 'newuser',
     email: 'newuser@example.com',
-    password: 'wrongpassword',
+    password: 'Password123!',
+    confirmPassword: 'Password123!'
   })
 
   fireEvent.click(screen.getByRole('button', { name: /scribe me in/i }))
 
   await waitFor(() =>
-    expect(screen.getByText(/the scroll was not sealed. check your runes/i)).toBeInTheDocument()
+    expect(screen.getByText(/the scroll was not sealed/i)).toBeInTheDocument()
   )
 })

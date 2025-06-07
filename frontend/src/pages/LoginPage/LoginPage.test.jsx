@@ -4,14 +4,26 @@ import LoginPage from './LoginPage'
 import { MemoryRouter } from 'react-router-dom'
 import axiosInstance from '@api/axiosInstance'
 import { fetchCurrentUser } from '@components/auth'
+import { MoodProvider } from '@components/MoodContext'
 
 vi.mock('@components/auth', () => ({
   fetchCurrentUser: vi.fn(),
 }))
 vi.mock('@api/axiosInstance')
 
+const renderWithProviders = (ui) =>
+  render(
+    <MemoryRouter>
+      <MoodProvider>
+        {ui}
+      </MoodProvider>
+    </MemoryRouter>
+  )
+
 beforeEach(() => {
   vi.resetAllMocks()
+  // Clear localStorage before each test
+  localStorage.clear()
 })
 
 test('logs in successfully with correct credentials', async () => {
@@ -23,11 +35,7 @@ test('logs in successfully with correct credentials', async () => {
     email: 'testuser@example.com',
   })
 
-  render(
-    <MemoryRouter>
-      <LoginPage />
-    </MemoryRouter>
-  )
+  renderWithProviders(<LoginPage />)
 
   const emailInput = screen.getByLabelText(/ravenmail/i)
   const passwordInput = screen.getByLabelText(/secret rune/i)
@@ -38,22 +46,22 @@ test('logs in successfully with correct credentials', async () => {
   fireEvent.click(loginButton)
 
   await waitFor(() => {
-    expect(screen.getByText(/the realm welcomes you back, testuser@example.com/i)).toBeInTheDocument()
+    expect(screen.getByText(/welcome back!/i)).toBeInTheDocument()
+    expect(screen.getByText(/successfully logged in as:/i)).toBeInTheDocument()
+    expect(screen.getByText(/testuser@example.com/i)).toBeInTheDocument()
   }, { timeout: 3000 })
 })
 
 test('shows error with incorrect credentials', async () => {
-  axiosInstance.post.mockRejectedValueOnce({
-    response: {
-      data: { detail: 'Incorrect username or password' }
-    }
-  })
+  const mockError = new Error('Request failed with status code 401')
+  mockError.response = {
+    status: 401,
+    data: { detail: 'Invalid email or password.' }
+  }
 
-  render(
-    <MemoryRouter>
-      <LoginPage />
-    </MemoryRouter>
-  )
+  axiosInstance.post.mockRejectedValueOnce(mockError)
+
+  renderWithProviders(<LoginPage />)
 
   fireEvent.change(screen.getByLabelText(/ravenmail/i), {
     target: { value: 'wronguser@example.com' },
@@ -65,6 +73,6 @@ test('shows error with incorrect credentials', async () => {
   fireEvent.click(screen.getByRole('button', { name: /unlock the tome/i }))
 
   await waitFor(() =>
-    expect(screen.getByText(/incorrect username or password/i)).toBeInTheDocument()
+    expect(screen.getByText(/invalid email or password/i)).toBeInTheDocument()
   )
 })

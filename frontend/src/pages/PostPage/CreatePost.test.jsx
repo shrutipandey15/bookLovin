@@ -6,6 +6,7 @@ import CreatePost from './CreatePost';
 import store from '@redux/store';
 import { vi } from 'vitest';
 import * as postsSlice from '@redux/postsSlice';
+import { MoodProvider } from '@components/MoodContext';
 
 vi.mock('@redux/postsSlice', async () => {
   const actual = await vi.importActual('@redux/postsSlice');
@@ -18,7 +19,11 @@ vi.mock('@redux/postsSlice', async () => {
 const renderWithProviders = (ui) =>
   render(
     <Provider store={store}>
-      <BrowserRouter>{ui}</BrowserRouter>
+      <BrowserRouter>
+        <MoodProvider>
+          {ui}
+        </MoodProvider>
+      </BrowserRouter>
     </Provider>
   );
 
