@@ -13,6 +13,7 @@ user_data = {
     "description": "Test user account",
     "role": UserRole.STANDARD,
     "link": "",
+    "uid": "alice-unique-id",
     "location": "SolarSystem/Earth",
     "active": True,
 }

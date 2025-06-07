@@ -13,8 +13,9 @@ async def create(db: State, user: User) -> None | UserError:
     return None
 
 
-async def get(db: State, email: str) -> User | None:
+async def get(db: State, email: str | None = None, uid: str | None = None) -> User | None:
+    match_func = lambda x: x.email == email if email else lambda x: x.uid == uid
     for user in db.users:
-        if user.email == email:
+        if match_func(user):
             return user
     return None

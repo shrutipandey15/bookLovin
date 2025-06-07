@@ -12,7 +12,7 @@ async def create(db: Redis, user: User) -> None | UserError:
     return None
 
 
-async def get(db: Redis, email: str) -> User | None:
+async def get(db: Redis, email: str | None = None, uid: str | None = None) -> User | None:
     user_data = await db.get(get_user_key(email))
     if user_data:
         return User.deserialize(user_data)

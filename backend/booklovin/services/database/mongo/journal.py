@@ -43,7 +43,7 @@ async def query(
     if favorite is not None:
         query["favorite"] = favorite  # Assuming there's a favorite field
 
-    entries = await db.journals.find(query).to_list(length=None)
+    entries = await db.journals.find(query).to_list()
 
     if not entries:
         return []
