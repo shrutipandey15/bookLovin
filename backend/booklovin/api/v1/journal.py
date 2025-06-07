@@ -1,7 +1,7 @@
 """Journal API endpoints for managing user journal entries."""
 
 from booklovin.core.config import APIResponse
-from booklovin.models.errors import UserError, gen_error, ErrorCode
+from booklovin.models.errors import UserError
 from booklovin.models.journals import JournalEntry, NewJournalEntry, Mood
 from booklovin.models.users import User
 from booklovin.services import database
@@ -9,8 +9,6 @@ from booklovin.utils.user_token import get_from_token
 from fastapi import APIRouter, Depends, Request
 
 router = APIRouter(tags=["journal"])
-
-NOT_ALLOWED = gen_error(ErrorCode.PERMISSION_DENIED, "You are not allowed to perform this action.")
 
 
 @router.post("/", response_model=JournalEntry | UserError, response_class=APIResponse)
