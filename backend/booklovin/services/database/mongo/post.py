@@ -10,7 +10,6 @@ from booklovin.models.comments import Comment
 from booklovin.models.errors import UserError
 from booklovin.models.post import Post
 from booklovin.models.users import User
-from booklovin.services import errors
 from pymongo.asynchronous.database import AsyncDatabase as Database
 
 
@@ -26,6 +25,10 @@ async def create(db: Database, post: Post) -> None | UserError:
 
 async def get_all(db: Database, start: int, end: int) -> list[Post]:
     return await db.posts.find({}).sort("creationTime", -1).skip(start).limit(end - start).to_list(length=None)
+
+
+async def exists(db: Database, post_id: str) -> bool:
+    return (await db.posts.count_documents({"uid": post_id}, limit=1)) > 0
 
 
 async def get_one(db: Database, post_id: str) -> Post | None:
@@ -120,11 +123,6 @@ async def add_comment(db: Database, comment: Comment) -> None | UserError:
     Returns:
         None on success, UserError on failure
     """
-    # Check if post exists
-    post = await get_one(db, comment.postId)
-    if not post:
-        return errors.POST_NOT_FOUND
-
     # Insert the comment
     await db.comments.insert_one(comment.model_dump())
     return None
@@ -140,11 +138,6 @@ async def get_comments(db: Database, post_id: str) -> None | UserError | list[Co
     Returns:
         List of comments on success, UserError on failure
     """
-    # Check if post exists
-    post = await get_one(db, post_id)
-    if not post:
-        return errors.POST_NOT_FOUND
-
     # Retrieve comments for the post
     comment_docs = await db.comments.find({"postId": post_id}).sort("creationTime", -1).to_list(length=None)
     return [Comment(**doc) for doc in comment_docs]

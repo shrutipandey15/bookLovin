@@ -47,6 +47,13 @@ async def get_popular(db: State) -> list[Post] | UserError:
     return results  # type: ignore
 
 
+async def exists(db: State, post_id: str) -> bool:
+    for post in db.posts:
+        if post.uid == post_id:
+            return True
+    return False
+
+
 async def get_one(db: State, post_id: str) -> Post | None:
     """get one post"""
     for post in db.posts:

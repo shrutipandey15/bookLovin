@@ -84,12 +84,9 @@ async def add_comment_to_post(
     comment: NewComment,
     user: User = Depends(get_from_token),
 ) -> None | UserError:
-    """
-    Add a comment to a specific post.
-    """
-    # Ensure post exists before adding a comment
-    post = await database.post.get_one(db=request.app.state.db, post_id=comment.postId)
-    if not post:
+    """Add a comment to a specific post."""
+
+    if not await database.post.exists(db=request.app.state.db, post_id=comment.postId):
         return errors.NOT_FOUND
 
     model = comment.model_dump()
@@ -102,16 +99,9 @@ async def add_comment_to_post(
     "/{post_id}/comments", response_model=list[Comment] | UserError, summary="Get all comments for a post", response_class=APIResponse
 )
 async def get_comments_for_post(request: Request, post_id: str, user: User = Depends(get_from_token)) -> list[Comment] | UserError:
-    """
-    Retrieve all comments for a specific post.
-
-    Note: The current service interface `PostService.get_comment` returns `None | UserError`.
-    For this API to return actual comments, that service method needs to be updated
-    to return `list[CommentModelFromService] | UserError`.
-    Currently, if the service call succeeds (returns None without error), this returns [].
-    """
-    # TODO:
-    # Ensure post exists
+    """Retrieve all comments for a specific post."""
+    if not await database.post.exists(db=request.app.state.db, post_id=post_id):
+        return errors.NOT_FOUND
     return await database.post.get_comments(db=request.app.state.db, post_id=post_id)
 
 
