@@ -53,14 +53,14 @@ def get_protocol_compliance_issues(
     for k, v in ref_members.items():
         v2 = inspected_members.get(k)
         if v2 is None:
-            issues.append(f"   {red(k)}: not implemented")
+            issues.append(f"     - {red(k)}: not implemented")
             continue
         ref_a = inspect.get_annotations(v)
         ref_b = inspect.get_annotations(v2)
         if ref_a != ref_b:
             mismatch = explain_mismatch(ref_a, ref_b)
             if mismatch:
-                issues.append(f"   {red(k)}:\n{mismatch}")
+                issues.append(f"     - {red(k)}:\n{mismatch}")
 
     return issues
 
