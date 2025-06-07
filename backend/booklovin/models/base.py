@@ -1,9 +1,9 @@
 from datetime import datetime, timezone
-from typing import Type, TypeVar, Any
-
-from pydantic import BaseModel, Field, SerializationInfo, field_serializer
-from booklovin.core.utils import dumps, loads
+from typing import Any, Type, TypeVar
 from uuid import uuid4
+
+from booklovin.core.utils import dumps, loads
+from pydantic import BaseModel, Field, SerializationInfo, field_serializer
 
 FM = TypeVar("FM", bound="FlexModel")
 

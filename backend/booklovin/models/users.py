@@ -1,8 +1,10 @@
+from datetime import datetime, timezone
 from enum import IntEnum, auto
 from typing import Optional
+from uuid import uuid4
 
 from booklovin.models.base import FlexModel
-from pydantic import BaseModel
+from pydantic import Field, field_serializer
 
 
 class UserRole(IntEnum):
@@ -23,6 +25,8 @@ class NewUser(UserLogin):
 
 
 class User(FlexModel):
+    uid: str = Field(default_factory=lambda: uuid4().hex)
+    creationTime: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     name: str
     password: str
     email: str
@@ -31,3 +35,7 @@ class User(FlexModel):
     link: Optional[str] = ""
     location: Optional[str] = "unknown"
     active: bool = True
+
+    @field_serializer("creationTime")
+    def serialize_creationTime(self, v: datetime, _) -> float:
+        return v.timestamp()
