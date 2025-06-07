@@ -43,20 +43,17 @@ async def update_journal_entry(
     return None
 
 
-# TODO: UNDERSTAND WHY CAN'T USE THE MOOD ENUM DIRECTLY WITHOUT A VALIDATION ERROR
 @router.get("/", response_model=list[JournalEntry] | UserError, response_class=APIResponse)
 async def list_journal_entries(
     request: Request,
     user: User = Depends(get_from_token),
-    mood: int | None = None,
+    mood: Mood | None = None,
     search: str | None = None,
     favorite: bool | None = None,
 ) -> list[JournalEntry] | UserError:
     """List journal entries with optional filtering."""
 
-    result = await database.journal.query(
-        db=request.app.state.db, user_id=user.email, mood=Mood(mood) if mood is not None else None, search=search, favorite=favorite
-    )
+    result = await database.journal.query(db=request.app.state.db, user_id=user.email, mood=mood, search=search, favorite=favorite)
 
     if isinstance(result, UserError):
         return result

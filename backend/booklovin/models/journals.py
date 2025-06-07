@@ -1,9 +1,9 @@
 from pydantic import Field
 from booklovin.models.base import FlexModel, UserObject
-from enum import Enum, auto
+from enum import IntEnum, auto
 
 
-class Mood(Enum):
+class Mood(IntEnum):
     HEARTBROKEN = auto()
     HEALING = auto()
     ENPOWERED = auto()
