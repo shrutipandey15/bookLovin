@@ -24,7 +24,7 @@ async def create(db: Database, post: Post) -> None | UserError:
 
 
 async def get_all(db: Database, start: int, end: int) -> list[Post]:
-    return [Post(**p) for p in await db.posts.find({}).sort("creationTime", -1).skip(start).limit(end - start).to_list(length=None)]
+    return [Post.from_json(p) for p in await db.posts.find({}).sort("creationTime", -1).skip(start).limit(end - start).to_list(length=None)]
 
 
 async def exists(db: Database, post_id: str) -> bool:
@@ -102,7 +102,7 @@ async def get_popular(db: Database) -> list[Post] | UserError:
 
     popular_post_docs = await cursor.to_list(length=RECENT_POSTS_LIMIT)
 
-    return [Post(**doc) for doc in popular_post_docs]
+    return [Post.from_json(doc) for doc in popular_post_docs]
 
 
 async def like(db: Database, post_id: str, user_id: str) -> None | UserError:
@@ -140,7 +140,7 @@ async def get_comments(db: Database, post_id: str) -> None | UserError | list[Co
     """
     # Retrieve comments for the post
     comment_docs = await db.comments.find({"postId": post_id}).sort("creationTime", -1).to_list(length=None)
-    return [Comment(**doc) for doc in comment_docs]
+    return [Comment.from_json(doc) for doc in comment_docs]
 
 
 async def delete_comment(db: Database, post_id: str, comment_id: str) -> None | UserError:
