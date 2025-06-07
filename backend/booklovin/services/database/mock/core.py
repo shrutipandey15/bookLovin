@@ -3,9 +3,10 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 
 from booklovin.core.utils import dumps, loads, red
+from booklovin.models.comments import Comment
+from booklovin.models.journals import JournalEntry
 from booklovin.models.post import Post
 from booklovin.models.users import User
-from booklovin.models.journals import JournalEntry
 from booklovin.services.interfaces import ServiceSetup
 from fastapi import FastAPI
 
@@ -20,6 +21,7 @@ class State:
     users_count: int = 0
     likes: dict[str, set[str]] = field(default_factory=lambda: defaultdict(set))
     journal_entries: dict[str, list[JournalEntry]] = field(default_factory=lambda: defaultdict(list))
+    comments: dict[str, list] = field(default_factory=lambda: defaultdict(list))
 
     def debug(self):
         def _show_list(title, item):
@@ -42,6 +44,7 @@ class State:
             "users_count": self.users_count,
             "journal_entries": {k: [je.model_dump() for je in v] for k, v in self.journal_entries.items()},
             "likes": {k: list(v) for k, v in self.likes.items()},
+            "comments": {k: [c.model_dump() for c in v] for k, v in self.comments.items()},
         })
         with open(DB_FILE, "w") as f:
             f.write(json_str)
@@ -57,6 +60,8 @@ class State:
             self.likes.update({k: set(v) for k, v in data["likes"].items()})
             self.journal_entries = defaultdict(list)
             self.journal_entries.update({k: [JournalEntry.from_json(je) for je in v] for k, v in data["journal_entries"].items()})
+            self.comments = defaultdict(list)
+            self.comments.update({k: [Comment.from_json(comment) for comment in v] for k, v in data["comments"].items()})
 
 
 class MockSetup(ServiceSetup):

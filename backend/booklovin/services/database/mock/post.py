@@ -3,6 +3,7 @@
 from booklovin.core.settings import RECENT_POSTS_LIMIT
 from booklovin.models.errors import UserError
 from booklovin.models.post import Post
+from booklovin.models.comments import Comment
 from booklovin.models.users import User
 from booklovin.services import errors
 
@@ -81,4 +82,57 @@ async def delete(db: State, post_id: str) -> None | UserError:
         return errors.POST_NOT_FOUND
     db.posts_count -= 1
     db.save()
+    return None
+
+
+async def add_comment(db: State, comment: Comment) -> None | UserError:
+    """Add a comment to a post.
+
+    Args:
+        db: Database state
+        post_id: ID of the post to comment on
+        user_id: ID of the user making the comment
+        comment: The comment data
+
+    Returns:
+        None on success, UserError on failure
+    """
+    db.comments[comment.postId].append(comment)
+    db.save()
+    return None
+
+
+async def get_comments(db: State, post_id: str) -> None | UserError | list[Comment]:
+    """Get all comments for a post.
+
+    Args:
+        db: Database state
+        post_id: ID of the post to get comments for
+
+    Returns:
+        List of comments on success, UserError on failure
+    """
+    post = await get_one(db, post_id)
+    if not post:
+        return errors.POST_NOT_FOUND
+
+    return db.comments.get(post_id, [])
+
+
+async def delete_comment(db: State, post_id: str, comment_id: str) -> None | UserError:
+    """Delete all comments for a post.
+
+    Args:
+        db: Database state
+        post_id: ID of the post to delete comments for
+
+    Returns:
+        None on success, UserError on failure
+    """
+    if post_id in db.comments:
+        if comment_id:
+            # Remove a specific comment
+            db.comments[post_id] = [c for c in db.comments[post_id] if c.uid != comment_id]
+        db.save()
+
     return None

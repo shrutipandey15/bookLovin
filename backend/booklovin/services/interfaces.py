@@ -2,7 +2,7 @@ from typing import Any, Protocol, runtime_checkable
 
 from booklovin.models.errors import UserError
 from booklovin.models.post import Post
-from booklovin.models.comments import Comment, NewComment
+from booklovin.models.comments import Comment
 from booklovin.models.users import User
 from booklovin.models.journals import JournalEntry, NewJournalEntry, Mood
 from fastapi import FastAPI
@@ -31,9 +31,9 @@ class PostService(Protocol):
     # likes
     async def like(self, db: Any, post_id: str, user_id: str) -> None | UserError: ...
     # comments
-    async def add_comment(self, db: Any, post_id: str, user_id: str, comment: NewComment) -> None | UserError: ...
+    async def add_comment(self, db: Any, comment: Comment) -> None | UserError: ...
     async def get_comments(self, db: Any, post_id: str) -> None | UserError | list[Comment]: ...
-    async def delete_comment(self, db: Any, post: Post) -> None | UserError: ...
+    async def delete_comment(self, db: Any, post_id: str, comment_id: str) -> None | UserError: ...
 
 
 @runtime_checkable

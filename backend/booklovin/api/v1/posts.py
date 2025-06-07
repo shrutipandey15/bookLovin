@@ -78,27 +78,24 @@ async def delete_post(request: Request, post_id: str, user: User = Depends(get_f
     )
 
 
-@router.post("/{post_id}/comments", response_model=Comment | UserError, summary="Add a comment to a post", response_class=APIResponse)
+@router.post("/{post_id}/comments", response_model=None | UserError, summary="Add a comment to a post", response_class=APIResponse)
 async def add_comment_to_post(
     request: Request,
-    post_id: str,
-    comment_body: NewComment,
+    comment: NewComment,
     user: User = Depends(get_from_token),
 ) -> None | UserError:
     """
     Add a comment to a specific post.
     """
     # Ensure post exists before adding a comment
-    post = await database.post.get_one(db=request.app.state.db, post_id=post_id)
+    post = await database.post.get_one(db=request.app.state.db, post_id=comment.postId)
     if not post:
         return errors.NOT_FOUND
 
-    return await database.post.add_comment(
-        db=request.app.state.db,
-        post_id=post_id,
-        user_id=user.email,
-        comment=NewComment(content=comment_body.content),
-    )
+    model = comment.model_dump()
+    new_comment = Comment(authorId=user.email, **model)
+
+    return await database.post.add_comment(db=request.app.state.db, comment=new_comment)
 
 
 @router.get(
@@ -113,22 +110,22 @@ async def get_comments_for_post(request: Request, post_id: str, user: User = Dep
     to return `list[CommentModelFromService] | UserError`.
     Currently, if the service call succeeds (returns None without error), this returns [].
     """
+    # TODO:
     # Ensure post exists
-
-    # The service method `get_comment` is expected to fetch comments for `post_id`.
-    # However, its defined return type is `None | UserError`.
-    # We are calling it and interpreting a `None` return (without UserError) as "no comments" or "success but no data returned by service".
-    return await database.post.get_comments(db=request.app.state.db, post_id=post_id) or errors.NOT_FOUND
+    return await database.post.get_comments(db=request.app.state.db, post_id=post_id)
 
 
-@router.delete("/{post_id}/comments", response_model=None | UserError, summary="Delete all comments for a post", response_class=APIResponse)
-async def delete_all_comments_for_post(request: Request, post_id: str, user: User = Depends(get_from_token)) -> None | UserError:
+@router.delete(
+    "/{post_id}/comments/{comment_id}",
+    response_model=None | UserError,
+    summary="Delete all comments for a post",
+    response_class=APIResponse,
+)
+async def delete_a_comments_for_post(
+    request: Request, post_id: str, comment_id: str, user: User = Depends(get_from_token)
+) -> None | UserError:
     """
-    Delete all comments for a specific post.
-    This uses the `delete_comment(db, post: Post)` service method,
-    interpreting it as deleting all comments for the given Post object.
-    A user must be authenticated, but authorization (e.g., only post author or admin can delete)
-    would typically be handled within the service layer or here.
+    Delete one comment.
     """
     post_to_modify = await database.post.get_one(db=request.app.state.db, post_id=post_id)
     if not post_to_modify:
@@ -137,7 +134,7 @@ async def delete_all_comments_for_post(request: Request, post_id: str, user: Use
     if post_to_modify.authorId != user.email:
         return errors.FORBIDDEN
 
-    result = await database.post.delete_comment(db=request.app.state.db, post=post_to_modify)
+    result = await database.post.delete_comment(db=request.app.state.db, post_id=post_id, comment_id=comment_id)
     if isinstance(result, UserError):
         return result
-    return None  # FastAPI will return 200 OK with empty body by default
+    return None
