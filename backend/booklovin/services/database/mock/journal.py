@@ -40,7 +40,7 @@ async def update(db: State, author_id: str, entry_id: str, journal_entry: NewJou
     for i, entry in enumerate(db.journal_entries[author_id]):
         if entry.uid == entry_id:
             # Replace the entry
-            db.journal_entries[author_id][i].update(journal_entry.model_construct())
+            db.journal_entries[author_id][i].update(journal_entry.model_dump(exclude_unset=True))
             db.save()
             return None
 

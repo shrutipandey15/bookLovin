@@ -78,7 +78,6 @@ async def test_list_journal_entries(aclient):
     assert "novel" in data[0]["content"]
 
 
-@pytest.mark.skip
 @pytest.mark.asyncio
 async def test_update_journal_entry(aclient):
     """Test updating a journal entry."""
@@ -96,6 +95,7 @@ async def test_update_journal_entry(aclient):
     # Update the entry
     updated_payload = {"title": "Updated title", "content": "Updated content", "mood": 2, "favorite": True}
     response = await aclient.put(f"/api/v1/journal/{entry_id}", json=updated_payload)
+
     assert_success(response)
 
     # Verify the update
