@@ -55,6 +55,8 @@ class State:
             self.posts = [Post.from_json(post) for post in data["posts"]]
             self.likes = defaultdict(set)
             self.likes.update({k: set(v) for k, v in data["likes"].items()})
+            self.journal_entries = defaultdict(list)
+            self.journal_entries.update({k: [JournalEntry.from_json(je) for je in v] for k, v in data["journal_entries"].items()})
 
 
 class MockSetup(ServiceSetup):

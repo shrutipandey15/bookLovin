@@ -11,7 +11,7 @@ async def test_create_journal(aclient):
     payload = {
         "title": "Test journal entry",
         "content": "This is a test journal entry containing very interesting text.",
-        "mood": 2,
+        "mood": 3,
     }
     response = await aclient.post("/api/v1/journal/", json=payload)
 
@@ -55,7 +55,7 @@ async def test_list_journal_entries(aclient):
     response = await aclient.get("/api/v1/journal/")
     assert_success(response)
     data = response.json()
-    assert len(data) == 3
+    assert len(data) == 4
 
     # Test filtering by mood
     response = await aclient.get("/api/v1/journal/?mood=2")
