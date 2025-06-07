@@ -9,13 +9,13 @@ repos:
       - id: trailing-whitespace
   - repo: local
     hooks:
-      - id: pytest
-        name: run pytest (backend)
+      - id: backendtest
+        name: run unit tests (backend)
         entry: ./scripts/run_backend_unit_tests
         files: \.(py)$
         language: system
       - id: fronttest
-        name: run unit tests (backend)
+        name: run unit tests (frontend)
         entry: cd frontend && npm run test_once
         files: \.(jsx?)$
         language: system
