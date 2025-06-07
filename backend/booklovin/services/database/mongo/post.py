@@ -2,13 +2,15 @@
 
 from contextlib import suppress
 from datetime import datetime, timedelta, timezone
-from typing import cast, Sequence, Mapping
+from typing import Mapping, Sequence, cast
 
 import pymongo.errors
 from booklovin.core.settings import RECENT_POSTS_LIMIT
+from booklovin.models.comments import Comment
 from booklovin.models.errors import UserError
 from booklovin.models.post import Post
 from booklovin.models.users import User
+from booklovin.services import errors
 from pymongo.asynchronous.database import AsyncDatabase as Database
 
 
@@ -30,7 +32,8 @@ async def get_one(db: Database, post_id: str) -> Post | None:
     post = await db.posts.find_one({"uid": post_id})
     if post:
         await _add_likes(db, post)
-    return post
+        return Post.from_json(post)
+    return None
 
 
 async def update(db: Database, post_id: str, post_data: Post) -> None | UserError:
@@ -49,11 +52,9 @@ async def delete(db: Database, post_id: str) -> None | UserError:
 async def get_recent(db: Database, user: User) -> list[Post] | UserError:
     """Returns a list of recent subscribed posts"""
     result = (
-        await db.posts.find(
-            {
-                "authorId": user.email,
-            }
-        )
+        await db.posts.find({
+            "authorId": user.email,
+        })
         .sort("creationTime", -1)
         .limit(RECENT_POSTS_LIMIT)
         .to_list()
@@ -106,4 +107,65 @@ async def like(db: Database, post_id: str, user_id: str) -> None | UserError:
     like_document = {"post_id": post_id, "user_id": user_id, "liked_at": datetime.now(timezone.utc)}
     with suppress(pymongo.errors.DuplicateKeyError):
         await db.likes.insert_one(like_document)
+    return None
+
+
+async def add_comment(db: Database, comment: Comment) -> None | UserError:
+    """Add a comment to a post.
+
+    Args:
+        db: Database connection
+        comment: The comment data
+
+    Returns:
+        None on success, UserError on failure
+    """
+    # Check if post exists
+    post = await get_one(db, comment.postId)
+    if not post:
+        return errors.POST_NOT_FOUND
+
+    # Insert the comment
+    await db.comments.insert_one(comment.model_dump())
+    return None
+
+
+async def get_comments(db: Database, post_id: str) -> None | UserError | list[Comment]:
+    """Get all comments for a post.
+
+    Args:
+        db: Database connection
+        post_id: ID of the post to get comments for
+
+    Returns:
+        List of comments on success, UserError on failure
+    """
+    # Check if post exists
+    post = await get_one(db, post_id)
+    if not post:
+        return errors.POST_NOT_FOUND
+
+    # Retrieve comments for the post
+    comment_docs = await db.comments.find({"postId": post_id}).sort("creationTime", -1).to_list(length=None)
+    return [Comment(**doc) for doc in comment_docs]
+
+
+async def delete_comment(db: Database, post_id: str, comment_id: str) -> None | UserError:
+    """Delete a comment or all comments for a post.
+
+    Args:
+        db: Database connection
+        post_id: ID of the post to delete comments for
+        comment_id: ID of the specific comment to delete, or None to delete all
+
+    Returns:
+        None on success, UserError on failure
+    """
+    # Build query based on whether comment_id is provided
+    query = {"postId": post_id}
+    if comment_id:
+        query["uid"] = comment_id
+
+    # Delete matching comment(s)
+    await db.comments.delete_many(query)
     return None

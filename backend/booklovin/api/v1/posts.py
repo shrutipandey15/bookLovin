@@ -124,9 +124,7 @@ async def get_comments_for_post(request: Request, post_id: str, user: User = Dep
 async def delete_a_comments_for_post(
     request: Request, post_id: str, comment_id: str, user: User = Depends(get_from_token)
 ) -> None | UserError:
-    """
-    Delete one comment.
-    """
+    """Delete one comment."""
     post_to_modify = await database.post.get_one(db=request.app.state.db, post_id=post_id)
     if not post_to_modify:
         return errors.NOT_FOUND
