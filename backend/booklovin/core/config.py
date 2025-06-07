@@ -7,7 +7,7 @@ DEBUG = "ENV_MODE" in os.environ and os.environ["ENV_MODE"] == "dev"
 
 print(f"debug mode: {DEBUG}")
 # DB
-AVAILABLE_DB_ENGINES = ("mock", "mongo", "redis")
+AVAILABLE_DB_ENGINES = ("mock", "mongo")
 DB_TYPE = os.environ.get("DB_TYPE", "mongo")  # mongo or mock
 DB_NAME = "booklovin_test" if DEBUG else "booklovin"
 print(f"Database: {DB_TYPE.upper()}::{DB_NAME}")
