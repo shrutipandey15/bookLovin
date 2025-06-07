@@ -54,14 +54,14 @@ class State:
             data = loads(open(DB_FILE).read())
             self.posts_count = data["posts_count"]
             self.users_count = data["users_count"]
-            self.users = [User.from_json(user) for user in data["users"]]
-            self.posts = [Post.from_json(post) for post in data["posts"]]
+            self.users = [User.from_dict(user) for user in data["users"]]
+            self.posts = [Post.from_dict(post) for post in data["posts"]]
             self.likes = defaultdict(set)
             self.likes.update({k: set(v) for k, v in data["likes"].items()})
             self.journal_entries = defaultdict(list)
-            self.journal_entries.update({k: [JournalEntry.from_json(je) for je in v] for k, v in data["journal_entries"].items()})
+            self.journal_entries.update({k: [JournalEntry.from_dict(je) for je in v] for k, v in data["journal_entries"].items()})
             self.comments = defaultdict(list)
-            self.comments.update({k: [Comment.from_json(comment) for comment in v] for k, v in data["comments"].items()})
+            self.comments.update({k: [Comment.from_dict(comment) for comment in v] for k, v in data["comments"].items()})
 
 
 class MockSetup(ServiceSetup):

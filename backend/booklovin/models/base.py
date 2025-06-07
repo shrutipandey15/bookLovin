@@ -16,17 +16,17 @@ class FlexModel(BaseModel):
             if prop in data:
                 setattr(self, prop, data[prop])
 
-    def serialize(self: FM) -> str:
+    def to_json(self: FM) -> str:
         """Returns a JSON string"""
         return dumps(self.model_dump())
 
     @classmethod
-    def deserialize(kls: Type[FM], post_data: str) -> FM:
+    def from_json(kls: Type[FM], post_data: str) -> FM:
         """Get a new instance from a JSON string"""
-        return kls.from_json(loads(post_data))
+        return kls.from_dict(loads(post_data))
 
     @classmethod
-    def from_json(kls: Type[FM], dict_obj: dict[str, Any], validate=True) -> FM:
+    def from_dict(kls: Type[FM], dict_obj: dict[str, Any], validate=True) -> FM:
         """Get a new instance from an Object"""
         if "creationTime" in dict_obj:
             dict_obj["creationTime"] = datetime.fromtimestamp(dict_obj["creationTime"], tz=timezone.utc)
@@ -39,7 +39,7 @@ class FlexModel(BaseModel):
     def from_new_model(kls: Type[FM], model: BaseModel, author: str) -> FM:
         d = model.model_dump()
         d["authorId"] = author
-        return kls.from_json(d)
+        return kls.from_dict(d)
 
 
 class UserObject:
@@ -48,5 +48,5 @@ class UserObject:
     authorId: str
 
     @field_serializer("creationTime")
-    def serialize_creationTime(self, v: datetime, _: SerializationInfo) -> float:
+    def to_json_creationTime(self, v: datetime, _: SerializationInfo) -> float:
         return v.timestamp()

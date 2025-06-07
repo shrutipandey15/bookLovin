@@ -46,4 +46,4 @@ async def query(
     if not entries:
         return []
 
-    return [JournalEntry.from_json(entry) for entry in entries]
+    return [JournalEntry.from_dict(entry) for entry in entries]

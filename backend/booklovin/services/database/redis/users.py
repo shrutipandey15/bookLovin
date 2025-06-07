@@ -8,7 +8,7 @@ from .core import get_user_key
 
 
 async def create(db: Redis, user: User) -> None | UserError:
-    await db.set(get_user_key(user.email), user.serialize())
+    await db.set(get_user_key(user.email), user.to_json())
     return None
 
 
@@ -18,5 +18,5 @@ async def get(db: Redis, email: str | None = None, uid: str | None = None) -> Us
     else:
         raise RuntimeError("Getting by uid isn't supported at the moment")
     if user_data:
-        return User.deserialize(user_data)
+        return User.from_json(user_data)
     return None

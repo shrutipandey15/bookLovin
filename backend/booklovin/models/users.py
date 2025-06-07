@@ -37,5 +37,5 @@ class User(FlexModel):
     active: bool = True
 
     @field_serializer("creationTime")
-    def serialize_creationTime(self, v: datetime, _) -> float:
+    def to_json_creationTime(self, v: datetime, _) -> float:
         return v.timestamp()

@@ -13,7 +13,7 @@ async def get(db: Database, email: str | None = None, uid: str | None = None) ->
         req["uid"] = uid
     obj = await db.users.find_one(req)
     if obj:
-        return User.from_json(obj)
+        return User.from_dict(obj)
     return None
 
 

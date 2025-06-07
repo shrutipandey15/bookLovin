@@ -9,7 +9,7 @@ from redis.asyncio import Redis
 
 
 async def create(db: Redis, post: Post) -> None | UserError:
-    new_post = post.serialize()
+    new_post = post.to_json()
     await db.set(f"posts:{post.uid}", new_post)
     return None
 
@@ -23,7 +23,7 @@ async def delete(db: Redis, post_id: str) -> None | UserError:
 async def get_one(db: Redis, post_id: str) -> Post | None:
     data = await db.get(f"posts:{post_id}")
     if data:
-        model = Post.deserialize(data)
+        model = Post.from_json(data)
         model.likes = await db.scard(f"likes:{post_id}")  # type: ignore
         return model
     return None
@@ -35,7 +35,7 @@ async def get_all(db: Redis, start: int, end: int) -> list[Post]:
     for key in keys:
         post_data = await db.get(key)
         if post_data:
-            post = Post.deserialize(post_data)
+            post = Post.from_json(post_data)
             posts.append(post)
     return posts
 
@@ -56,7 +56,7 @@ async def get_popular(db: Redis) -> list[Post] | UserError:
     for key in keys:
         post_data = await db.get(key)
         if post_data:
-            post = Post.deserialize(post_data)
+            post = Post.from_json(post_data)
             post.likes = await db.scard(f"likes:{post.uid}")  # type: ignore
             posts.append(post)
     posts.sort(key=lambda x: x.likes, reverse=True)
@@ -70,7 +70,7 @@ async def get_recent(db: Redis, user: User) -> list[Post] | UserError:
     for key in keys:
         post_data = await db.get(key)
         if post_data:
-            post = Post.deserialize(post_data)
+            post = Post.from_json(post_data)
             if post.authorId == user.uid:
                 posts.append(post)
     posts.sort(key=lambda x: x.creationTime, reverse=True)
@@ -84,7 +84,7 @@ async def update(db: Redis, post_id: str, post_data: Post) -> None | UserError:
 
     if post:
         post.update(update_data)
-        await db.set(f"posts:{post_id}", post.serialize())
+        await db.set(f"posts:{post_id}", post.to_json())
     else:
         return errors.POST_NOT_FOUND
     return None
