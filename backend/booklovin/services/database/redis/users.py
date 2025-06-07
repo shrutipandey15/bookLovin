@@ -13,7 +13,10 @@ async def create(db: Redis, user: User) -> None | UserError:
 
 
 async def get(db: Redis, email: str | None = None, uid: str | None = None) -> User | None:
-    user_data = await db.get(get_user_key(email))
+    if email:
+        user_data = await db.get(get_user_key(email))
+    else:
+        raise RuntimeError("Getting by uid isn't supported at the moment")
     if user_data:
         return User.deserialize(user_data)
     return None

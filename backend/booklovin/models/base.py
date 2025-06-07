@@ -26,14 +26,20 @@ class FlexModel(BaseModel):
         return kls.from_json(loads(post_data))
 
     @classmethod
-    def from_json(kls: Type[FM], post: dict[str, Any], validate=True) -> FM:
+    def from_json(kls: Type[FM], dict_obj: dict[str, Any], validate=True) -> FM:
         """Get a new instance from an Object"""
-        if "creationTime" in post:
-            post["creationTime"] = datetime.fromtimestamp(post["creationTime"], tz=timezone.utc)
+        if "creationTime" in dict_obj:
+            dict_obj["creationTime"] = datetime.fromtimestamp(dict_obj["creationTime"], tz=timezone.utc)
         if validate:
-            return kls.model_validate(post)
+            return kls.model_validate(dict_obj)
         else:
-            return kls.model_construct(post)
+            return kls.model_construct(dict_obj)  # type: ignore
+
+    @classmethod
+    def from_new_model(kls: Type[FM], model: BaseModel, author: str) -> FM:
+        d = model.model_dump()
+        d["authorId"] = author
+        return kls.from_json(d)
 
 
 class UserObject:

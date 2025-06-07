@@ -43,7 +43,7 @@ async def update(db: State, author_id: str, entry_id: str, journal_entry: NewJou
             return None
 
     # If we get here, entry wasn't found
-    return gen_error(ErrorCode.NOT_FOUND, f"Journal entry with ID {journal_entry.uid} not found.")
+    return gen_error(ErrorCode.NOT_FOUND, f"Journal entry with ID {entry_id} not found.")
 
 
 async def query(

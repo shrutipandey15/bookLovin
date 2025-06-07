@@ -9,7 +9,7 @@ class NewPost(FlexModel):
     imageUrl: str = ""
 
 
-class Post(UserObject, NewPost):
+class Post(NewPost, UserObject):
     lastLike: int = 0
     likes: int = 0
 

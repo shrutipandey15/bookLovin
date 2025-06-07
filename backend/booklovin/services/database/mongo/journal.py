@@ -35,15 +35,15 @@ async def query(
     query = {"authorId": user_id}
 
     if mood:
-        query["mood"] = mood.value  # Assuming Mood is an Enum with a value attribute
+        query["mood"] = mood.value  # type: ignore
     if search:
-        query["$text"] = {"$search": search}  # Assuming text index is set up for search
+        query["$text"] = {"$search": search}  # type: ignore
     if favorite is not None:
-        query["favorite"] = favorite  # Assuming there's a favorite field
+        query["favorite"] = favorite  # type: ignore
 
     entries = await db.journals.find(query).to_list()
 
     if not entries:
         return []
 
-    return [JournalEntry(**entry) for entry in entries]
+    return [JournalEntry.from_json(entry) for entry in entries]

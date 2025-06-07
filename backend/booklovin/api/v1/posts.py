@@ -1,4 +1,4 @@
-"""Routes for /posts"""
+"""Routes for /posts."""
 
 from booklovin.core.config import APIResponse
 from booklovin.models.comments import Comment, NewComment
@@ -17,10 +17,8 @@ crouter = APIRouter(tags=["comments"])
 # create
 @router.post("/", response_model=Post | UserError, response_class=APIResponse)
 async def create_post(request: Request, post: NewPost, user: User = Depends(get_from_token)) -> Post:
-    """Create one post"""
-    model = post.model_dump()
-    new_post = Post(authorId=user.uid, **model)
-
+    """Create one post."""
+    new_post = Post.from_new_model(post, user.uid)
     await database.post.create(db=request.app.state.db, post=new_post)
     return new_post
 
@@ -28,7 +26,7 @@ async def create_post(request: Request, post: NewPost, user: User = Depends(get_
 # list all, deprecated
 @router.get("/", response_model=list[Post] | UserError, response_class=APIResponse)
 async def read_all_posts(request: Request, s: int, e: int, user: User = Depends(get_from_token)) -> list[Post] | UserError:
-    """Get a range of posts (from most recent to oldest)"""
+    """Get a range of posts (from most recent to oldest)."""
     assert e > s
     if e - s > 40:
         return errors.ABUSIVE_USAGE
@@ -37,20 +35,20 @@ async def read_all_posts(request: Request, s: int, e: int, user: User = Depends(
 
 @router.get("/recent", response_model=list[Post] | UserError, response_class=APIResponse)
 async def read_recent_posts(request: Request, user: User = Depends(get_from_token)) -> list[Post] | UserError:
-    """Returns a list of recent subscribed posts"""
+    """Return a list of recent subscribed posts."""
     return await database.post.get_recent(db=request.app.state.db, user=user)
 
 
 @router.get("/popular", response_model=list[Post] | UserError, response_class=APIResponse)
 async def read_popular_posts(request: Request, user: User = Depends(get_from_token)) -> list[Post] | UserError:
-    """Returns a list of recent popular posts"""
+    """Return a list of recent popular posts."""
     return await database.post.get_popular(db=request.app.state.db)
 
 
 # get one
 @router.get("/{post_id}", response_model=Post | UserError, response_class=APIResponse)
 async def read_one_post(request: Request, post_id: str, user: User = Depends(get_from_token)) -> Post | UserError:
-    "Get one specific post"
+    """Get one specific post."""
     post = await database.post.get_one(db=request.app.state.db, post_id=post_id)
     return post or errors.POST_NOT_FOUND
 
@@ -58,22 +56,20 @@ async def read_one_post(request: Request, post_id: str, user: User = Depends(get
 # update
 @router.put("/{post_id}", response_model=None | UserError, response_class=APIResponse)
 async def update_post(request: Request, post_id: str, post: Post, user: User = Depends(get_from_token)) -> None:
-    "Update a specific post"
+    """Update a specific post."""
     await database.post.update(db=request.app.state.db, post_id=post_id, post_data=post)
 
 
 @router.put("/{post_id}/like", response_model=None | UserError, response_class=APIResponse)
 async def like_post(request: Request, post_id: str, user: User = Depends(get_from_token)) -> None:
-    "Like a specific post"
+    """Like a specific post."""
     await database.post.like(db=request.app.state.db, post_id=post_id, user_id=user.uid)
     return None
 
 
-# delete
 @router.delete("/{post_id}", response_model=None | UserError, response_class=APIResponse)
 async def delete_post(request: Request, post_id: str, user: User = Depends(get_from_token)) -> None | UserError:
-    "delete a specific post"
-
+    """Delete a specific post."""
     return await database.post.delete(
         db=request.app.state.db,
         post_id=post_id,
@@ -87,12 +83,10 @@ async def add_comment_to_post(
     user: User = Depends(get_from_token),
 ) -> None | UserError:
     """Add a comment to a specific post."""
-
     if not await database.post.exists(db=request.app.state.db, post_id=comment.postId):
         return errors.POST_NOT_FOUND
 
-    model = comment.model_dump()
-    new_comment = Comment(authorId=user.uid, **model)
+    new_comment = Comment.from_new_model(comment, user.uid)
 
     return await database.post.add_comment(db=request.app.state.db, comment=new_comment)
 

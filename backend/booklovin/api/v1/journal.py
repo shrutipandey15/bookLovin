@@ -14,8 +14,7 @@ router = APIRouter(tags=["journal"])
 @router.post("/", response_model=JournalEntry | UserError, response_class=APIResponse)
 async def create_journal_entry(request: Request, post: NewJournalEntry, user: User = Depends(get_from_token)) -> JournalEntry:
     """Create one journal entry."""
-    model = post.model_dump()
-    new_entry = JournalEntry(authorId=user.uid, **model)
+    new_entry = JournalEntry.from_new_model(post, author=user.uid)
 
     await database.journal.create(db=request.app.state.db, entry=new_entry)
     return new_entry
