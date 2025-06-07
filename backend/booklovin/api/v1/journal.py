@@ -15,7 +15,7 @@ router = APIRouter(tags=["journal"])
 async def create_journal_entry(request: Request, post: NewJournalEntry, user: User = Depends(get_from_token)) -> JournalEntry:
     """Create one journal entry."""
     model = post.model_dump()
-    new_entry = JournalEntry(authorId=user.email, **model)
+    new_entry = JournalEntry(authorId=user.uid, **model)
 
     await database.journal.create(db=request.app.state.db, entry=new_entry)
     return new_entry
@@ -35,7 +35,7 @@ async def update_journal_entry(
     request: Request, entry_id: str, entry: NewJournalEntry, user: User = Depends(get_from_token)
 ) -> None | UserError:
     """Update an existing journal entry."""
-    result = await database.journal.update(db=request.app.state.db, author_id=user.email, entry_id=entry_id, journal_entry=entry)
+    result = await database.journal.update(db=request.app.state.db, author_id=user.uid, entry_id=entry_id, journal_entry=entry)
     if isinstance(result, UserError):
         return result
     return None
@@ -51,7 +51,7 @@ async def list_journal_entries(
 ) -> list[JournalEntry] | UserError:
     """List journal entries with optional filtering."""
 
-    result = await database.journal.query(db=request.app.state.db, user_id=user.email, mood=mood, search=search, favorite=favorite)
+    result = await database.journal.query(db=request.app.state.db, user_id=user.uid, mood=mood, search=search, favorite=favorite)
 
     if isinstance(result, UserError):
         return result

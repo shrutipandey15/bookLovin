@@ -56,7 +56,7 @@ async def get_recent(db: Database, user: User) -> list[Post] | UserError:
     """Returns a list of recent subscribed posts"""
     result = (
         await db.posts.find({
-            "authorId": user.email,
+            "authorId": user.uid,
         })
         .sort("creationTime", -1)
         .limit(RECENT_POSTS_LIMIT)

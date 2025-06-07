@@ -1,7 +1,6 @@
 """Database helper for mock db: Users"""
 
 from booklovin.core import settings
-from booklovin.core.utils import loads
 from booklovin.models.errors import UserError
 from booklovin.models.post import Post
 from booklovin.models.users import User
@@ -72,7 +71,7 @@ async def get_recent(db: Redis, user: User) -> list[Post] | UserError:
         post_data = await db.get(key)
         if post_data:
             post = Post.deserialize(post_data)
-            if post.authorId == user.email:
+            if post.authorId == user.uid:
                 posts.append(post)
     posts.sort(key=lambda x: x.creationTime, reverse=True)
     return posts[: settings.RECENT_POSTS_LIMIT]

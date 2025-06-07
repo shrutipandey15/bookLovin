@@ -19,7 +19,7 @@ crouter = APIRouter(tags=["comments"])
 async def create_post(request: Request, post: NewPost, user: User = Depends(get_from_token)) -> Post:
     """Create one post"""
     model = post.model_dump()
-    new_post = Post(authorId=user.email, **model)
+    new_post = Post(authorId=user.uid, **model)
 
     await database.post.create(db=request.app.state.db, post=new_post)
     return new_post
@@ -65,7 +65,7 @@ async def update_post(request: Request, post_id: str, post: Post, user: User = D
 @router.put("/{post_id}/like", response_model=None | UserError, response_class=APIResponse)
 async def like_post(request: Request, post_id: str, user: User = Depends(get_from_token)) -> None:
     "Like a specific post"
-    await database.post.like(db=request.app.state.db, post_id=post_id, user_id=user.email)
+    await database.post.like(db=request.app.state.db, post_id=post_id, user_id=user.uid)
     return None
 
 
@@ -92,7 +92,7 @@ async def add_comment_to_post(
         return errors.NOT_FOUND
 
     model = comment.model_dump()
-    new_comment = Comment(authorId=user.email, **model)
+    new_comment = Comment(authorId=user.uid, **model)
 
     return await database.post.add_comment(db=request.app.state.db, comment=new_comment)
 
@@ -121,7 +121,7 @@ async def delete_a_comments_for_post(
     if not post_to_modify:
         return errors.NOT_FOUND
 
-    if post_to_modify.authorId != user.email:
+    if post_to_modify.authorId != user.uid:
         return errors.FORBIDDEN
 
     result = await database.post.delete_comment(db=request.app.state.db, post_id=post_id, comment_id=comment_id)
