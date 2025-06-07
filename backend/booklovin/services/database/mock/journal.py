@@ -7,8 +7,6 @@ from .core import State
 
 async def create(db: State, entry: JournalEntry) -> None | UserError:
     """Create a journal entry."""
-    if entry.authorId not in db.journal_entries:
-        db.journal_entries[entry.authorId] = []
     db.journal_entries[entry.authorId].append(entry)
     db.save()
     return None
