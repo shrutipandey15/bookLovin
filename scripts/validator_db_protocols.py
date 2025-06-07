@@ -79,6 +79,7 @@ if __name__ == "__main__":
     }
     for engine in reversed(AVAILABLE_DB_ENGINES):
         print("-" * 80)
+        clean = True
         for route, protocol in api_items.items():
             try:
                 module = importlib.import_module(
@@ -86,9 +87,13 @@ if __name__ == "__main__":
                 )
             except ImportError:
                 _header(engine, route, "IMPLEMENTATION IS MISSING")
+                clean = False
             else:
                 issues = get_protocol_compliance_issues(module, protocol)
                 if issues:
                     _header(engine, route)
+                    clean = False
                     for issue in issues:
                         print(issue)
+        if clean:
+            print(f"🎉 {green(engine.upper())} is fully implemented.")
