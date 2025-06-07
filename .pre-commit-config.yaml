@@ -16,7 +16,7 @@ repos:
         language: system
       - id: fronttest
         name: run unit tests (frontend)
-        entry: cd frontend && npm run test_once
+        entry: ./scripts/run_frontend_unit_tests
         files: \.(jsx?)$
         language: system
 
