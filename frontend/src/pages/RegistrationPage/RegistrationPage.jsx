@@ -22,16 +22,13 @@ const RegistrationPage = () => {
   const timeoutRef = useRef(null)
   const redirectTimeoutRef = useRef(null)
 
-  // Rate limiting constants
-  const MAX_REGISTRATION_ATTEMPTS = 3
-  const BLOCK_DURATION = 10 * 60 * 1000 // 10 minutes
+  const MAX_REGISTRATION_ATTEMPTS = 100 // needs to be 5, but for testing purposes, we set it to 100
+  const BLOCK_DURATION = 3000 // needs to be 10 minutes, but for testing purposes, we set it to 3 seconds
   const REQUEST_TIMEOUT = 30000 // 30 seconds
 
-  // Password strength requirements
   const PASSWORD_MIN_LENGTH = 8
   const PASSWORD_MAX_LENGTH = 128
 
-  // Username validation
   const validateUsername = (username) => {
     const trimmed = username.trim()
     if (trimmed.length < 3 || trimmed.length > 30) return false
@@ -39,14 +36,10 @@ const RegistrationPage = () => {
     const usernameRegex = /^[a-zA-Z0-9_-]+$/
     return usernameRegex.test(trimmed)
   }
-
-  // Email validation
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     return emailRegex.test(email) && email.length <= 254
   }
-
-  // Password validation
   const validatePassword = (password) => {
     if (password.length < PASSWORD_MIN_LENGTH || password.length > PASSWORD_MAX_LENGTH) {
       return { valid: false, message: `Password must be ${PASSWORD_MIN_LENGTH}-${PASSWORD_MAX_LENGTH} characters long` }
@@ -67,7 +60,6 @@ const RegistrationPage = () => {
     return { valid: true, message: '' }
   }
 
-  // Real-time validation
   const validateForm = useCallback(() => {
     const errors = {}
 
@@ -94,12 +86,10 @@ const RegistrationPage = () => {
     return Object.keys(errors).length === 0
   }, [username, email, password, confirmPassword])
 
-  // Validate form on input changes
   useEffect(() => {
     validateForm()
   }, [validateForm])
 
-  // Check if user is currently blocked
   useEffect(() => {
     const checkBlock = () => {
       const storedBlockEnd = localStorage.getItem('registrationBlockEnd')

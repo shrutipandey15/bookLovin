@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Search,
   Filter,
@@ -9,32 +9,80 @@ import {
   Star,
   TrendingUp
 } from 'lucide-react';
-import { mockJournalEntries } from '@utils/journalMock';
 import { calculateStats } from '@utils/journalUtils';
 import { MOOD_CONFIG } from '@components/MoodContext';
 import JournalEditor from './JournalEditor';
 import EntryCard from './EntryCard';
-
+import axiosInstance from '@api/axiosInstance';
+import ConfirmModal from '@components/ConfirmModal';
 const JournalPage = () => {
-  const [entries, setEntries] = useState(mockJournalEntries);
+  const [entries, setEntries] = useState([]);
   const [activeEntry, setActiveEntry] = useState(null);
   const [isWriting, setIsWriting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [moodFilter, setMoodFilter] = useState('all');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [editorError, setEditorError] = useState(null);
 
-  const stats = calculateStats(entries);
+  // For delete confirmation modal
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [entryToDeleteId, setEntryToDeleteId] = useState(null);
 
-  // Map mood enum values to keys for filtering
+  // Map mood enum values to keys for filtering (consistent with backend Mood enum)
   const moodMapping = {
     1: 'heartbroken',
     2: 'healing',
     3: 'empowered'
   };
 
+  // Function to fetch entries from the backend
+  const fetchEntries = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const params = {};
+      if (moodFilter !== 'all') {
+        const backendMoodValue = Object.keys(moodMapping).find(key => moodMapping[key] === moodFilter);
+        if (backendMoodValue) {
+          params.mood = backendMoodValue;
+        }
+      }
+      if (searchTerm) {
+        params.search = searchTerm;
+      }
+
+      const response = await axiosInstance.get('/journal', { params });
+
+      const data = response.data;
+
+      const formattedEntries = data.map(entry => ({
+        ...entry,
+        _id: entry.uid,
+        writing_time: entry.writingTime,
+        is_favorite: entry.favorite,
+        created_at: entry.created_at || new Date().toISOString(),
+        updated_at: entry.updated_at || new Date().toISOString(),
+      }));
+      setEntries(formattedEntries);
+    } catch (err) {
+      console.error("Failed to fetch entries:", err);
+      setError(err.response?.data?.detail || "Failed to load journal entries. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEntries();
+  }, [moodFilter, searchTerm]);
+
+  const stats = calculateStats(entries);
+
   const filteredEntries = entries.filter(entry => {
     const matchesSearch = entry.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           (entry.title || '').toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesMood = moodFilter === 'all' || entry.mood.toString() === moodFilter;
+    const matchesMood = moodFilter === 'all' || moodMapping[entry.mood.toString()] === moodFilter;
     return matchesSearch && matchesMood;
   });
 
@@ -49,50 +97,81 @@ const JournalPage = () => {
   };
 
   const handleSaveEntry = async (entryData) => {
-    const now = new Date();
+    setEditorError(null);
+    try {
+      const payload = {
+        title: entryData.title,
+        content: entryData.content,
+        mood: entryData.mood,
+        writingTime: entryData.writing_time,
+        tags: entryData.tags,
+        favorite: entryData.is_favorite
+      };
 
-    if (activeEntry) {
-      // Update existing entry
+      let response;
+      if (activeEntry) {
+        response = await axiosInstance.put(`/journal/${activeEntry._id}`, payload);
+      } else {
+        response = await axiosInstance.post('/journal/', payload);
+      }
+
+      await fetchEntries();
+
+      setIsWriting(false);
+      setActiveEntry(null);
+    } catch (err) {
+      console.error("Error saving entry:", err);
+      setEditorError(err.response?.data?.detail || "Failed to save entry. Please try again.");
+    }
+  };
+
+  const handleDeleteEntry = async (entryId) => {
+    setShowConfirmModal(false);
+    setEntryToDeleteId(null);
+    setError(null);
+    try {
+      await axiosInstance.delete(`/journal/${entryId}`);
+
+      setEntries(prev => prev.filter(entry => entry._id !== entryId));
+    } catch (err) {
+      console.error("Error deleting entry:", err);
+      setError(err.response?.data?.detail || "Failed to delete entry. Please try again.");
+    }
+  };
+
+  const handleToggleFavorite = async (entryId) => {
+    setError(null);
+    try {
+      const entryToToggle = entries.find(entry => entry._id === entryId);
+      if (!entryToToggle) return;
+
+      const updatedFavoriteStatus = !entryToToggle.is_favorite;
+      const payload = {
+        favorite: updatedFavoriteStatus
+      };
+
+      await axiosInstance.put(`/journal/${entryId}`, payload);
+
       setEntries(prev => prev.map(entry =>
-        entry._id === activeEntry._id
-          ? {
-              ...entry,
-              ...entryData,
-              updated_at: now
-            }
+        entry._id === entryId
+          ? { ...entry, is_favorite: updatedFavoriteStatus }
           : entry
       ));
-    } else {
-      // Create new entry
-      const newEntry = {
-        _id: Date.now().toString(),
-        ...entryData,
-        is_favorite: false,
-        created_at: now,
-        updated_at: now
-      };
-      setEntries(prev => [newEntry, ...prev]);
+    } catch (err) {
+      console.error("Error toggling favorite:", err);
+      setError(err.response?.data?.detail || "Failed to toggle favorite status. Please try again.");
     }
-
-    setIsWriting(false);
-    setActiveEntry(null);
-  };
-
-  const handleDeleteEntry = (entryId) => {
-    setEntries(prev => prev.filter(entry => entry._id !== entryId));
-  };
-
-  const handleToggleFavorite = (entryId) => {
-    setEntries(prev => prev.map(entry =>
-      entry._id === entryId
-        ? { ...entry, is_favorite: !entry.is_favorite }
-        : entry
-    ));
   };
 
   const handleCancelEdit = () => {
     setIsWriting(false);
     setActiveEntry(null);
+    setEditorError(null);
+  };
+
+  const confirmDelete = (entryId) => {
+    setEntryToDeleteId(entryId);
+    setShowConfirmModal(true);
   };
 
   if (isWriting) {
@@ -101,6 +180,7 @@ const JournalPage = () => {
         entry={activeEntry}
         onSave={handleSaveEntry}
         onCancel={handleCancelEdit}
+        error={editorError}
       />
     );
   }
@@ -213,179 +293,195 @@ const JournalPage = () => {
           </div>
         </div>
 
+        {/* Display loading/error states */}
+        {isLoading && <div className="text-center py-8" style={{ color: 'var(--mood-secondary)' }}>Loading entries...</div>}
+        {error && <div className="text-center py-8 text-red-500">{error}</div>}
+
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div
-            className="p-6 rounded-xl shadow-sm border"
-            style={{
-              backgroundColor: 'var(--mood-contrast)',
-              borderColor: 'var(--mood-secondary)'
-            }}
-          >
-            <div className="flex items-center space-x-3">
-              <BookOpen
-                className="w-8 h-8"
-                style={{ color: 'var(--mood-primary)' }}
-              />
-              <div>
-                <p
-                  className="text-2xl font-bold"
-                  style={{ color: 'var(--mood-text)' }}
-                >
-                  {stats.totalEntries}
-                </p>
-                <p
-                  className="text-sm"
-                  style={{ color: 'var(--mood-secondary)' }}
-                >
-                  Total Entries
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div
-            className="p-6 rounded-xl shadow-sm border"
-            style={{
-              backgroundColor: 'var(--mood-contrast)',
-              borderColor: 'var(--mood-secondary)'
-            }}
-          >
-            <div className="flex items-center space-x-3">
-              <Clock
-                className="w-8 h-8"
-                style={{ color: 'var(--mood-primary)' }}
-              />
-              <div>
-                <p
-                  className="text-2xl font-bold"
-                  style={{ color: 'var(--mood-text)' }}
-                >
-                  {stats.streak}
-                </p>
-                <p
-                  className="text-sm"
-                  style={{ color: 'var(--mood-secondary)' }}
-                >
-                  Day Streak
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div
-            className="p-6 rounded-xl shadow-sm border"
-            style={{
-              backgroundColor: 'var(--mood-contrast)',
-              borderColor: 'var(--mood-secondary)'
-            }}
-          >
-            <div className="flex items-center space-x-3">
-              <Star
-                className="w-8 h-8"
-                style={{ color: 'var(--mood-primary)' }}
-              />
-              <div>
-                <p
-                  className="text-2xl font-bold"
-                  style={{ color: 'var(--mood-text)' }}
-                >
-                  {stats.favorites}
-                </p>
-                <p
-                  className="text-sm"
-                  style={{ color: 'var(--mood-secondary)' }}
-                >
-                  Favorites
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div
-            className="p-6 rounded-xl shadow-sm border"
-            style={{
-              backgroundColor: 'var(--mood-contrast)',
-              borderColor: 'var(--mood-secondary)'
-            }}
-          >
-            <div className="flex items-center space-x-3">
-              <TrendingUp
-                className="w-8 h-8"
-                style={{ color: 'var(--mood-primary)' }}
-              />
-              <div>
-                <p
-                  className="text-2xl font-bold"
-                  style={{ color: 'var(--mood-text)' }}
-                >
-                  {stats.avgWordsPerEntry}
-                </p>
-                <p
-                  className="text-sm"
-                  style={{ color: 'var(--mood-secondary)' }}
-                >
-                  Avg Words
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Entries Grid */}
-        <div className="space-y-6">
-          {filteredEntries.length === 0 ? (
+        {!isLoading && !error && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div
-              className="text-center py-12 rounded-xl border"
+              className="p-6 rounded-xl shadow-sm border"
               style={{
                 backgroundColor: 'var(--mood-contrast)',
                 borderColor: 'var(--mood-secondary)'
               }}
             >
-              <BookOpen
-                className="w-16 h-16 mx-auto mb-4 opacity-50"
-                style={{ color: 'var(--mood-secondary)' }}
-              />
-              <h3
-                className="text-xl font-semibold mb-2"
-                style={{ color: 'var(--mood-text)' }}
-              >
-                {searchTerm || moodFilter !== 'all' ? 'No entries found' : 'No entries yet'}
-              </h3>
-              <p style={{ color: 'var(--mood-secondary)' }}>
-                {searchTerm || moodFilter !== 'all'
-                  ? 'Try adjusting your search or filter criteria'
-                  : 'Start your journaling journey by creating your first entry'
-                }
-              </p>
-              {!searchTerm && moodFilter === 'all' && (
-                <button
-                  onClick={handleNewEntry}
-                  className="mt-4 px-6 py-3 rounded-xl hover:opacity-90 transition-all"
-                  style={{
-                    backgroundColor: 'var(--mood-primary)',
-                    color: 'var(--mood-contrast)'
-                  }}
-                >
-                  Create First Entry
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredEntries.map(entry => (
-                <EntryCard
-                  key={entry._id}
-                  entry={entry}
-                  onEdit={handleEditEntry}
-                  onDelete={handleDeleteEntry}
-                  onToggleFavorite={handleToggleFavorite}
+              <div className="flex items-center space-x-3">
+                <BookOpen
+                  className="w-8 h-8"
+                  style={{ color: 'var(--mood-primary)' }}
                 />
-              ))}
+                <div>
+                  <p
+                    className="text-2xl font-bold"
+                    style={{ color: 'var(--mood-text)' }}
+                  >
+                    {stats.totalEntries}
+                  </p>
+                  <p
+                    className="text-sm"
+                    style={{ color: 'var(--mood-secondary)' }}
+                  >
+                    Total Entries
+                  </p>
+                </div>
+              </div>
             </div>
-          )}
-        </div>
+
+            <div
+              className="p-6 rounded-xl shadow-sm border"
+              style={{
+                backgroundColor: 'var(--mood-contrast)',
+                borderColor: 'var(--mood-secondary)'
+              }}
+            >
+              <div className="flex items-center space-x-3">
+                <Clock
+                  className="w-8 h-8"
+                  style={{ color: 'var(--mood-primary)' }}
+                />
+                <div>
+                  <p
+                    className="text-2xl font-bold"
+                    style={{ color: 'var(--mood-text)' }}
+                  >
+                    {stats.streak}
+                  </p>
+                  <p
+                    className="text-sm"
+                    style={{ color: 'var(--mood-secondary)' }}
+                  >
+                    Day Streak
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div
+              className="p-6 rounded-xl shadow-sm border"
+              style={{
+                backgroundColor: 'var(--mood-contrast)',
+                borderColor: 'var(--mood-secondary)'
+              }}
+            >
+              <div className="flex items-center space-x-3">
+                <Star
+                  className="w-8 h-8"
+                  style={{ color: 'var(--mood-primary)' }}
+                />
+                <div>
+                  <p
+                    className="text-2xl font-bold"
+                    style={{ color: 'var(--mood-text)' }}
+                  >
+                    {stats.favoriteEntries}
+                  </p>
+                  <p
+                    className="text-sm"
+                    style={{ color: 'var(--mood-secondary)' }}
+                  >
+                    Favorites
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div
+              className="p-6 rounded-xl shadow-sm border"
+              style={{
+                backgroundColor: 'var(--mood-contrast)',
+                borderColor: 'var(--mood-secondary)'
+              }}
+            >
+              <div className="flex items-center space-x-3">
+                <TrendingUp
+                  className="w-8 h-8"
+                  style={{ color: 'var(--mood-primary)' }}
+                />
+                <div>
+                  <p
+                    className="text-2xl font-bold"
+                    style={{ color: 'var(--mood-text)' }}
+                  >
+                    {stats.totalWords ? Math.round(stats.totalWords / stats.totalEntries) : 0}
+                  </p>
+                  <p
+                    className="text-sm"
+                    style={{ color: 'var(--mood-secondary)' }}
+                  >
+                    Avg Words
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Entries Grid */}
+        {!isLoading && !error && (
+          <div className="space-y-6">
+            {filteredEntries.length === 0 ? (
+              <div
+                className="text-center py-12 rounded-xl border"
+                style={{
+                  backgroundColor: 'var(--mood-contrast)',
+                  borderColor: 'var(--mood-secondary)'
+                }}
+              >
+                <BookOpen
+                  className="w-16 h-16 mx-auto mb-4 opacity-50"
+                  style={{ color: 'var(--mood-secondary)' }}
+                />
+                <h3
+                  className="text-xl font-semibold mb-2"
+                  style={{ color: 'var(--mood-text)' }}
+                >
+                  {searchTerm || moodFilter !== 'all' ? 'No entries found' : 'No entries yet'}
+                </h3>
+                <p style={{ color: 'var(--mood-secondary)' }}>
+                  {searchTerm || moodFilter !== 'all'
+                    ? 'Try adjusting your search or filter criteria'
+                    : 'Start your journaling journey by creating your first entry'
+                  }
+                </p>
+                {!searchTerm && moodFilter === 'all' && (
+                  <button
+                    onClick={handleNewEntry}
+                    className="mt-4 px-6 py-3 rounded-xl hover:opacity-90 transition-all"
+                    style={{
+                      backgroundColor: 'var(--mood-primary)',
+                      color: 'var(--mood-contrast)'
+                    }}
+                  >
+                    Create First Entry
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredEntries.map(entry => (
+                  <EntryCard
+                    key={entry._id}
+                    entry={entry}
+                    onEdit={handleEditEntry}
+                    onDelete={confirmDelete}
+                    onToggleFavorite={handleToggleFavorite}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        message="Are you sure you want to delete this entry? This action cannot be undone."
+        onConfirm={() => handleDeleteEntry(entryToDeleteId)}
+        onCancel={() => setShowConfirmModal(false)}
+      />
     </div>
   );
 };

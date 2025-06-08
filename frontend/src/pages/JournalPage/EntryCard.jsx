@@ -32,9 +32,7 @@ const EntryCard = ({ entry, onEdit, onDelete, onToggleFavorite }) => {
 
   const handleDeleteClick = (e) => {
     e.stopPropagation();
-    if (window.confirm('Are you sure you want to delete this entry?')) {
-      onDelete(entry._id);
-    }
+    onDelete(entry._id); // Call the onDelete prop, which now triggers the modal in JournalPage
   };
 
   return (

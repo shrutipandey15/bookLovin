@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
-import { Save, ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { Save, ArrowLeft, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { getWordCount } from '@utils/journalUtils';
 import { useAutoSave } from '@hooks/useAutoSave';
 import MoodSelectDropdown from './MoodSelectDropdown';
 
-const JournalEditor = ({ entry, onSave, onCancel }) => {
+const JournalEditor = ({ entry, onSave, onCancel, error }) => {
   const [title, setTitle] = useState(entry?.title || '');
   const [content, setContent] = useState(entry?.content || '');
+  // Mood should be an integer value as per backend enum (1, 2, or 3)
   const [mood, setMood] = useState(entry?.mood || 2);
   const [tags, setTags] = useState(entry?.tags?.join(', ') || '');
   const [writingStartTime] = useState(Date.now());
@@ -41,7 +42,10 @@ const JournalEditor = ({ entry, onSave, onCancel }) => {
     await onSave(entryData);
   };
 
-  const handleSave = async () => {
+  const handleSave = async (e) => {
+    if (e) {
+      e.preventDefault();
+    }
     await saveEntry();
   };
 
@@ -146,99 +150,119 @@ const JournalEditor = ({ entry, onSave, onCancel }) => {
           </div>
         </div>
 
+        {/* Error display */}
+        {error && (
+          <div
+            className="mb-4 p-4 rounded-lg border-l-4"
+            style={{
+              borderColor: 'var(--error-color, #ef4444)',
+              backgroundColor: 'var(--error-bg, #fef2f2)',
+              color: 'var(--error-text, #dc2626)'
+            }}
+          >
+            <div className="flex items-center">
+              <AlertCircle className="w-5 h-5 mr-2" />
+              <span className="font-medium">Save Failed</span>
+            </div>
+            <p className="mt-1 text-sm">{error}</p>
+          </div>
+        )}
+
         {/* Writing/Preview Area */}
-        <div
-          className="rounded-2xl shadow-lg p-8"
-          style={{
-            backgroundColor: 'var(--mood-contrast)',
-            border: `1px solid var(--mood-secondary)`,
-            backdropFilter: 'blur(10px)'
-          }}
-        >
-          {showPreview ? (
-            // Preview Mode
-            <div className="prose max-w-none">
-              {title && (
-                <h1
-                  className="text-3xl font-bold mb-6"
+        <form onSubmit={handleSave}>
+          <div
+            className="rounded-2xl shadow-lg p-8"
+            style={{
+              backgroundColor: 'var(--mood-contrast)',
+              border: `1px solid var(--mood-secondary)`,
+              backdropFilter: 'blur(10px)'
+            }}
+          >
+            {showPreview ? (
+              // Preview Mode
+              <div className="prose max-w-none">
+                {title && (
+                  <h1
+                    className="text-3xl font-bold mb-6"
+                    style={{
+                      color: 'var(--mood-text)',
+                      fontFamily: 'var(--mood-font)'
+                    }}
+                  >
+                    {title}
+                  </h1>
+                )}
+                <div
+                  className="whitespace-pre-wrap text-lg leading-relaxed"
                   style={{
                     color: 'var(--mood-text)',
                     fontFamily: 'var(--mood-font)'
                   }}
                 >
-                  {title}
-                </h1>
-              )}
-              <div
-                className="whitespace-pre-wrap text-lg leading-relaxed"
-                style={{
-                  color: 'var(--mood-text)',
-                  fontFamily: 'var(--mood-font)'
-                }}
-              >
-                {content}
-              </div>
-              {tags && (
-                <div className="flex flex-wrap gap-2 mt-6">
-                  {tags.split(',').filter(Boolean).map((tag, index) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1 text-sm rounded-full"
-                      style={{
-                        backgroundColor: 'var(--mood-primary)',
-                        color: 'var(--mood-contrast)'
-                      }}
-                    >
-                      #{tag.trim()}
-                    </span>
-                  ))}
+                  {content}
                 </div>
-              )}
-            </div>
-          ) : (
-            // Edit Mode
-            <>
-              <input
-                type="text"
-                placeholder="Entry title (optional)"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                onKeyDown={handleKeyDown}
-                className="w-full text-2xl font-bold border-0 bg-transparent focus:outline-none mb-6 placeholder-opacity-50"
-                style={{
-                  color: 'var(--mood-text)',
-                  fontFamily: 'var(--mood-font)',
-                }}
-              />
+                {tags && (
+                  <div className="flex flex-wrap gap-2 mt-6">
+                    {tags.split(',').filter(Boolean).map((tag, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1 text-sm rounded-full"
+                        style={{
+                          backgroundColor: 'var(--mood-primary)',
+                          color: 'var(--mood-contrast)'
+                        }}
+                      >
+                        #{tag.trim()}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              // Edit Mode
+              <>
+                <input
+                  type="text"
+                  placeholder="Entry title (optional)"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className="w-full text-2xl font-bold border-0 bg-transparent focus:outline-none mb-6 placeholder-opacity-50"
+                  style={{
+                    color: 'var(--mood-text)',
+                    fontFamily: 'var(--mood-font)',
+                  }}
+                />
 
-              <textarea
-                ref={textareaRef}
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Pour your heart out... What's on your mind today?"
-                className="w-full h-96 border-0 bg-transparent resize-none focus:outline-none text-lg leading-relaxed mb-6 placeholder-opacity-50"
-                style={{
-                  color: 'var(--mood-text)',
-                  fontFamily: 'var(--mood-font)',
-                }}
-              />
+                <textarea
+                  ref={textareaRef}
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Pour your heart out... What's on your mind today?"
+                  className="w-full h-96 border-0 bg-transparent resize-none focus:outline-none text-lg leading-relaxed mb-6 placeholder-opacity-50"
+                  style={{
+                    color: 'var(--mood-text)',
+                    fontFamily: 'var(--mood-font)',
+                  }}
+                />
 
-              <input
-                type="text"
-                placeholder="Tags (comma-separated, e.g., self-care, book-inspired)"
-                value={tags}
-                onChange={(e) => setTags(e.target.value)}
-                onKeyDown={handleKeyDown}
-                className="w-full border-t pt-4 bg-transparent focus:outline-none text-sm placeholder-opacity-50"
-                style={{
-                  color: 'var(--mood-text)',
-                  borderColor: 'var(--mood-secondary)',
-                }}
-              />
-            </>
-          )}
-        </div>
+                <input
+                  type="text"
+                  placeholder="Tags (comma-separated, e.g., self-care, book-inspired)"
+                  value={tags}
+                  onChange={(e) => setTags(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className="w-full border-t pt-4 bg-transparent focus:outline-none text-sm placeholder-opacity-50"
+                  style={{
+                    color: 'var(--mood-text)',
+                    borderColor: 'var(--mood-secondary)',
+                  }}
+                />
+              </>
+            )}
+          </div>
+        </form>
 
         {/* Keyboard shortcuts hint */}
         <div
