@@ -2,7 +2,7 @@
 const MoodTypes = {
   heartbroken: 1,
   healing: 2,
-  enpowered: 3,
+  empowered: 3,
 }
 
 const UserRoleTypes = {

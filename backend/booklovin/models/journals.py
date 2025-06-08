@@ -6,7 +6,7 @@ from enum import IntEnum, auto
 class Mood(IntEnum):
     HEARTBROKEN = auto()
     HEALING = auto()
-    ENPOWERED = auto()
+    EMPOWERED = auto()
 
 
 class NewJournalEntry(FlexModel):
