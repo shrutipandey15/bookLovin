@@ -1,11 +1,16 @@
 import { useState } from 'react';
-import { Heart, Sparkles, Zap, Star, Trash2, Edit } from 'lucide-react';
-import { useMood, MOOD_CONFIG } from '@components/MoodContext';
+import { Heart, Sparkles, Zap, Star, Trash2 } from 'lucide-react';
+import { MOOD_CONFIG } from '@components/MoodContext';
 import EntryStats from './EntryStats';
 
 const EntryCard = ({ entry, onEdit, onDelete, onToggleFavorite }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const { mood } = useMood();
+
+  const moodMapping = {
+    1: 'heartbroken',
+    2: 'healing',
+    3: 'empowered'
+  };
 
   const moodIcons = {
     heartbroken: Heart,
@@ -13,7 +18,8 @@ const EntryCard = ({ entry, onEdit, onDelete, onToggleFavorite }) => {
     empowered: Zap
   };
 
-  const MoodIcon = moodIcons[entry.mood];
+  const moodKey = moodMapping[entry.mood] || 'healing';
+  const MoodIcon = moodIcons[moodKey];
 
   const handleCardClick = () => {
     onEdit(entry);
@@ -58,7 +64,7 @@ const EntryCard = ({ entry, onEdit, onDelete, onToggleFavorite }) => {
               fontFamily: 'var(--mood-font)'
             }}
           >
-            {MOOD_CONFIG[entry.mood]?.label || entry.mood}
+            {MOOD_CONFIG[moodKey]?.label || moodKey}
           </span>
         </div>
 

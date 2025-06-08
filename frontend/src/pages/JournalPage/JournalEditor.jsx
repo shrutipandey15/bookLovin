@@ -7,7 +7,7 @@ import MoodSelectDropdown from './MoodSelectDropdown';
 const JournalEditor = ({ entry, onSave, onCancel }) => {
   const [title, setTitle] = useState(entry?.title || '');
   const [content, setContent] = useState(entry?.content || '');
-  const [mood, setMood] = useState(entry?.mood || 'healing');
+  const [mood, setMood] = useState(entry?.mood || 2);
   const [tags, setTags] = useState(entry?.tags?.join(', ') || '');
   const [writingStartTime] = useState(Date.now());
   const [showPreview, setShowPreview] = useState(false);
@@ -20,15 +20,7 @@ const JournalEditor = ({ entry, onSave, onCancel }) => {
     content,
     entry?._id,
     async () => {
-      const entryData = {
-        title: title.trim(),
-        content: content.trim(),
-        mood,
-        tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0),
-        word_count: wordCount,
-        writing_time: Math.floor((Date.now() - writingStartTime) / 1000)
-      };
-      await onSave(entryData);
+      await saveEntry();
     }
   );
 
@@ -36,16 +28,21 @@ const JournalEditor = ({ entry, onSave, onCancel }) => {
     textareaRef.current?.focus();
   }, []);
 
-  const handleSave = async () => {
+  const saveEntry = async () => {
     const entryData = {
       title: title.trim(),
       content: content.trim(),
       mood,
-      tags: tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0),
-      word_count: wordCount,
-      writing_time: Math.floor((Date.now() - writingStartTime) / 1000)
+      tags: tags.split(',').map(tag => tag.trim()).filter(Boolean),
+      writing_time: Math.floor((Date.now() - writingStartTime) / 1000),
+      is_favorite: entry?.is_favorite || false,
+      word_count: wordCount
     };
     await onSave(entryData);
+  };
+
+  const handleSave = async () => {
+    await saveEntry();
   };
 
   const handleKeyDown = (e) => {
@@ -183,7 +180,7 @@ const JournalEditor = ({ entry, onSave, onCancel }) => {
               </div>
               {tags && (
                 <div className="flex flex-wrap gap-2 mt-6">
-                  {tags.split(',').map((tag, index) => (
+                  {tags.split(',').filter(Boolean).map((tag, index) => (
                     <span
                       key={index}
                       className="px-3 py-1 text-sm rounded-full"
@@ -207,11 +204,10 @@ const JournalEditor = ({ entry, onSave, onCancel }) => {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="w-full text-2xl font-bold border-0 bg-transparent focus:outline-none mb-6"
+                className="w-full text-2xl font-bold border-0 bg-transparent focus:outline-none mb-6 placeholder-opacity-50"
                 style={{
                   color: 'var(--mood-text)',
                   fontFamily: 'var(--mood-font)',
-                  '::placeholder': { color: 'var(--mood-secondary)' }
                 }}
               />
 
@@ -221,11 +217,10 @@ const JournalEditor = ({ entry, onSave, onCancel }) => {
                 onChange={(e) => setContent(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Pour your heart out... What's on your mind today?"
-                className="w-full h-96 border-0 bg-transparent resize-none focus:outline-none text-lg leading-relaxed mb-6"
+                className="w-full h-96 border-0 bg-transparent resize-none focus:outline-none text-lg leading-relaxed mb-6 placeholder-opacity-50"
                 style={{
                   color: 'var(--mood-text)',
                   fontFamily: 'var(--mood-font)',
-                  '::placeholder': { color: 'var(--mood-secondary)' }
                 }}
               />
 
@@ -235,11 +230,10 @@ const JournalEditor = ({ entry, onSave, onCancel }) => {
                 value={tags}
                 onChange={(e) => setTags(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="w-full border-t pt-4 bg-transparent focus:outline-none text-sm"
+                className="w-full border-t pt-4 bg-transparent focus:outline-none text-sm placeholder-opacity-50"
                 style={{
                   color: 'var(--mood-text)',
                   borderColor: 'var(--mood-secondary)',
-                  '::placeholder': { color: 'var(--mood-secondary)' }
                 }}
               />
             </>

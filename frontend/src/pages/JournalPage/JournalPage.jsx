@@ -5,17 +5,15 @@ import {
   Download,
   Plus,
   BookOpen,
-  Edit3,
   Clock,
   Star,
   TrendingUp
 } from 'lucide-react';
 import { mockJournalEntries } from '@utils/journalMock';
 import { calculateStats } from '@utils/journalUtils';
-import { useMood, MOOD_CONFIG } from '@components/MoodContext';
+import { MOOD_CONFIG } from '@components/MoodContext';
 import JournalEditor from './JournalEditor';
 import EntryCard from './EntryCard';
-import MoodSelector from '@components/MoodSelector';
 
 const JournalPage = () => {
   const [entries, setEntries] = useState(mockJournalEntries);
@@ -26,10 +24,17 @@ const JournalPage = () => {
 
   const stats = calculateStats(entries);
 
+  // Map mood enum values to keys for filtering
+  const moodMapping = {
+    1: 'heartbroken',
+    2: 'healing',
+    3: 'empowered'
+  };
+
   const filteredEntries = entries.filter(entry => {
     const matchesSearch = entry.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          entry.title.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesMood = moodFilter === 'all' || entry.mood === moodFilter;
+                          (entry.title || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesMood = moodFilter === 'all' || entry.mood.toString() === moodFilter;
     return matchesSearch && matchesMood;
   });
 
@@ -110,9 +115,6 @@ const JournalPage = () => {
       }}
     >
       <div className="max-w-6xl mx-auto p-6">
-        {/* Mood Selector */}
-        {/* <MoodSelector /> */}
-
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -212,9 +214,7 @@ const JournalPage = () => {
         </div>
 
         {/* Stats Overview */}
-        <div
-          className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
-        >
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div
             className="p-6 rounded-xl shadow-sm border"
             style={{

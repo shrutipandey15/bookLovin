@@ -17,7 +17,7 @@ const EntryStats = ({ entry, showDetailed = false }) => {
             style={{ color: 'var(--mood-secondary)' }}
           />
           <span style={{ color: 'var(--mood-text)' }}>
-            {entry.word_count} words
+            {entry.word_count || 0} words
           </span>
         </div>
         <div className="flex items-center space-x-2 text-sm">
@@ -26,7 +26,7 @@ const EntryStats = ({ entry, showDetailed = false }) => {
             style={{ color: 'var(--mood-secondary)' }}
           />
           <span style={{ color: 'var(--mood-text)' }}>
-            {formatTime(entry.writing_time)}
+            {formatTime(entry.writing_time || 0)}
           </span>
         </div>
         <div className="flex items-center space-x-2 text-sm">
@@ -74,8 +74,8 @@ const EntryStats = ({ entry, showDetailed = false }) => {
       style={{ color: 'var(--mood-secondary)' }}
     >
       <div className="flex items-center space-x-3">
-        <span>{entry.word_count} words</span>
-        <span>{formatTime(entry.writing_time)}</span>
+        <span>{entry.word_count || 0} words</span>
+        <span>{formatTime(entry.writing_time || 0)}</span>
       </div>
       <span>{formatDate(entry.created_at)}</span>
     </div>

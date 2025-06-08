@@ -65,7 +65,7 @@ class State:
             self.journal_entries = defaultdict(list)
             self.journal_entries.update({k: colMap(v, JournalEntry.from_dict) for k, v in data["journal_entries"].items()})
             self.comments = defaultdict(list)
-            self.comments.update({k: colMap(v, Comment.from_dict) for k, v in data["comments"].items()})
+            self.comments.update({k: colMap(v, Comment.from_dict) for k, v in data.get("comments", {}).items()})
 
 
 class MockSetup(ServiceSetup):
