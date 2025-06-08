@@ -216,12 +216,7 @@ const RegistrationPage = () => {
 
       const data = response.data
 
-      // Validate response structure
-      if (!data || typeof data !== 'object') {
-        throw new Error('Invalid response format')
-      }
-
-      if (data.id || data.success) {
+      if (!(data?.error)) {
         setSuccess(true)
 
         // Clear registration attempts on success
