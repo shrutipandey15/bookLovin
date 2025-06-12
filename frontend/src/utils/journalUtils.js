@@ -1,4 +1,8 @@
+// journalUtils.js
+import { MOOD_ENUM_TO_KEY } from '@components/MoodContext';
+
 export const formatDate = (date) => {
+  if (!date) return '';
   return new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: 'numeric',
@@ -14,6 +18,7 @@ export const formatTime = (seconds) => {
 };
 
 export const formatDateLong = (date) => {
+  if (!date) return '';
   return new Intl.DateTimeFormat('en-US', {
     weekday: 'long',
     year: 'numeric',
@@ -23,47 +28,73 @@ export const formatDateLong = (date) => {
 };
 
 export const getWordCount = (text) => {
-  if (!text || !text.trim()) return 0;
+  if (!text || typeof text !== 'string' || !text.trim()) return 0;
   return text.trim().split(/\s+/).filter(word => word.length > 0).length;
 };
 
 export const calculateStats = (entries) => {
+  const mappedEntries = entries.map(entry => ({
+    ...entry,
+    moodKey: MOOD_ENUM_TO_KEY[entry.mood] || 'healing'
+  }));
+
   return {
-    totalEntries: entries.length,
-    totalWords: entries.reduce((sum, entry) => sum + entry.word_count, 0),
-    totalWritingTime: entries.reduce((sum, entry) => sum + entry.writing_time, 0),
-    favoriteEntries: entries.filter(entry => entry.is_favorite).length,
+    totalEntries: mappedEntries.length,
+    totalWords: mappedEntries.reduce((sum, entry) => sum + (entry.word_count || 0), 0),
+    totalWritingTime: mappedEntries.reduce((sum, entry) => sum + (entry.writing_time || 0), 0),
+    favoriteEntries: mappedEntries.filter(entry => entry.is_favorite).length,
     entriesByMood: {
-      heartbroken: entries.filter(entry => entry.mood === 'heartbroken').length,
-      healing: entries.filter(entry => entry.mood === 'healing').length,
-      empowered: entries.filter(entry => entry.mood === 'empowered').length
-    }
+      heartbroken: mappedEntries.filter(entry => entry.moodKey === 'heartbroken').length,
+      healing: mappedEntries.filter(entry => entry.moodKey === 'healing').length,
+      empowered: mappedEntries.filter(entry => entry.moodKey === 'empowered').length
+    },
+    streak: calculateWritingStreak(mappedEntries.map(entry => entry.created_at))
   };
 };
 
-export const moods = {
-  heartbroken: {
-    name: 'Heartbroken',
-    color: 'text-rose-600',
-    bg: 'bg-rose-50',
-    border: 'border-rose-200',
-    theme: 'from-rose-100 to-pink-50',
-    gradient: 'from-rose-500 to-pink-500'
-  },
-  healing: {
-    name: 'Healing',
-    color: 'text-purple-600',
-    bg: 'bg-purple-50',
-    border: 'border-purple-200',
-    theme: 'from-purple-100 to-violet-50',
-    gradient: 'from-purple-500 to-violet-500'
-  },
-  empowered: {
-    name: 'Empowered',
-    color: 'text-amber-600',
-    bg: 'bg-amber-50',
-    border: 'border-amber-200',
-    theme: 'from-amber-100 to-yellow-50',
-    gradient: 'from-amber-500 to-yellow-500'
+const calculateWritingStreak = (entryDates) => {
+  if (!entryDates || entryDates.length === 0) return 0;
+
+  const uniqueDates = [...new Set(entryDates.map(dateStr => {
+    const d = new Date(dateStr);
+    d.setHours(0, 0, 0, 0);
+    return d.getTime();
+  }))].sort((a, b) => a - b);
+
+  if (uniqueDates.length === 0) return 0;
+
+  let streak = 0;
+  let today = new Date();
+  today.setHours(0, 0, 0, 0);
+  let yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+
+  const todayTimestamp = today.getTime();
+  const yesterdayTimestamp = yesterday.getTime();
+
+  const lastEntryDateTimestamp = uniqueDates[uniqueDates.length - 1];
+
+  if (lastEntryDateTimestamp === todayTimestamp) {
+    streak = 1;
   }
+  else if (lastEntryDateTimestamp === yesterdayTimestamp) {
+    streak = 1;
+  }
+  else {
+    return 0;
+  }
+
+  for (let i = uniqueDates.length - 2; i >= 0; i--) {
+    const currentDate = new Date(uniqueDates[i]);
+    const nextExpectedDate = new Date(uniqueDates[i + 1]);
+    nextExpectedDate.setDate(nextExpectedDate.getDate() - 1);
+
+    if (currentDate.getTime() === nextExpectedDate.getTime()) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+
+  return streak;
 };

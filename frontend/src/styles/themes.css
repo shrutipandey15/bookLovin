@@ -10,6 +10,15 @@
   --mood-text: #2D1B29;
   --mood-font: 'Playfair Display', serif;
   --mood-contrast: #FFFFFF;
+
+    /* Add transitions for the custom properties themselves */
+  transition:
+    --mood-primary 0.3s ease,
+    --mood-secondary 0.3s ease,
+    --mood-bg 0.3s ease,
+    --mood-text 0.3s ease,
+    --mood-font 0.3s ease,
+    --mood-contrast 0.3s ease;
 }
 
 /* Mood-driven theming on root */

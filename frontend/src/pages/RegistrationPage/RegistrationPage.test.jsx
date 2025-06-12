@@ -23,38 +23,30 @@ const renderWithProviders = (ui) => render(<MemoryRouter>{ui}</MemoryRouter>);
 beforeEach(() => {
   vi.resetAllMocks();
   localStorage.clear();
-  // It's crucial not to use fake timers globally
 });
 
 describe('RegistrationPage', () => {
-  // --- NO CHANGES TO THESE TESTS ---
   test('renders registration form correctly', () => { /* ... */ });
   test('validates form inputs', async () => { /* ... */ });
   test('shows password strength indicator and toggles visibility', () => { /* ... */ });
 
-  // --- REVISED ASYNC TESTS ---
 
   test('handles successful registration', async () => {
-    // This test requires special handling due to the mix of promises and timers.
-    // We cannot use waitFor/findBy when fake timers are active.
     vi.useFakeTimers();
     axiosInstance.post.mockResolvedValueOnce({ data: null });
 
     renderWithProviders(<RegistrationPage />);
 
-    // Fill and submit form
     fireEvent.change(screen.getByLabelText(/pen name/i), { target: { value: 'testuser' } });
     fireEvent.change(screen.getByLabelText(/ravenmail/i), { target: { value: 'test@example.com' } });
     fireEvent.change(screen.getByLabelText(/^secret rune$/i), { target: { value: 'ValidPass123!' } });
     fireEvent.change(screen.getByLabelText(/confirm secret rune/i), { target: { value: 'ValidPass123!' } });
     fireEvent.click(screen.getByRole('button', { name: /scribe me in/i }));
 
-    // Manually flush the promise queue to ensure the .then() in the component runs
     await act(async () => {
       await Promise.resolve();
     });
 
-    // Now assert the success message and API call
     expect(screen.getByText(/your legend begins, testuser!/i)).toBeInTheDocument();
     expect(axiosInstance.post).toHaveBeenCalledWith(
         '/auth/register',
@@ -62,7 +54,6 @@ describe('RegistrationPage', () => {
         expect.any(Object)
     );
 
-    // Advance timers and assert navigation
     act(() => {
       vi.advanceTimersByTime(3000);
     });
@@ -128,7 +119,6 @@ describe('RegistrationPage', () => {
     expect(await screen.findByText(/inscribing\.\.\./i)).toBeInTheDocument();
     expect(screen.getByLabelText(/pen name/i)).toBeDisabled();
 
-    // Clean up by resolving the promise so the test doesn't hang
     await act(async () => {
         resolvePromise({ data: null });
     });
@@ -141,7 +131,6 @@ describe('RegistrationPage', () => {
 
     renderWithProviders(<RegistrationPage />);
 
-    // The UI should be disabled immediately, but findBy is safer for initial renders
     expect(await screen.findByText(/registration temporarily blocked/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/pen name/i)).toBeDisabled();
     expect(screen.getByRole('button', { name: /scribe me in/i })).toBeDisabled();

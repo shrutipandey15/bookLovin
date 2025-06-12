@@ -40,8 +40,9 @@ const EntryStats = ({ entry, showDetailed = false }) => {
         </div>
         <div className="flex items-center space-x-2 text-sm">
           <Star
-            className={`w-4 h-4 ${entry.is_favorite ? 'fill-current' : ''}`}
+            className="w-4 h-4"
             style={{ color: entry.is_favorite ? '#fbbf24' : 'var(--mood-secondary)' }}
+            fill={entry.is_favorite ? 'currentColor' : 'none'}
           />
           <span style={{ color: 'var(--mood-text)' }}>
             {entry.is_favorite ? 'Favorited' : 'Not favorited'}

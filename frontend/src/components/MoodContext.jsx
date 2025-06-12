@@ -6,11 +6,14 @@ import React, {
   useCallback,
   useMemo
 } from 'react';
+import { Heart, Sparkles, Zap } from 'lucide-react';
 
-export const MOOD_CONFIG = {
+export const MOOD_CONFIG = Object.freeze({
   heartbroken: {
     label: "Heartbroken",
     emoji: "💔",
+    description: "Processing difficult emotions",
+    enum: 1,
     coffee: {
       "--mood-primary": "#8B5A7C",
       "--mood-secondary": "#A67E94",
@@ -31,6 +34,8 @@ export const MOOD_CONFIG = {
   healing: {
     label: "Healing",
     emoji: "🌸",
+    description: "Finding strength and growth",
+    enum: 2,
     coffee: {
       "--mood-primary": "#7FB069",
       "--mood-secondary": "#A3C585",
@@ -51,6 +56,8 @@ export const MOOD_CONFIG = {
   empowered: {
     label: "Empowered",
     emoji: "⚡",
+    description: "Feeling confident and strong",
+    enum: 3,
     coffee: {
       "--mood-primary": "#E63946",
       "--mood-secondary": "#F77F88",
@@ -68,12 +75,30 @@ export const MOOD_CONFIG = {
       "--mood-contrast": "#000000"
     }
   }
-};
+});
 
-export const THEME_CONFIG = {
+export const THEME_CONFIG = Object.freeze({
   coffee: { label: "Coffee", emoji: "☕" },
   dragon: { label: "Dragon", emoji: "🐉" }
-};
+});
+
+export const MOOD_ICONS = Object.freeze({
+  heartbroken: Heart,
+  healing: Sparkles,
+  empowered: Zap,
+});
+
+export const MOOD_ENUM_TO_KEY = Object.freeze({
+  1: 'heartbroken',
+  2: 'healing',
+  3: 'empowered',
+});
+
+export const MOOD_KEY_TO_ENUM = Object.freeze({
+  heartbroken: 1,
+  healing: 2,
+  empowered: 3,
+});
 
 const isValidMood = (mood) => mood && mood in MOOD_CONFIG;
 const isValidTheme = (theme) => theme && theme in THEME_CONFIG;
@@ -112,7 +137,11 @@ export function MoodProvider({ children }) {
       setTheme,
       getMoodConfig: () => MOOD_CONFIG[mood][theme],
       getMoodLabel: () => MOOD_CONFIG[mood]?.label || mood,
-      getThemeLabel: () => THEME_CONFIG[theme]?.label || theme
+      getThemeLabel: () => THEME_CONFIG[theme]?.label || theme,
+      MOOD_CONFIG,
+      MOOD_ICONS,
+      MOOD_ENUM_TO_KEY,
+      MOOD_KEY_TO_ENUM,
     }),
     [mood, theme, setMood, setTheme]
   );

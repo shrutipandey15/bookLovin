@@ -1,25 +1,14 @@
+// EntryCard.jsx
 import { useState } from 'react';
-import { Heart, Sparkles, Zap, Star, Trash2 } from 'lucide-react';
-import { MOOD_CONFIG } from '@components/MoodContext';
+import { Star, Trash2 } from 'lucide-react';
+import { MOOD_CONFIG, MOOD_ENUM_TO_KEY, MOOD_ICONS } from '@components/MoodContext';
 import EntryStats from './EntryStats';
 
 const EntryCard = ({ entry, onEdit, onDelete, onToggleFavorite }) => {
   const [isHovered, setIsHovered] = useState(false);
 
-  const moodMapping = {
-    1: 'heartbroken',
-    2: 'healing',
-    3: 'empowered'
-  };
-
-  const moodIcons = {
-    heartbroken: Heart,
-    healing: Sparkles,
-    empowered: Zap
-  };
-
-  const moodKey = moodMapping[entry.mood] || 'healing';
-  const MoodIcon = moodIcons[moodKey];
+  const moodKey = MOOD_ENUM_TO_KEY[entry.mood] || 'healing';
+  const MoodIcon = MOOD_ICONS[moodKey];
 
   const handleCardClick = () => {
     onEdit(entry);
@@ -32,7 +21,7 @@ const EntryCard = ({ entry, onEdit, onDelete, onToggleFavorite }) => {
 
   const handleDeleteClick = (e) => {
     e.stopPropagation();
-    onDelete(entry._id); // Call the onDelete prop, which now triggers the modal in JournalPage
+    onDelete(entry._id);
   };
 
   return (
@@ -48,13 +37,14 @@ const EntryCard = ({ entry, onEdit, onDelete, onToggleFavorite }) => {
         border: `1px solid var(--mood-secondary)`,
       }}
     >
-      {/* Header with mood and actions */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-2">
-          <MoodIcon
-            className="w-5 h-5"
-            style={{ color: 'var(--mood-primary)' }}
-          />
+          {MoodIcon && (
+            <MoodIcon
+              className="w-5 h-5"
+              style={{ color: 'var(--mood-primary)' }}
+            />
+          )}
           <span
             className="text-sm font-medium"
             style={{
@@ -94,7 +84,6 @@ const EntryCard = ({ entry, onEdit, onDelete, onToggleFavorite }) => {
         </div>
       </div>
 
-      {/* Title */}
       {entry.title && (
         <h3
           className="font-semibold mb-2 line-clamp-2"
@@ -107,7 +96,6 @@ const EntryCard = ({ entry, onEdit, onDelete, onToggleFavorite }) => {
         </h3>
       )}
 
-      {/* Content preview */}
       <p
         className="text-sm mb-4 line-clamp-3 leading-relaxed"
         style={{ color: 'var(--mood-text)' }}
@@ -115,7 +103,6 @@ const EntryCard = ({ entry, onEdit, onDelete, onToggleFavorite }) => {
         {entry.content}
       </p>
 
-      {/* Tags */}
       {entry.tags && entry.tags.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-4">
           {entry.tags.slice(0, 3).map((tag, index) => (
@@ -146,10 +133,8 @@ const EntryCard = ({ entry, onEdit, onDelete, onToggleFavorite }) => {
         </div>
       )}
 
-      {/* Stats */}
       <EntryStats entry={entry} />
 
-      {/* Hover effect indicator */}
       <div
         className={`absolute inset-0 border-2 rounded-xl transition-all pointer-events-none ${
           isHovered ? 'border-opacity-50' : 'border-transparent'

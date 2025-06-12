@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+// JournalPage.jsx
+import { useState, useEffect, useCallback } from 'react';
 import {
   Search,
   Filter,
@@ -9,12 +10,13 @@ import {
   Star,
   TrendingUp
 } from 'lucide-react';
+import { MOOD_CONFIG, MOOD_KEY_TO_ENUM } from '@components/MoodContext';
 import { calculateStats } from '@utils/journalUtils';
-import { MOOD_CONFIG } from '@components/MoodContext';
 import JournalEditor from './JournalEditor';
 import EntryCard from './EntryCard';
 import axiosInstance from '@api/axiosInstance';
 import ConfirmModal from '@components/ConfirmModal';
+
 const JournalPage = () => {
   const [entries, setEntries] = useState([]);
   const [activeEntry, setActiveEntry] = useState(null);
@@ -25,26 +27,17 @@ const JournalPage = () => {
   const [error, setError] = useState(null);
   const [editorError, setEditorError] = useState(null);
 
-  // For delete confirmation modal
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [entryToDeleteId, setEntryToDeleteId] = useState(null);
 
-  // Map mood enum values to keys for filtering (consistent with backend Mood enum)
-  const moodMapping = {
-    1: 'heartbroken',
-    2: 'healing',
-    3: 'empowered'
-  };
-
-  // Function to fetch entries from the backend
-  const fetchEntries = async () => {
+  const fetchEntries = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
       const params = {};
       if (moodFilter !== 'all') {
-        const backendMoodValue = Object.keys(moodMapping).find(key => moodMapping[key] === moodFilter);
-        if (backendMoodValue) {
+        const backendMoodValue = MOOD_KEY_TO_ENUM[moodFilter];
+        if (backendMoodValue !== undefined) {
           params.mood = backendMoodValue;
         }
       }
@@ -71,20 +64,15 @@ const JournalPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [moodFilter, searchTerm]);
 
   useEffect(() => {
     fetchEntries();
-  }, [moodFilter, searchTerm]);
+  }, [fetchEntries]);
 
   const stats = calculateStats(entries);
 
-  const filteredEntries = entries.filter(entry => {
-    const matchesSearch = entry.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          (entry.title || '').toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesMood = moodFilter === 'all' || moodMapping[entry.mood.toString()] === moodFilter;
-    return matchesSearch && matchesMood;
-  });
+  const displayEntries = entries;
 
   const handleNewEntry = () => {
     setActiveEntry(null);
@@ -108,11 +96,10 @@ const JournalPage = () => {
         favorite: entryData.is_favorite
       };
 
-      let response;
       if (activeEntry) {
-        response = await axiosInstance.put(`/journal/${activeEntry._id}`, payload);
+        await axiosInstance.put(`/journal/${activeEntry._id}`, payload);
       } else {
-        response = await axiosInstance.post('/journal/', payload);
+        await axiosInstance.post('/journal/', payload);
       }
 
       await fetchEntries();
@@ -131,7 +118,6 @@ const JournalPage = () => {
     setError(null);
     try {
       await axiosInstance.delete(`/journal/${entryId}`);
-
       setEntries(prev => prev.filter(entry => entry._id !== entryId));
     } catch (err) {
       console.error("Error deleting entry:", err);
@@ -195,7 +181,6 @@ const JournalPage = () => {
       }}
     >
       <div className="max-w-6xl mx-auto p-6">
-        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1
@@ -226,7 +211,6 @@ const JournalPage = () => {
           </button>
         </div>
 
-        {/* Search and Filters */}
         <div
           className="rounded-xl shadow-sm border p-6 mb-8"
           style={{
@@ -271,9 +255,9 @@ const JournalPage = () => {
                   }}
                 >
                   <option value="all">All Moods</option>
-                  {Object.keys(MOOD_CONFIG).map(mood => (
-                    <option key={mood} value={mood}>
-                      {mood.charAt(0).toUpperCase() + mood.slice(1)}
+                  {Object.keys(MOOD_CONFIG).map(moodKey => (
+                    <option key={moodKey} value={moodKey}>
+                      {MOOD_CONFIG[moodKey].label}
                     </option>
                   ))}
                 </select>
@@ -293,11 +277,9 @@ const JournalPage = () => {
           </div>
         </div>
 
-        {/* Display loading/error states */}
         {isLoading && <div className="text-center py-8" style={{ color: 'var(--mood-secondary)' }}>Loading entries...</div>}
         {error && <div className="text-center py-8 text-red-500">{error}</div>}
 
-        {/* Stats Overview */}
         {!isLoading && !error && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div
@@ -404,7 +386,7 @@ const JournalPage = () => {
                     className="text-2xl font-bold"
                     style={{ color: 'var(--mood-text)' }}
                   >
-                    {stats.totalWords ? Math.round(stats.totalWords / stats.totalEntries) : 0}
+                    {stats.totalEntries > 0 ? Math.round(stats.totalWords / stats.totalEntries) : 0}
                   </p>
                   <p
                     className="text-sm"
@@ -418,10 +400,9 @@ const JournalPage = () => {
           </div>
         )}
 
-        {/* Entries Grid */}
         {!isLoading && !error && (
           <div className="space-y-6">
-            {filteredEntries.length === 0 ? (
+            {displayEntries.length === 0 ? (
               <div
                 className="text-center py-12 rounded-xl border"
                 style={{
@@ -460,7 +441,7 @@ const JournalPage = () => {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredEntries.map(entry => (
+                {displayEntries.map(entry => (
                   <EntryCard
                     key={entry._id}
                     entry={entry}
@@ -475,7 +456,6 @@ const JournalPage = () => {
         )}
       </div>
 
-      {/* Confirmation Modal */}
       <ConfirmModal
         isOpen={showConfirmModal}
         message="Are you sure you want to delete this entry? This action cannot be undone."

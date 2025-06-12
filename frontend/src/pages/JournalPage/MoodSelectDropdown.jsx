@@ -1,42 +1,18 @@
+// MoodSelectDropdown.jsx
 import { useState } from 'react';
-import { Heart, Sparkles, Zap, ChevronDown } from 'lucide-react';
-import { MOOD_CONFIG } from '@components/MoodContext';
+import { ChevronDown } from 'lucide-react';
+import { MOOD_CONFIG, MOOD_ENUM_TO_KEY, MOOD_KEY_TO_ENUM, MOOD_ICONS } from '@components/MoodContext';
 
 const MoodSelectDropdown = ({ selectedMood, onMoodChange, className = '' }) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const moodIcons = {
-    heartbroken: Heart,
-    healing: Sparkles,
-    empowered: Zap
-  };
-
-  // Map between backend enum values and frontend mood keys (consistent with enum_types)
-  const moodMapping = {
-    1: 'heartbroken', // HEARTBROKEN = 1
-    2: 'healing',     // HEALING = 2
-    3: 'empowered'    // EMPOWERED = 3 (fixed typo)
-  };
-
-  const reverseMoodMapping = {
-    heartbroken: 1,
-    healing: 2,
-    empowered: 3
-  };
-
-  const currentMoodKey = moodMapping[selectedMood] || 'healing';
+  const currentMoodKey = MOOD_ENUM_TO_KEY[selectedMood] || 'healing';
   const currentMood = MOOD_CONFIG[currentMoodKey];
-  const CurrentIcon = moodIcons[currentMoodKey];
+  const CurrentIcon = MOOD_ICONS[currentMoodKey];
 
   const handleMoodSelect = (moodKey) => {
-    onMoodChange(reverseMoodMapping[moodKey]);
+    onMoodChange(MOOD_KEY_TO_ENUM[moodKey]);
     setIsOpen(false);
-  };
-
-  const moodDescriptions = {
-    heartbroken: 'Processing difficult emotions',
-    healing: 'Finding strength and growth',
-    empowered: 'Feeling confident and strong'
   };
 
   return (
@@ -51,7 +27,7 @@ const MoodSelectDropdown = ({ selectedMood, onMoodChange, className = '' }) => {
           fontFamily: 'var(--mood-font)'
         }}
       >
-        <CurrentIcon className="w-5 h-5" />
+        {CurrentIcon && <CurrentIcon className="w-5 h-5" />}
         <span className="font-medium">
           {currentMood?.label || currentMoodKey}
         </span>
@@ -73,8 +49,8 @@ const MoodSelectDropdown = ({ selectedMood, onMoodChange, className = '' }) => {
               borderColor: 'var(--mood-secondary)'
             }}
           >
-            {Object.entries(MOOD_CONFIG).map(([key, mood]) => {
-              const Icon = moodIcons[key];
+            {Object.entries(MOOD_CONFIG).map(([key, moodConfig]) => {
+              const Icon = MOOD_ICONS[key];
               const isSelected = currentMoodKey === key;
 
               return (
@@ -90,19 +66,19 @@ const MoodSelectDropdown = ({ selectedMood, onMoodChange, className = '' }) => {
                     fontFamily: 'var(--mood-font)'
                   }}
                 >
-                  <span className="text-lg">{mood.emoji}</span>
+                  <span className="text-lg">{moodConfig.emoji}</span>
                   <div>
                     <div
                       className="font-medium"
                       style={{ color: 'var(--mood-primary)' }}
                     >
-                      {mood.label}
+                      {moodConfig.label}
                     </div>
                     <div
                       className="text-xs"
                       style={{ color: 'var(--mood-secondary)' }}
                     >
-                      {moodDescriptions[key]}
+                      {moodConfig.description}
                     </div>
                   </div>
                 </button>
