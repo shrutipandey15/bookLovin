@@ -1,26 +1,17 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { createParticle } from "../utils/ParticlesFactory";
+import { useMood } from '@components/MoodContext'; // Import the mood context
 
 const ParticlesBackground = () => {
   const canvasRef = useRef(null);
-  const [isDark, setIsDark] = useState(false);
+  const { theme } = useMood(); // Use the mood context instead of detecting dark class
   const animationRef = useRef(null);
   const particlesRef = useRef([]);
 
-  useEffect(() => {
-    setIsDark(document.documentElement.classList.contains("dark"));
+  // Determine if current theme is dark
+  const isDark = theme === 'dragon';
 
-    const observer = new MutationObserver(() => {
-      setIsDark(document.documentElement.classList.contains("dark"));
-    });
-
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
-    });
-
-    return () => observer.disconnect();
-  }, []);
+  // Note: Layout component should handle the dark class for Tailwind
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -34,12 +25,13 @@ const ParticlesBackground = () => {
     };
 
     const initParticles = () => {
-      const theme = isDark ? "dark" : "light";
+      // Pass the actual theme name instead of 'dark'/'light'
+      const currentTheme = isDark ? 'dragon' : 'coffee';
       const count = isDark ? 40 : 60;
 
       const particles = [];
       for (let i = 0; i < count; i++) {
-        particles.push(createParticle(theme, canvas.width, canvas.height));
+        particles.push(createParticle(currentTheme, canvas.width, canvas.height));
       }
 
       particlesRef.current = particles;
@@ -83,34 +75,32 @@ const ParticlesBackground = () => {
             ctx.font = `${particle.size * 8}px serif`;
             ctx.fillText('*', particle.x, particle.y);
             break;
-            case 'flower': {
-              ctx.save();
-              ctx.translate(particle.x, particle.y);
-              ctx.rotate(particle.x * 0.01);
+          case 'flower': {
+            ctx.save();
+            ctx.translate(particle.x, particle.y);
+            ctx.rotate(particle.x * 0.01);
 
-              const petalCount = 5;
-              const petalRadius = particle.size;
-              const innerRadius = particle.size / 2;
+            const petalCount = 5;
+            const petalRadius = particle.size;
+            const innerRadius = particle.size / 2;
 
-              for (let i = 0; i < petalCount; i++) {
-                const angle = (2 * Math.PI * i) / petalCount;
-                const x = Math.cos(angle) * petalRadius;
-                const y = Math.sin(angle) * petalRadius;
+            for (let i = 0; i < petalCount; i++) {
+              const angle = (2 * Math.PI * i) / petalCount;
+              const x = Math.cos(angle) * petalRadius;
+              const y = Math.sin(angle) * petalRadius;
 
-                ctx.beginPath();
-                ctx.ellipse(x, y, innerRadius, innerRadius / 2, angle, 0, 2 * Math.PI);
-                ctx.fill();
-              }
-              ctx.restore();
-              break;
+              ctx.beginPath();
+              ctx.ellipse(x, y, innerRadius, innerRadius / 2, angle, 0, 2 * Math.PI);
+              ctx.fill();
             }
-
+            ctx.restore();
+            break;
+          }
           default:
             ctx.beginPath();
             ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
             ctx.fill();
         }
-
 
         particle.x += particle.speedX;
         particle.y += particle.speedY;
@@ -141,7 +131,7 @@ const ParticlesBackground = () => {
       }
       window.removeEventListener("resize", handleResize);
     };
-  }, [isDark]);
+  }, [isDark, theme]); // Add theme to dependencies
 
   return (
     <div className="fixed inset-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }}>

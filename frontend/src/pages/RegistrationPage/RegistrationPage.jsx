@@ -36,10 +36,13 @@ const RegistrationPage = () => {
     const usernameRegex = /^[a-zA-Z0-9_-]+$/
     return usernameRegex.test(trimmed)
   }
+
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     return emailRegex.test(email) && email.length <= 254
   }
+
+  // Fixed password validation logic
   const validatePassword = (password) => {
     if (password.length < PASSWORD_MIN_LENGTH || password.length > PASSWORD_MAX_LENGTH) {
       return { valid: false, message: `Password must be ${PASSWORD_MIN_LENGTH}-${PASSWORD_MAX_LENGTH} characters long` }
@@ -200,13 +203,14 @@ const RegistrationPage = () => {
     abortControllerRef.current = new AbortController()
 
     try {
-      const sanitizedData = {
+      // Backend expects: username, email, password (NewUser model)
+      const requestData = {
         username: sanitizeInput(username),
         email: sanitizeInput(email.toLowerCase()),
         password: password, // Don't sanitize password as it may contain special chars
       }
 
-      const response = await axiosInstance.post('/auth/register', sanitizedData, {
+      const response = await axiosInstance.post('/auth/register', requestData, {
         signal: abortControllerRef.current.signal,
         timeout: REQUEST_TIMEOUT,
         headers: {
@@ -214,9 +218,12 @@ const RegistrationPage = () => {
         }
       })
 
+      // Backend returns null on success or UserError on failure
       const data = response.data
 
-      if (!(data?.error)) {
+      // Check if response is null (success) or contains error
+      if (data === null || data === undefined) {
+        // Success case
         setSuccess(true)
 
         // Clear registration attempts on success
@@ -240,14 +247,21 @@ const RegistrationPage = () => {
           })
         }, 3000)
 
-      } else if (data.error_code === 'USER_ALREADY_EXISTS' || data.detail?.includes('already exists')) {
-        setError('A tale with that Pen name or Ravenmail already exists. Try entering the realm.')
-        clearErrorAfterDelay()
-      } else if (data.error_code === 'INVALID_EMAIL') {
-        setError('Please provide a valid Ravenmail address.')
-        clearErrorAfterDelay()
-      } else if (data.error_code === 'WEAK_PASSWORD') {
-        setError('Your Secret Rune is too weak. Make it stronger.')
+      } else if (data && data.error_code) {
+        // Handle UserError response
+        switch (data.error_code) {
+          case 'ALREADY_EXISTS':
+            setError('A tale with that Pen name or Ravenmail already exists. Try entering the realm.')
+            break
+          case 'INVALID_EMAIL':
+            setError('Please provide a valid Ravenmail address.')
+            break
+          case 'WEAK_PASSWORD':
+            setError('Your Secret Rune is too weak. Make it stronger.')
+            break
+          default:
+            setError(data.details || 'The scroll was not sealed. Please check your runes and try again.')
+        }
         clearErrorAfterDelay()
       } else {
         console.warn('Unexpected registration response:', data)
@@ -262,7 +276,7 @@ const RegistrationPage = () => {
       } else if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
         setError('Request timed out. Please check your connection and try again.')
       } else if (err.response?.status === 400) {
-        const errorMessage = err.response.data?.detail || 'Invalid registration data.'
+        const errorMessage = err.response.data?.details || err.response.data?.detail || 'Invalid registration data.'
         setError(typeof errorMessage === 'string' ? errorMessage : 'Invalid registration data.')
       } else if (err.response?.status === 409) {
         setError('Username or email already exists.')
@@ -308,23 +322,49 @@ const RegistrationPage = () => {
     return `${remaining} minute${remaining !== 1 ? 's' : ''}`
   }
 
+  // Fixed password strength calculation
   const getPasswordStrength = (password) => {
     if (!password) return { strength: 0, label: '', color: '' }
 
-    let strength = 0
-    if (password.length >= 8) strength += 1
-    if (/[a-z]/.test(password)) strength += 1
-    if (/[A-Z]/.test(password)) strength += 1
-    if (/\d/.test(password)) strength += 1
-    if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength += 1
+    let score = 0
 
-    const labels = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong']
-    const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-blue-500', 'bg-green-500']
+    // Length scoring (more granular)
+    if (password.length >= 8) score += 1
+    if (password.length >= 12) score += 1
+    if (password.length >= 16) score += 1
+
+    // Character variety scoring
+    const hasLower = /[a-z]/.test(password)
+    const hasUpper = /[A-Z]/.test(password)
+    const hasNumber = /\d/.test(password)
+    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password)
+
+    const charTypes = [hasLower, hasUpper, hasNumber, hasSpecial].filter(Boolean).length
+
+    // Add points based on character variety
+    if (charTypes >= 2) score += 1
+    if (charTypes >= 3) score += 1
+    if (charTypes >= 4) score += 1
+
+    // Bonus for very long passwords with all character types
+    if (password.length >= 20 && charTypes === 4) score += 1
+
+    // Cap the score at 5
+    score = Math.min(score, 5)
+
+    const strengthLevels = [
+      { label: 'Very Weak', color: 'bg-red-500' },
+      { label: 'Weak', color: 'bg-red-400' },
+      { label: 'Fair', color: 'bg-yellow-500' },
+      { label: 'Good', color: 'bg-blue-500' },
+      { label: 'Strong', color: 'bg-green-500' },
+      { label: 'Very Strong', color: 'bg-green-600' }
+    ]
 
     return {
-      strength,
-      label: labels[strength] || 'Very Weak',
-      color: colors[strength] || 'bg-red-500'
+      strength: score,
+      label: strengthLevels[score]?.label || 'Very Weak',
+      color: strengthLevels[score]?.color || 'bg-red-500'
     }
   }
 
@@ -486,11 +526,11 @@ const RegistrationPage = () => {
                     >
                       <div
                         className={`h-full transition-all duration-300 ${passwordStrength.color}`}
-                        style={{ width: `${(passwordStrength.strength / 5) * 100}%` }}
+                        style={{ width: `${Math.max((passwordStrength.strength / 5) * 100, 10)}%` }}
                       />
                     </div>
                     <span
-                      className="text-xs"
+                      className="text-xs font-medium min-w-16"
                       style={{ color: 'var(--mood-secondary)' }}
                     >
                       {passwordStrength.label}

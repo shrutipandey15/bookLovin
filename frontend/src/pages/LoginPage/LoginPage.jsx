@@ -88,9 +88,6 @@ const LoginPage = () => {
           if (currentUser) {
             setUser(currentUser)
             setIsLoggedIn(true)
-            // REMOVED: Redirect logic
-            // const from = location.state?.from?.pathname || '/dashboard'
-            // navigate(from, { replace: true })
           }
         } catch (error) {
           console.error('Error fetching current user:', error)
@@ -162,15 +159,17 @@ const LoginPage = () => {
     abortControllerRef.current = new AbortController()
 
     try {
+      // FIXED: Send form data to match backend OAuth2PasswordRequestForm
+      const formData = new FormData()
+      formData.append('username', email.trim().toLowerCase()) // Backend expects 'username' field
+      formData.append('password', password)
+
       const response = await axiosInstance.post(
         '/auth/login',
-        new URLSearchParams({
-          username: email.trim().toLowerCase(), // Normalize email
-          password: password,
-        }),
+        formData, // FIXED: Use FormData instead of URLSearchParams
         {
           headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': 'multipart/form-data', // FIXED: Correct content type for FormData
           },
           signal: abortControllerRef.current.signal,
           timeout: REQUEST_TIMEOUT,
@@ -202,18 +201,20 @@ const LoginPage = () => {
       // Log successful login (without sensitive data)
       console.log('Login successful for user:', email)
 
-      // REMOVED: Redirect logic
-      // const from = location.state?.from?.pathname || '/dashboard'
-      // navigate(from, { replace: true })
-
     } catch (err) {
       // Handle different types of errors
       if (err.name === 'AbortError') {
         setError('Request was cancelled.')
-      } else if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
+      } else if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
         setError('Request timed out. Please check your connection and try again.')
       } else if (err.response?.status === 401) {
-        setError('Invalid email or password.')
+        // FIXED: Handle the specific error message from backend
+        const detail = err.response?.data?.detail
+        if (detail === "Incorrect username or password") {
+          setError('Invalid email or password.')
+        } else {
+          setError('Invalid email or password.')
+        }
         handleRateLimitExceeded()
       } else if (err.response?.status === 429) {
         setError('Too many requests. Please wait before trying again.')
@@ -221,8 +222,8 @@ const LoginPage = () => {
       } else if (err.response?.status >= 500) {
         setError('Server error. Please try again later.')
       } else {
-        // Sanitize error message to prevent XSS
-        const message = err.response?.data?.detail || 'Login failed. Please try again.'
+        // FIXED: Better error handling for backend responses
+        const message = err.response?.data?.detail || err.response?.data?.message || 'Login failed. Please try again.'
         setError(typeof message === 'string' ? message : 'Login failed. Please try again.')
       }
 
@@ -307,6 +308,34 @@ const LoginPage = () => {
             Current mood: {getMoodLabel()}
           </p>
 
+          {/* Navigation buttons */}
+          <div className="space-y-2 mb-4">
+            <Link
+              to="/posts"
+              className="block w-full px-4 py-2 rounded hover:opacity-80 transition-all duration-200 text-center"
+              style={{
+                backgroundColor: 'var(--mood-primary)',
+                color: 'var(--mood-contrast)',
+                fontFamily: 'var(--mood-font)',
+                textDecoration: 'none'
+              }}
+            >
+              View Posts
+            </Link>
+            <Link
+              to="/journal"
+              className="block w-full px-4 py-2 rounded hover:opacity-80 transition-all duration-200 text-center"
+              style={{
+                backgroundColor: 'var(--mood-secondary)',
+                color: 'var(--mood-contrast)',
+                fontFamily: 'var(--mood-font)',
+                textDecoration: 'none'
+              }}
+            >
+              My Journal
+            </Link>
+          </div>
+
           {/* Logout button with mood styling */}
           <button
             onClick={() => {
@@ -316,10 +345,10 @@ const LoginPage = () => {
               setEmail('')
               setPassword('')
             }}
-            className="mt-4 px-4 py-2 rounded hover:opacity-80 transition-all duration-200"
+            className="w-full px-4 py-2 rounded hover:opacity-80 transition-all duration-200 border"
             style={{
-              backgroundColor: 'var(--mood-primary)',
-              color: 'var(--mood-contrast)',
+              backgroundColor: 'transparent',
+              color: 'var(--mood-primary)',
               fontFamily: 'var(--mood-font)',
               border: '1px solid var(--mood-primary)'
             }}

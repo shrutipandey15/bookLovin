@@ -19,6 +19,14 @@ const Layout = ({ children }) => {
     setTheme(initialTheme);
   }, [setTheme]);
 
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDark]);
+
   return (
     <div
       className="min-h-screen transition-all duration-300 relative"
