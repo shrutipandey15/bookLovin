@@ -2,7 +2,7 @@
 
 from booklovin.core.config import APIResponse
 from booklovin.models.errors import UserError
-from booklovin.models.journals import JournalEntry, NewJournalEntry, Mood
+from booklovin.models.journals import JournalEntry, NewJournalEntry, Mood, JournalEntryUpdate
 from booklovin.models.users import User
 from booklovin.services import database
 from booklovin.utils.user_token import get_from_token
@@ -31,7 +31,7 @@ async def delete_journal_entry(request: Request, entry_id: str, user: User = Dep
 
 @router.put("/{entry_id}", response_model=None | UserError, response_class=APIResponse)
 async def update_journal_entry(
-    request: Request, entry_id: str, entry: NewJournalEntry, user: User = Depends(get_from_token)
+    request: Request, entry_id: str, entry: JournalEntryUpdate, user: User = Depends(get_from_token)
 ) -> None | UserError:
     """Update an existing journal entry."""
     result = await database.journal.update(db=request.app.state.db, author_id=user.uid, entry_id=entry_id, journal_entry=entry)

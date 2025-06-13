@@ -63,12 +63,12 @@ const EntryCard = ({ entry, onEdit, onDelete, onToggleFavorite }) => {
             onClick={handleFavoriteClick}
             className="p-1 rounded-full hover:bg-opacity-10 transition-colors"
             style={{
-              color: entry.is_favorite ? '#fbbf24' : 'var(--mood-secondary)',
+              color: entry.favorite ? '#fbbf24' : 'var(--mood-secondary)',
               backgroundColor: isHovered ? 'var(--mood-secondary)' : 'transparent'
             }}
-            title={entry.is_favorite ? 'Remove from favorites' : 'Add to favorites'}
+            title={entry.favorite ? 'Remove from favorites' : 'Add to favorites'}
           >
-            <Star className="w-4 h-4" fill={entry.is_favorite ? 'currentColor' : 'none'} />
+            <Star className="w-4 h-4" fill={entry.favorite ? 'currentColor' : 'none'} />
           </button>
           <button
             onClick={handleDeleteClick}

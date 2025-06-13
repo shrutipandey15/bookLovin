@@ -1,9 +1,10 @@
 """Database helpers for mongo: posts"""
 
 from booklovin.models.errors import UserError
-from booklovin.models.journals import JournalEntry, NewJournalEntry, Mood
+from booklovin.models.journals import JournalEntry, JournalEntryUpdate, Mood
 from pymongo.asynchronous.database import AsyncDatabase as Database
 from booklovin.services import errors
+from datetime import datetime, timezone
 
 
 async def create(db: Database, entry: JournalEntry) -> None | UserError:
@@ -19,9 +20,10 @@ async def delete(db: Database, entry_id: str) -> None | UserError:
     return None
 
 
-async def update(db: Database, author_id: str, entry_id: str, journal_entry: NewJournalEntry) -> None | UserError:
+async def update(db: Database, author_id: str, entry_id: str, journal_entry: JournalEntryUpdate) -> None | UserError:
     """Update an existing journal entry."""
     update_data = journal_entry.model_dump(exclude_unset=True)  # Only update provided fields
+    update_data["updated_at"] = datetime.now(timezone.utc)
     result = await db.journals.update_one({"uid": entry_id, "authorId": author_id}, {"$set": update_data})
     if result.matched_count == 0:
         return errors.NOT_FOUND
