@@ -5,33 +5,14 @@ from booklovin.models.journals import JournalEntry, JournalEntryUpdate, Mood
 from pymongo.asynchronous.database import AsyncDatabase as Database
 from booklovin.services import errors
 from datetime import datetime, timezone
-from typing import Optional
 from booklovin.models.users import User
 
 
-async def _get_user_data(db: Database, user_id: str) -> Optional[User]:
-    """Retrieves user data, including streak information."""
-    user_doc = await db.users.find_one({"uid": user_id})
-    if user_doc:
-        return User.model_validate(user_doc)
-    return None
-
-
-async def _update_user_data(db: Database, user_id: str, update_fields: dict) -> None:
-    """Updates specific fields for a user."""
-    await db.users.update_one({"uid": user_id}, {"$set": update_fields})
-
-
-async def _update_user_streak(db: Database, user_id: str, entry_created_at: datetime):
+async def _update_user_streak(db: Database, user: User, entry_created_at: datetime):
     """
     Calculates and updates the user's journaling streak based on a new/updated entry.
     entry_created_at should be the created_at timestamp of the journal entry.
     """
-    user = await _get_user_data(db, user_id)
-    if not user:
-        print(f"Error: User with ID {user_id} not found for streak update.")
-        return
-
     # Normalize entry_created_at to midnight UTC
     entry_date_midnight = entry_created_at.replace(hour=0, minute=0, second=0, microsecond=0)
 
@@ -69,16 +50,17 @@ async def _update_user_streak(db: Database, user_id: str, entry_created_at: date
         or (last_journal_date_midnight is None and entry_date_midnight is not None)  # First entry case
         or (last_journal_date_midnight is not None and entry_date_midnight != last_journal_date_midnight)
     ):
-        await _update_user_data(
-            db,
-            user_id,
-            {"last_journal_date": entry_date_midnight, "current_streak": new_current_streak, "longest_streak": new_longest_streak},
-        )
+        update_fields = {
+            "last_journal_date": entry_date_midnight,
+            "current_streak": new_current_streak,
+            "longest_streak": new_longest_streak,
+        }
+        await db.users.update_one({"uid": user.uid}, {"$set": update_fields})
 
 
-async def create(db: Database, entry: JournalEntry) -> None | UserError:
+async def create(db: Database, entry: JournalEntry, user: User) -> None | UserError:
     await db.journals.insert_one(entry.model_dump())
-    await _update_user_streak(db, entry.authorId, entry.creationTime)
+    await _update_user_streak(db, user, entry.creationTime)
     return None
 
 
@@ -90,18 +72,18 @@ async def delete(db: Database, entry_id: str) -> None | UserError:
     return None
 
 
-async def update(db: Database, author_id: str, entry_id: str, journal_entry: JournalEntryUpdate) -> None | UserError:
+async def update(db: Database, user: User, entry_id: str, journal_entry: JournalEntryUpdate) -> None | UserError:
     """Update an existing journal entry."""
     update_data = journal_entry.model_dump(exclude_unset=True)
     update_data["updatedAt"] = datetime.now(timezone.utc)
-    result = await db.journals.update_one({"uid": entry_id, "authorId": author_id}, {"$set": update_data})
+    result = await db.journals.update_one({"uid": entry_id, "authorid": user.uid}, {"$set": update_data})
     if result.matched_count == 0:
         return errors.NOT_FOUND
 
-    existing_entry_doc = await db.journals.find_one({"uid": entry_id, "authorId": author_id})
+    existing_entry_doc = await db.journals.find_one({"uid": entry_id, "authorId": user.uid})
     if existing_entry_doc:
         existing_entry = JournalEntry.from_dict(existing_entry_doc)
-        await _update_user_streak(db, author_id, existing_entry.creationTime)
+        await _update_user_streak(db, user, existing_entry.creationTime)
     return None
 
 

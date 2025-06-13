@@ -16,7 +16,7 @@ async def create_journal_entry(request: Request, post: NewJournalEntry, user: Us
     """Create one journal entry."""
     new_entry = JournalEntry.from_new_model(post, author=user.uid)
 
-    await database.journal.create(db=request.app.state.db, entry=new_entry)
+    await database.journal.create(db=request.app.state.db, entry=new_entry, user=user)
     return new_entry
 
 
@@ -34,7 +34,7 @@ async def update_journal_entry(
     request: Request, entry_id: str, entry: JournalEntryUpdate, user: User = Depends(get_from_token)
 ) -> None | UserError:
     """Update an existing journal entry."""
-    result = await database.journal.update(db=request.app.state.db, author_id=user.uid, entry_id=entry_id, journal_entry=entry)
+    result = await database.journal.update(db=request.app.state.db, user=user, entry_id=entry_id, journal_entry=entry)
     if isinstance(result, UserError):
         return result
     return None
@@ -49,7 +49,6 @@ async def list_journal_entries(
     favorite: bool | None = None,
 ) -> list[JournalEntry] | UserError:
     """List journal entries with optional filtering."""
-
     result = await database.journal.query(db=request.app.state.db, user_id=user.uid, mood=mood, search=search, favorite=favorite)
 
     if isinstance(result, UserError):

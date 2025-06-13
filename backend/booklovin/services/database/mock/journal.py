@@ -1,11 +1,11 @@
-from booklovin.models.errors import UserError, gen_error, ErrorCode
+from booklovin.models.errors import ErrorCode, UserError, gen_error
 from booklovin.models.journals import JournalEntry, JournalEntryUpdate, Mood
-
+from booklovin.models.users import User
 
 from .core import State
 
 
-async def create(db: State, entry: JournalEntry) -> None | UserError:
+async def create(db: State, entry: JournalEntry, user: User) -> None | UserError:
     """Create a journal entry."""
     db.journal_entries[entry.authorId].append(entry)
     db.save()
@@ -27,18 +27,18 @@ async def delete(db: State, entry_id: str) -> None | UserError:
     return gen_error(ErrorCode.NOT_FOUND, f"Journal entry with ID {entry_id} not found.")
 
 
-async def update(db: State, author_id: str, entry_id: str, journal_entry: JournalEntryUpdate) -> None | UserError:
+async def update(db: State, user: User, entry_id: str, journal_entry: JournalEntryUpdate) -> None | UserError:
     """Update an existing journal entry."""
 
     # Check if user exists
-    if author_id not in db.journal_entries:
-        return gen_error(ErrorCode.NOT_FOUND, f"No journal entries found for user {author_id}.")
+    if user.uid not in db.journal_entries:
+        return gen_error(ErrorCode.NOT_FOUND, f"No journal entries found for user {user.uid}.")
 
     # Find the entry to update
-    for i, entry in enumerate(db.journal_entries[author_id]):
+    for i, entry in enumerate(db.journal_entries[user.uid]):
         if entry.uid == entry_id:
             # Replace the entry
-            db.journal_entries[author_id][i].update(journal_entry.model_dump(exclude_unset=True))
+            db.journal_entries[user.uid][i].update(journal_entry.model_dump(exclude_unset=True))
             db.save()
             return None
 
