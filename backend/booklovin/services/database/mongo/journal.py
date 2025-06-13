@@ -8,6 +8,10 @@ from datetime import datetime, timezone
 from booklovin.models.users import User
 
 
+def to_midnight(dt):
+    return dt.replace(hour=0, minute=0, second=0, microsecond=0)
+
+
 async def _update_user_streak(db: Database, user: User, entry_date: datetime):
     """
     Update and calculate the user's journaling streak based on a new entry.
@@ -18,11 +22,12 @@ async def _update_user_streak(db: Database, user: User, entry_date: datetime):
 
     # Initialize update document
     update_doc = {}
+    entry_day = to_midnight(entry_date)
 
     # Check for existing last journal date
     if user.last_journal_date:
-        last_date = user.last_journal_date.replace(tzinfo=timezone.utc)  # Mongo looses timezone info
-        days_diff = (entry_date - last_date).days
+        last_date = to_midnight(user.last_journal_date.replace(tzinfo=timezone.utc))  # Mongo looses timezone info
+        days_diff = (entry_day - last_date).days
 
         if days_diff == 0:
             # Same day entry, no streak change
@@ -35,7 +40,7 @@ async def _update_user_streak(db: Database, user: User, entry_date: datetime):
                 update_doc["current_streak"] = 2  # Yesterday + today
             else:
                 # Calculate streak directly from start date
-                current_streak = (entry_date - user.streak_start_date).days + 1
+                current_streak = (entry_day - user.streak_start_date).days + 1
                 update_doc["current_streak"] = current_streak
 
                 # Update longest streak if needed
@@ -43,17 +48,17 @@ async def _update_user_streak(db: Database, user: User, entry_date: datetime):
                     update_doc["longest_streak"] = current_streak
         else:
             # Streak broken, reset if journaling today
-            if entry_date == datetime.today():
-                update_doc.update({"streak_start_date": entry_date, "current_streak": 1})
+            if entry_day == to_midnight(datetime.now(timezone.utc)):
+                update_doc.update({"streak_start_date": entry_day, "current_streak": 1})
             else:
                 update_doc.update({"streak_start_date": None, "current_streak": 0})
     else:
         # First journal entry ever
-        update_doc.update({"streak_start_date": entry_date, "current_streak": 1, "longest_streak": 1})
+        update_doc.update({"streak_start_date": entry_day, "current_streak": 1, "longest_streak": 1})
 
     # Only update if we have changes
     if update_doc:
-        update_doc["last_journal_date"] = entry_date
+        update_doc["last_journal_date"] = entry_day
         await db.users.update_one({"uid": user.uid}, {"$set": update_doc})
 
 

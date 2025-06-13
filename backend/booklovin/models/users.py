@@ -35,10 +35,12 @@ class User(FlexModel):
     link: Optional[str] = ""
     location: Optional[str] = "unknown"
     active: bool = True
+    # journal data
     last_journal_date: Optional[datetime] = None
+    # streak data
     current_streak: int = 0
     longest_streak: int = 0
-    streak_start_date: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    streak_start_date: Optional[datetime] = None
 
     @field_serializer("creationTime")
     def to_json_creationTime(self, v: datetime, _) -> float:
