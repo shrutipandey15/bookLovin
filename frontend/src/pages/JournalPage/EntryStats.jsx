@@ -35,7 +35,7 @@ const EntryStats = ({ entry, showDetailed = false }) => {
             style={{ color: 'var(--mood-secondary)' }}
           />
           <span style={{ color: 'var(--mood-text)' }}>
-            Created {formatDate(entry.created_at)}
+            Created {formatDate(entry.creationTime)}
           </span>
         </div>
         <div className="flex items-center space-x-2 text-sm">

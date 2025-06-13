@@ -24,5 +24,4 @@ class JournalEntryUpdate(NewJournalEntry): ...
 
 
 class JournalEntry(UserObject, NewJournalEntry):
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updatedAt: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

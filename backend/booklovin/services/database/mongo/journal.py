@@ -72,7 +72,7 @@ async def _update_user_streak(db: Database, user_id: str, entry_created_at: date
 
 async def create(db: Database, entry: JournalEntry) -> None | UserError:
     await db.journals.insert_one(entry.model_dump())
-    await _update_user_streak(db, entry.authorId, entry.created_at)
+    await _update_user_streak(db, entry.authorId, entry.creationTime)
     return None
 
 
@@ -87,7 +87,7 @@ async def delete(db: Database, entry_id: str) -> None | UserError:
 async def update(db: Database, author_id: str, entry_id: str, journal_entry: JournalEntryUpdate) -> None | UserError:
     """Update an existing journal entry."""
     update_data = journal_entry.model_dump(exclude_unset=True)
-    update_data["updated_at"] = datetime.now(timezone.utc)
+    update_data["updatedAt"] = datetime.now(timezone.utc)
     result = await db.journals.update_one({"uid": entry_id, "authorId": author_id}, {"$set": update_data})
     if result.matched_count == 0:
         return errors.NOT_FOUND
@@ -95,7 +95,7 @@ async def update(db: Database, author_id: str, entry_id: str, journal_entry: Jou
     existing_entry_doc = await db.journals.find_one({"uid": entry_id, "authorId": author_id})
     if existing_entry_doc:
         existing_entry = JournalEntry.from_dict(existing_entry_doc)
-        await _update_user_streak(db, author_id, existing_entry.created_at)
+        await _update_user_streak(db, author_id, existing_entry.creationTime)
     return None
 
 

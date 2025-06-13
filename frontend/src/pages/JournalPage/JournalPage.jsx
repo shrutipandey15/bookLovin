@@ -57,8 +57,8 @@ const JournalPage = () => {
         writing_time: entry.writingTime,
         favorite: entry.favorite,
         word_count: getWordCount(entry.description),
-        created_at: entry.created_at,
-        updated_at: entry.updated_at,
+        created_at: entry.creationTime,
+        updated_at: entry.updatedAt,
       }));
       setEntries(formattedEntries);
     } catch (err) {
