@@ -13,6 +13,10 @@ async def _update_user_streak(db: Database, user: User, entry_created_at: dateti
     Calculates and updates the user's journaling streak based on a new/updated entry.
     entry_created_at should be the created_at timestamp of the journal entry.
     """
+    # Ensure entry_created_at is timezone aware
+    if entry_created_at.tzinfo is None:
+        entry_created_at = entry_created_at.replace(tzinfo=timezone.utc)
+
     # Normalize entry_created_at to midnight UTC
     entry_date_midnight = entry_created_at.replace(hour=0, minute=0, second=0, microsecond=0)
 
@@ -20,7 +24,12 @@ async def _update_user_streak(db: Database, user: User, entry_created_at: dateti
 
     last_journal_date_midnight = None
     if user.last_journal_date:
-        last_journal_date_midnight = user.last_journal_date.replace(hour=0, minute=0, second=0, microsecond=0)
+        # Ensure last_journal_date is timezone aware
+        if user.last_journal_date.tzinfo is None:
+            last_journal_date = user.last_journal_date.replace(tzinfo=timezone.utc)
+        else:
+            last_journal_date = user.last_journal_date
+        last_journal_date_midnight = last_journal_date.replace(hour=0, minute=0, second=0, microsecond=0)
 
     new_current_streak = user.current_streak
     new_longest_streak = user.longest_streak
