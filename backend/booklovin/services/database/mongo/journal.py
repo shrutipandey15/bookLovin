@@ -85,7 +85,7 @@ async def update(db: Database, user: User, entry_id: str, journal_entry: Journal
     """Update an existing journal entry."""
     update_data = journal_entry.model_dump(exclude_unset=True)
     update_data["updatedAt"] = datetime.now(timezone.utc)
-    result = await db.journals.update_one({"uid": entry_id, "authorid": user.uid}, {"$set": update_data})
+    result = await db.journals.update_one({"uid": entry_id, "authorId": user.uid}, {"$set": update_data})
     if result.matched_count == 0:
         return errors.NOT_FOUND
 
