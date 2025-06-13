@@ -1,5 +1,6 @@
+from dataclasses import MISSING, fields, is_dataclass
 from datetime import datetime, timezone
-from typing import Any, Type, TypeVar
+from typing import Any, Optional, Type, TypeVar, Union, cast
 from uuid import uuid4
 
 from booklovin.core.utils import dumps, loads
@@ -18,7 +19,7 @@ class FlexModel(BaseModel):
 
     def to_json(self: FM) -> str:
         """Returns a JSON string"""
-        return dumps(self.model_dump())
+        return cast(str, dumps(self.model_dump()))
 
     @classmethod
     def from_json(kls: Type[FM], post_data: str) -> FM:
@@ -50,3 +51,31 @@ class UserObject:
     @field_serializer("creationTime")
     def to_json_creationTime(self, v: datetime, _: SerializationInfo) -> float:
         return v.timestamp()
+
+
+def optional_fields(cls):
+    """
+    A class decorator that makes all fields of a class Optional.
+    Works with regular classes and dataclasses.
+    """
+    if is_dataclass(cls):
+        # Handle dataclasses
+        for field in fields(cls):
+            if field.type != Optional and field.default is MISSING and field.default_factory is MISSING:
+                # Only modify fields that don't already have defaults
+                field.type = Optional[field.type]
+    else:
+        # Handle regular classes
+        annotations = getattr(cls, "__annotations__", {})
+        new_annotations = {}
+
+        for name, type_hint in annotations.items():
+            # Skip if already Optional
+            if getattr(type_hint, "__origin__", None) is Union and type(None) in getattr(type_hint, "__args__", ()):
+                new_annotations[name] = type_hint
+            else:
+                new_annotations[name] = Optional[type_hint]
+
+        cls.__annotations__ = new_annotations
+
+    return cls
