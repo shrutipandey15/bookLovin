@@ -12,7 +12,7 @@ import {
   Flame
 } from 'lucide-react';
 import { MOOD_CONFIG, MOOD_KEY_TO_ENUM } from '@components/MoodContext';
-import { calculateStats } from '@utils/journalUtils';
+import { calculateStats, getWordCount } from '@utils/journalUtils';
 import JournalEditor from './JournalEditor';
 import EntryCard from './EntryCard';
 import axiosInstance from '@api/axiosInstance';
@@ -56,7 +56,7 @@ const JournalPage = () => {
         _id: entry.uid,
         writing_time: entry.writingTime,
         favorite: entry.favorite,
-        word_count: entry.wordCount,
+        word_count: getWordCount(entry.description),
         created_at: entry.created_at,
         updated_at: entry.updated_at,
       }));

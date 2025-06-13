@@ -15,7 +15,6 @@ class NewJournalEntry(FlexModel):
     content: str
     title: str = ""
     writingTime: int = 0  # time spent to write the journal entry
-    wordCount: int = 0  # New field for word count
     tags: list[str] = Field(default_factory=list)
     favorite: bool = False
 
