@@ -1,17 +1,17 @@
 import { useEffect, useRef } from "react";
 import { createParticle } from "../utils/ParticlesFactory";
-import { useMood } from '@components/MoodContext'; // Import the mood context
+import { useMood, MOOD_CONFIG, MOOD_ENUM_TO_KEY } from '@components/MoodContext';
 
 const ParticlesBackground = () => {
   const canvasRef = useRef(null);
-  const { theme } = useMood(); // Use the mood context instead of detecting dark class
+  const { mood, theme } = useMood();
   const animationRef = useRef(null);
   const particlesRef = useRef([]);
 
-  // Determine if current theme is dark
   const isDark = theme === 'dragon';
+  const currentMoodKey = MOOD_ENUM_TO_KEY[mood] || 'healing';
+  const currentMoodConfig = MOOD_CONFIG[currentMoodKey];
 
-  // Note: Layout component should handle the dark class for Tailwind
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -19,19 +19,26 @@ const ParticlesBackground = () => {
 
     const ctx = canvas.getContext("2d");
 
+    const moodColors = {
+      primary: `var(--mood-primary)`,
+      secondary: `var(--mood-secondary)`,
+      bg: `var(--mood-bg)`,
+      text: `var(--mood-text)`,
+      contrast: `var(--mood-contrast)`,
+    };
+
     const resizeCanvas = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     };
 
     const initParticles = () => {
-      // Pass the actual theme name instead of 'dark'/'light'
-      const currentTheme = isDark ? 'dragon' : 'coffee';
       const count = isDark ? 40 : 60;
 
       const particles = [];
       for (let i = 0; i < count; i++) {
-        particles.push(createParticle(currentTheme, canvas.width, canvas.height));
+        // moodColors is now accessible here
+        particles.push(createParticle(moodColors, theme, canvas.width, canvas.height));
       }
 
       particlesRef.current = particles;
@@ -41,7 +48,8 @@ const ParticlesBackground = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       particlesRef.current.forEach((particle) => {
-        ctx.fillStyle = particle.color;
+        const computedColor = getComputedStyle(document.documentElement).getPropertyValue(particle.color.replace('var(', '').replace(')', '').trim());
+        ctx.fillStyle = computedColor || particle.color;
 
         switch (particle.shape) {
           case 'circle':
@@ -131,7 +139,7 @@ const ParticlesBackground = () => {
       }
       window.removeEventListener("resize", handleResize);
     };
-  }, [isDark, theme]); // Add theme to dependencies
+  }, [isDark, theme, mood]);
 
   return (
     <div className="fixed inset-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }}>

@@ -1,4 +1,3 @@
-// JournalPage.jsx
 import { useState, useEffect, useCallback } from 'react';
 import {
   Search,
@@ -8,7 +7,9 @@ import {
   BookOpen,
   Clock,
   Star,
-  TrendingUp
+  TrendingUp,
+  Award,
+  Flame
 } from 'lucide-react';
 import { MOOD_CONFIG, MOOD_KEY_TO_ENUM } from '@components/MoodContext';
 import { calculateStats } from '@utils/journalUtils';
@@ -29,6 +30,7 @@ const JournalPage = () => {
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [entryToDeleteId, setEntryToDeleteId] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
 
   const fetchEntries = useCallback(async () => {
     setIsLoading(true);
@@ -67,25 +69,43 @@ const JournalPage = () => {
     }
   }, [moodFilter, searchTerm]);
 
+  const fetchUserProfile = useCallback(async () => {
+    try {
+      const response = await axiosInstance.get('/auth/me');
+      setUserProfile(response.data.data);
+    } catch (err) {
+      console.error("Failed to fetch user profile:", err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchEntries();
-  }, [fetchEntries]);
+    fetchUserProfile();
+  }, [fetchEntries, fetchUserProfile]);
 
   const stats = calculateStats(entries);
+  const getStreakMessage = (currentStreak) => {
+    if (currentStreak === 0) return "Start a streak today!";
+    if (currentStreak === 1) return "Keep it up!";
+    if (currentStreak >= 7) return "You're on fire!";
+    if (currentStreak > 1) return `Keep the momentum going!`;
+    return "";
+  };
 
   const displayEntries = entries;
 
-  const handleNewEntry = () => {
+
+  const handleNewEntry = useCallback(() => {
     setActiveEntry(null);
     setIsWriting(true);
-  };
+  }, []);
 
-  const handleEditEntry = (entry) => {
+  const handleEditEntry = useCallback((entry) => {
     setActiveEntry(entry);
     setIsWriting(true);
-  };
+  }, []);
 
-  const handleSaveEntry = async (entryData) => {
+  const handleSaveEntry = useCallback(async (entryData) => {
     setEditorError(null);
     try {
       const payload = {
@@ -105,6 +125,7 @@ const JournalPage = () => {
       }
 
       await fetchEntries();
+      await fetchUserProfile();
 
       setIsWriting(false);
       setActiveEntry(null);
@@ -112,22 +133,23 @@ const JournalPage = () => {
       console.error("Error saving entry:", err);
       setEditorError(err.response?.data?.detail || "Failed to save entry. Please try again.");
     }
-  };
+  }, [activeEntry, fetchEntries, fetchUserProfile]);
 
-  const handleDeleteEntry = async (entryId) => {
+  const handleDeleteEntry = useCallback(async (entryId) => {
     setShowConfirmModal(false);
     setEntryToDeleteId(null);
     setError(null);
     try {
       await axiosInstance.delete(`/journal/${entryId}`);
       setEntries(prev => prev.filter(entry => entry._id !== entryId));
+      await fetchUserProfile();
     } catch (err) {
       console.error("Error deleting entry:", err);
       setError(err.response?.data?.detail || "Failed to delete entry. Please try again.");
     }
-  };
+  }, [fetchUserProfile]);
 
-  const handleToggleFavorite = async (entryId) => {
+  const handleToggleFavorite = useCallback(async (entryId) => {
     setError(null);
     try {
       const entryToToggle = entries.find(entry => entry._id === entryId);
@@ -149,18 +171,18 @@ const JournalPage = () => {
       console.error("Error toggling favorite:", err);
       setError(err.response?.data?.detail || "Failed to toggle favorite status. Please try again.");
     }
-  };
+  }, [entries]);
 
-  const handleCancelEdit = () => {
+  const handleCancelEdit = useCallback(() => {
     setIsWriting(false);
     setActiveEntry(null);
     setEditorError(null);
-  };
+  }, []);
 
-  const confirmDelete = (entryId) => {
+  const confirmDelete = useCallback((entryId) => {
     setEntryToDeleteId(entryId);
     setShowConfirmModal(true);
-  };
+  }, []);
 
   if (isWriting) {
     return (
@@ -313,34 +335,81 @@ const JournalPage = () => {
               </div>
             </div>
 
-            <div
-              className="p-6 rounded-xl shadow-sm border"
-              style={{
-                backgroundColor: 'var(--mood-contrast)',
-                borderColor: 'var(--mood-secondary)'
-              }}
-            >
-              <div className="flex items-center space-x-3">
-                <Clock
-                  className="w-8 h-8"
+            {userProfile && (
+              <div
+                className="p-6 rounded-xl shadow-sm border"
+                style={{
+                  backgroundColor: 'var(--mood-contrast)',
+                  borderColor: 'var(--mood-secondary)'
+                }}
+              >
+                <div className="flex items-center space-x-3">
+                  {userProfile.current_streak > 0 ? (
+                    <Flame
+                      className="w-8 h-8 animate-pulse"
+                      style={{ color: 'var(--mood-primary)' }}
+                    />
+                  ) : (
+                    <Clock // Use clock when no streak
+                      className="w-8 h-8"
+                      style={{ color: 'var(--mood-secondary)' }}
+                    />
+                  )}
+                  <div>
+                    <p
+                      className="text-2xl font-bold"
+                      style={{ color: 'var(--mood-text)' }}
+                    >
+                      {userProfile.current_streak}
+                    </p>
+                    <p
+                      className="text-sm"
+                      style={{ color: 'var(--mood-secondary)' }}
+                    >
+                      Day Streak
+                    </p>
+                  </div>
+                </div>
+                {/* Motivational Message */}
+                <p
+                  className="text-xs mt-3 text-center"
                   style={{ color: 'var(--mood-primary)' }}
-                />
-                <div>
-                  <p
-                    className="text-2xl font-bold"
-                    style={{ color: 'var(--mood-text)' }}
-                  >
-                    {stats.streak}
-                  </p>
-                  <p
-                    className="text-sm"
-                    style={{ color: 'var(--mood-secondary)' }}
-                  >
-                    Day Streak
-                  </p>
+                >
+                  {getStreakMessage(userProfile.current_streak)}
+                </p>
+              </div>
+            )}
+
+            {userProfile && ( // Only render if userProfile is loaded
+              <div
+                className="p-6 rounded-xl shadow-sm border"
+                style={{
+                  backgroundColor: 'var(--mood-contrast)',
+                  borderColor: 'var(--mood-secondary)'
+                }}
+              >
+                <div className="flex items-center space-x-3">
+                  <Award
+                    className="w-8 h-8"
+                    style={{ color: 'var(--mood-primary)' }}
+                  />
+                  <div>
+                    <p
+                      className="text-2xl font-bold"
+                      style={{ color: 'var(--mood-text)' }}
+                    >
+                      {userProfile.longest_streak}
+                    </p>
+                    <p
+                      className="text-sm"
+                      style={{ color: 'var(--mood-secondary)' }}
+                    >
+                      Longest Streak
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             <div
               className="p-6 rounded-xl shadow-sm border"

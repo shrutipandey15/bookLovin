@@ -1,5 +1,5 @@
-export const createParticle = (theme, canvasWidth, canvasHeight) => {
-  const isDark = theme === 'dragon'; // Check for 'dragon' theme instead of 'dark'
+export const createParticle = (moodColors, theme, canvasWidth, canvasHeight) => {
+  const isDark = theme === 'dragon';
 
   const common = {
     x: Math.random() * canvasWidth,
@@ -8,22 +8,22 @@ export const createParticle = (theme, canvasWidth, canvasHeight) => {
     speedY: -Math.random() * (isDark ? 1 : 0.5),
   };
 
+  const { primary, secondary, text, contrast } = moodColors;
+
   if (isDark) {
-    // Dragon theme: wings, glyphs
     const shapes = ['wing', 'glyph', 'circle'];
     return {
       ...common,
       size: Math.random() * 2 + 1,
-      color: ['#facc15', '#fb923c', '#38bdf8'][Math.floor(Math.random() * 3)],
+      color: [primary, secondary, text, contrast][Math.floor(Math.random() * 4)],
       shape: shapes[Math.floor(Math.random() * shapes.length)],
     };
   } else {
-    // Coffee/bookish theme: feather, quill, circle, flower
     const shapes = ['feather', 'flower', 'quill', 'circle'];
     return {
       ...common,
       size: Math.random() * 2 + 3,
-      color: ['#d6bfa4', '#ceb18e', '#f1e2c6'][Math.floor(Math.random() * 3)],
+      color: [primary, secondary, text, contrast][Math.floor(Math.random() * 4)],
       shape: shapes[Math.floor(Math.random() * shapes.length)],
     };
   }

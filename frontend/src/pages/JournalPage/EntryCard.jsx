@@ -38,59 +38,51 @@ const EntryCard = ({ entry, onEdit, onDelete, onToggleFavorite }) => {
       }}
     >
       <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 min-w-0 pr-2">
           {MoodIcon && (
             <MoodIcon
-              className="w-5 h-5"
-              style={{ color: 'var(--mood-primary)' }}
+              className="w-5 h-5 flex-shrink-0"
+              style={{ color: MOOD_CONFIG[moodKey]?.color || 'var(--mood-primary)' }}
             />
           )}
-          <span
-            className="text-sm font-medium"
-            style={{
-              color: 'var(--mood-primary)',
-              fontFamily: 'var(--mood-font)'
-            }}
+          <h3
+            className="text-lg font-semibold truncate flex-grow"
+            style={{ color: 'var(--mood-primary)' }}
           >
-            {MOOD_CONFIG[moodKey]?.label || moodKey}
-          </span>
+            {entry.title || 'Untitled Entry'}
+          </h3>
         </div>
 
-        <div className={`flex items-center space-x-2 transition-opacity ${
-          isHovered ? 'opacity-100' : 'opacity-0'
-        }`}>
+        <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          {/* Favorite Button */}
           <button
             onClick={handleFavoriteClick}
-            className="p-1 rounded-full hover:bg-opacity-10 transition-colors"
+            className="p-1 rounded-md hover:bg-opacity-20 transition-colors"
             style={{
-              color: entry.favorite ? '#fbbf24' : 'var(--mood-secondary)',
-              backgroundColor: isHovered ? 'var(--mood-secondary)' : 'transparent'
+              color: entry.favorite ? 'var(--mood-primary)' : 'var(--mood-secondary)',
+              backgroundColor: entry.favorite ? 'var(--mood-primary-rgb) / 0.1' : 'transparent',
             }}
-            title={entry.favorite ? 'Remove from favorites' : 'Add to favorites'}
           >
-            <Star className="w-4 h-4" fill={entry.favorite ? 'currentColor' : 'none'} />
+            <Star className={`w-5 h-5 ${entry.favorite ? 'fill-current' : ''}`} />
           </button>
+          {/* Delete Button */}
           <button
             onClick={handleDeleteClick}
-            className="p-1 rounded-full hover:bg-opacity-10 transition-colors"
+            className="p-1 rounded-md hover:bg-opacity-20 transition-colors"
             style={{
+              backgroundColor: 'transparent',
               color: 'var(--mood-secondary)',
-              backgroundColor: isHovered ? 'var(--mood-secondary)' : 'transparent'
             }}
-            title="Delete entry"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-5 h-5" />
           </button>
         </div>
       </div>
 
       {entry.title && (
         <h3
-          className="font-semibold mb-2 line-clamp-2"
-          style={{
-            color: 'var(--mood-text)',
-            fontFamily: 'var(--mood-font)'
-          }}
+          className="text-lg font-semibold mb-2 truncate"
+          style={{ color: 'var(--mood-text)' }}
         >
           {entry.title}
         </h3>
@@ -140,9 +132,9 @@ const EntryCard = ({ entry, onEdit, onDelete, onToggleFavorite }) => {
           isHovered ? 'border-opacity-50' : 'border-transparent'
         }`}
         style={{
-          borderColor: isHovered ? 'var(--mood-primary)' : 'transparent'
+          borderColor: isHovered ? 'var(--mood-primary)' : 'transparent',
         }}
-      />
+      ></div>
     </div>
   );
 };
