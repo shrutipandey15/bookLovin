@@ -4,9 +4,10 @@ from booklovin.models.errors import UserError
 from booklovin.models.journals import JournalEntry, JournalEntryUpdate, Mood
 from pymongo.asynchronous.database import AsyncDatabase as Database
 from booklovin.services import errors
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 from typing import Optional
 from booklovin.models.users import User
+
 
 async def _get_user_data(db: Database, user_id: str) -> Optional[User]:
     """Retrieves user data, including streak information."""
@@ -14,9 +15,12 @@ async def _get_user_data(db: Database, user_id: str) -> Optional[User]:
     if user_doc:
         return User.model_validate(user_doc)
     return None
+
+
 async def _update_user_data(db: Database, user_id: str, update_fields: dict) -> None:
     """Updates specific fields for a user."""
     await db.users.update_one({"uid": user_id}, {"$set": update_fields})
+
 
 async def _update_user_streak(db: Database, user_id: str, entry_created_at: datetime):
     """
@@ -59,16 +63,18 @@ async def _update_user_streak(db: Database, user_id: str, entry_created_at: date
     if new_current_streak > new_longest_streak:
         new_longest_streak = new_current_streak
 
-    if (new_current_streak != user.current_streak or
-        new_longest_streak != user.longest_streak or
-        (last_journal_date_midnight is None and entry_date_midnight is not None) or # First entry case
-        (last_journal_date_midnight is not None and entry_date_midnight != last_journal_date_midnight)):
+    if (
+        new_current_streak != user.current_streak
+        or new_longest_streak != user.longest_streak
+        or (last_journal_date_midnight is None and entry_date_midnight is not None)  # First entry case
+        or (last_journal_date_midnight is not None and entry_date_midnight != last_journal_date_midnight)
+    ):
+        await _update_user_data(
+            db,
+            user_id,
+            {"last_journal_date": entry_date_midnight, "current_streak": new_current_streak, "longest_streak": new_longest_streak},
+        )
 
-        await _update_user_data(db, user_id, {
-            "last_journal_date": entry_date_midnight,
-            "current_streak": new_current_streak,
-            "longest_streak": new_longest_streak
-        })
 
 async def create(db: Database, entry: JournalEntry) -> None | UserError:
     await db.journals.insert_one(entry.model_dump())
