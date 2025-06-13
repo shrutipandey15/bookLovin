@@ -6,7 +6,7 @@ export const mockJournalEntries = [
     mood: 'healing',
     writing_time: 1200,
     word_count: 245,
-    is_favorite: true,
+    favorite: true,
     tags: ['self-discovery', 'book-inspired'],
     created_at: new Date('2024-06-01T10:30:00'),
     updated_at: new Date('2024-06-01T10:45:00')
@@ -18,7 +18,7 @@ export const mockJournalEntries = [
     mood: 'heartbroken',
     writing_time: 600,
     word_count: 180,
-    is_favorite: false,
+    favorite: false,
     tags: ['weather', 'emotions'],
     created_at: new Date('2024-05-28T14:20:00'),
     updated_at: new Date('2024-05-28T14:30:00')
@@ -30,7 +30,7 @@ export const mockJournalEntries = [
     mood: 'empowered',
     writing_time: 900,
     word_count: 320,
-    is_favorite: true,
+    favorite: true,
     tags: ['affirmations', 'strength'],
     created_at: new Date('2024-06-03T08:15:00'),
     updated_at: new Date('2024-06-03T08:30:00')
@@ -42,7 +42,7 @@ export const mockJournalEntries = [
     mood: 'healing',
     writing_time: 780,
     word_count: 198,
-    is_favorite: false,
+    favorite: false,
     tags: ['book-club', 'mythology', 'transformation'],
     created_at: new Date('2024-05-30T19:15:00'),
     updated_at: new Date('2024-05-30T19:28:00')

@@ -108,7 +108,7 @@ describe('JournalEditor', () => {
           mood: parseInt(screen.getByTestId('mood-select').value),
           tags: screen.getByPlaceholderText(/tags/i).value.split(',').map(tag => tag.trim()).filter(Boolean),
           writing_time: MOCK_WRITING_TIME_SECONDS,
-          is_favorite: false,
+          favorite: false,
           word_count: getWordCount(screen.getByPlaceholderText(/pour your heart out/i).value)
         };
         await onSaveCallback(entryData); // Call the original onSave passed from JournalEditor
@@ -134,7 +134,7 @@ describe('JournalEditor', () => {
         mood: 2, // Default mood is 2
         tags: ['gratitude', 'learning', 'joy'],
         writing_time: MOCK_WRITING_TIME_SECONDS,
-        is_favorite: false,
+        favorite: false,
         word_count: 10
       });
     });
@@ -294,7 +294,7 @@ describe('JournalEditor', () => {
       content: 'This is existing content from a previous entry.',
       mood: 1,
       tags: ['existing', 'entry', 'test'],
-      is_favorite: true,
+      favorite: true,
       writing_time: 120,
       word_count: 10
     };

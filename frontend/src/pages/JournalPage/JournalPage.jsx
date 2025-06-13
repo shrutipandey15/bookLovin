@@ -53,9 +53,10 @@ const JournalPage = () => {
         ...entry,
         _id: entry.uid,
         writing_time: entry.writingTime,
-        is_favorite: entry.favorite,
-        created_at: entry.created_at || new Date().toISOString(),
-        updated_at: entry.updated_at || new Date().toISOString(),
+        favorite: entry.favorite,
+        word_count: entry.wordCount,
+        created_at: entry.created_at,
+        updated_at: entry.updated_at,
       }));
       setEntries(formattedEntries);
     } catch (err) {
@@ -93,7 +94,8 @@ const JournalPage = () => {
         mood: entryData.mood,
         writingTime: entryData.writing_time,
         tags: entryData.tags,
-        favorite: entryData.is_favorite
+        favorite: entryData.favorite,
+        wordCount: entryData.word_count
       };
 
       if (activeEntry) {
@@ -131,7 +133,7 @@ const JournalPage = () => {
       const entryToToggle = entries.find(entry => entry._id === entryId);
       if (!entryToToggle) return;
 
-      const updatedFavoriteStatus = !entryToToggle.is_favorite;
+      const updatedFavoriteStatus = !entryToToggle.favorite;
       const payload = {
         favorite: updatedFavoriteStatus
       };
@@ -140,7 +142,7 @@ const JournalPage = () => {
 
       setEntries(prev => prev.map(entry =>
         entry._id === entryId
-          ? { ...entry, is_favorite: updatedFavoriteStatus }
+          ? { ...entry, favorite: updatedFavoriteStatus }
           : entry
       ));
     } catch (err) {

@@ -42,7 +42,7 @@ export const calculateStats = (entries) => {
     totalEntries: mappedEntries.length,
     totalWords: mappedEntries.reduce((sum, entry) => sum + (entry.word_count || 0), 0),
     totalWritingTime: mappedEntries.reduce((sum, entry) => sum + (entry.writing_time || 0), 0),
-    favoriteEntries: mappedEntries.filter(entry => entry.is_favorite).length,
+    favoriteEntries: mappedEntries.filter(entry => entry.favorite).length,
     entriesByMood: {
       heartbroken: mappedEntries.filter(entry => entry.moodKey === 'heartbroken').length,
       healing: mappedEntries.filter(entry => entry.moodKey === 'healing').length,

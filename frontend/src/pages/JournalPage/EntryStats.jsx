@@ -41,11 +41,11 @@ const EntryStats = ({ entry, showDetailed = false }) => {
         <div className="flex items-center space-x-2 text-sm">
           <Star
             className="w-4 h-4"
-            style={{ color: entry.is_favorite ? '#fbbf24' : 'var(--mood-secondary)' }}
-            fill={entry.is_favorite ? 'currentColor' : 'none'}
+            style={{ color: entry.favorite ? '#fbbf24' : 'var(--mood-secondary)' }}
+            fill={entry.favorite ? 'currentColor' : 'none'}
           />
           <span style={{ color: 'var(--mood-text)' }}>
-            {entry.is_favorite ? 'Favorited' : 'Not favorited'}
+            {entry.favorite ? 'Favorited' : 'Not favorited'}
           </span>
         </div>
         {entry.tags && entry.tags.length > 0 && (

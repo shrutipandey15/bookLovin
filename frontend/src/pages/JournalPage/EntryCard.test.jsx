@@ -60,7 +60,7 @@ describe('EntryCard', () => {
     content: 'This is a test journal entry with some content.',
     mood: 2, // Corresponds to 'healing'
     tags: ['test', 'journal', 'sample'],
-    is_favorite: false,
+    favorite: false,
     word_count: 10,
     created_at: '2023-01-01T12:00:00Z'
   };
@@ -137,7 +137,7 @@ describe('EntryCard', () => {
   });
 
   test('displays favorite star as filled when entry is favorited', () => {
-    const favoriteEntry = { ...mockEntry, is_favorite: true };
+    const favoriteEntry = { ...mockEntry, favorite: true };
 
     render(<EntryCard {...defaultProps} entry={favoriteEntry} />);
 

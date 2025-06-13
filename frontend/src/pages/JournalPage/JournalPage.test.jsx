@@ -61,7 +61,7 @@ vi.mock('./JournalEditor', () => ({
             mood: 1, // Consistent mock data for saving
             writing_time: 5,
             tags: [],
-            is_favorite: false,
+            favorite: false,
           })
         }
       >
@@ -87,7 +87,7 @@ vi.mock('./EntryCard', () => ({
         onClick={() => onToggleFavorite(entry._id)}
         data-testid={`favorite-button-${entry._id}`} // Added unique data-testid
       >
-        {entry.is_favorite ? 'Unfavorite' : 'Favorite'}{' '}
+        {entry.favorite ? 'Unfavorite' : 'Favorite'}{' '}
       </button>
     </div>
   ),

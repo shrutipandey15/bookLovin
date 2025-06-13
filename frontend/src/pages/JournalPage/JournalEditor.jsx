@@ -22,7 +22,7 @@ const JournalEditor = ({ entry, onSave, onCancel, error }) => {
       mood,
       tags: tags.split(',').map(tag => tag.trim()).filter(Boolean),
       writing_time: Math.floor((Date.now() - writingStartTime) / 1000),
-      is_favorite: entry?.is_favorite || false,
+      favorite: entry?.favorite || false,
       word_count: wordCount
     };
     await onSave(entryData);
