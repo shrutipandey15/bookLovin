@@ -12,7 +12,7 @@ import {
   Flame
 } from 'lucide-react';
 import { MOOD_CONFIG, MOOD_KEY_TO_ENUM } from '@components/MoodContext';
-import { calculateStats, getWordCount } from '@utils/journalUtils';
+import { getWordCount, calculateStats } from '@utils/journalUtils';
 import JournalEditor from './JournalEditor';
 import EntryCard from './EntryCard';
 import axiosInstance from '@api/axiosInstance';

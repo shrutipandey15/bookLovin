@@ -7,13 +7,16 @@ import axiosInstance from '@api/axiosInstance';
 
 vi.mock('@api/axiosInstance');
 
-vi.mock('@utils/journalUtils', () => ({
+vi.mock('@utils/journalUtils', async (importOriginal) => {
+  const mod = await importOriginal();
+  return {
+    getWordCount: mod.getWordCount,
   calculateStats: vi.fn(() => ({
     totalEntries: 3,
     favoriteEntries: 1,
     totalWords: 450,
-  })),
-}));
+  }))}
+});
 
 vi.mock('@components/MoodContext', () => ({
   MOOD_CONFIG: {
