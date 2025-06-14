@@ -45,3 +45,11 @@ class User(FlexModel):
     @field_serializer("creationTime")
     def to_json_creationTime(self, v: datetime, _) -> float:
         return v.timestamp()
+
+    @field_serializer("currentStreakStart")
+    def to_json_currentStreakStart(self, v: datetime, _) -> float | None:
+        return v.timestamp() if v else None
+
+    @field_serializer("lastJournalDate")
+    def to_json_lastJournalDate(self, v: datetime, _) -> float | None:
+        return v.timestamp() if v else None
