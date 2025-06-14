@@ -2,7 +2,7 @@ import os
 from collections import defaultdict
 from dataclasses import dataclass, field
 
-from booklovin.core.utils import dumps, loads, red
+from booklovin.core.utils import dumps, loads, red, convert_datetime_fields
 from booklovin.models.comments import Comment
 from booklovin.models.journals import JournalEntry
 from booklovin.models.post import Post
@@ -13,8 +13,20 @@ from fastapi import FastAPI
 DB_FILE = "/tmp/booklovin_mock.db"
 
 
-def colMap(col, factory):
-    return list(map(factory, col))
+def colMap(col, modelType):
+    """
+    Map a collection of items to a new collection using the provided factory function.
+
+    Args:
+        col: The collection to map
+        factory: The factory function to apply to each item
+
+    Returns:
+        A new collection with the factory function applied to each item
+    """
+    factory = modelType.from_dict
+    mapped = list(map(lambda x: convert_datetime_fields(factory(x), modelType), col))
+    return mapped
 
 
 @dataclass
@@ -58,14 +70,14 @@ class State:
             data = loads(open(DB_FILE).read())
             self.posts_count = data["posts_count"]
             self.users_count = data["users_count"]
-            self.users = colMap(data["users"], User.from_dict)
-            self.posts = colMap(data["posts"], Post.from_dict)
+            self.users = colMap(data["users"], User)
+            self.posts = colMap(data["posts"], Post)
             self.likes = defaultdict(set)
             self.likes.update({k: set(v) for k, v in data["likes"].items()})
             self.journal_entries = defaultdict(list)
-            self.journal_entries.update({k: colMap(v, JournalEntry.from_dict) for k, v in data["journal_entries"].items()})
+            self.journal_entries.update({k: colMap(v, JournalEntry) for k, v in data["journal_entries"].items()})
             self.comments = defaultdict(list)
-            self.comments.update({k: colMap(v, Comment.from_dict) for k, v in data.get("comments", {}).items()})
+            self.comments.update({k: colMap(v, Comment) for k, v in data.get("comments", {}).items()})
 
 
 class MockSetup(ServiceSetup):

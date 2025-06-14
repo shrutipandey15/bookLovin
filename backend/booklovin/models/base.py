@@ -10,12 +10,17 @@ FM = TypeVar("FM", bound="FlexModel")
 
 
 class FlexModel(BaseModel):
-    def update(self: FM, data: dict):
+    def update(self: FM, data: dict | FM):
         """Updates the instance from `data`, only allowing to change properties of the parent class"""
         assert self.__class__.__base__
-        for prop in self.__class__.__base__.model_fields.keys():  # type: ignore
-            if prop in data:
-                setattr(self, prop, data[prop])
+        if isinstance(data, FlexModel):
+            for k, v in data:
+                if k in self.__dict__:
+                    setattr(self, k, v)
+        else:
+            for prop in data.keys():  # type: ignore
+                if prop in self.__dict__:
+                    setattr(self, prop, data[prop])
 
     def to_json(self: FM) -> str:
         """Returns a JSON string"""
@@ -31,10 +36,12 @@ class FlexModel(BaseModel):
         """Get a new instance from an Object"""
         if "creationTime" in dict_obj:
             dict_obj["creationTime"] = datetime.fromtimestamp(dict_obj["creationTime"], tz=timezone.utc)
-        if validate:
-            return kls.model_validate(dict_obj)
-        else:
-            return kls.model_construct(dict_obj)  # type: ignore
+        # TODO: ensure it works without validation
+        # if validate:
+        #     return kls.model_validate(dict_obj)
+        # else:
+        #     return kls.model_construct(dict_obj)  # type: ignore
+        return kls.model_validate(dict_obj)
 
     @classmethod
     def from_new_model(kls: Type[FM], model: BaseModel, author: str) -> FM:

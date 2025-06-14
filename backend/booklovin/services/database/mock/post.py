@@ -66,10 +66,9 @@ async def get_one(db: State, post_id: str) -> Post | None:
 
 async def update(db: State, post_id: str, post_data: Post) -> None | UserError:
     """Updates an existing post."""
-    update_data = post_data.model_dump(exclude_unset=True)
     post = await get_one(db, post_id)
     if post:
-        post.update(update_data)
+        post.update(post_data)
         db.save()
     else:
         return errors.POST_NOT_FOUND

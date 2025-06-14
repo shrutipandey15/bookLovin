@@ -1,13 +1,31 @@
+from datetime import datetime
+
 from booklovin.models.errors import ErrorCode, UserError, gen_error
+from booklovin.services.streak_logic import calculate_streak_changes
 from booklovin.models.journals import JournalEntry, JournalEntryUpdate, Mood
 from booklovin.models.users import User
 
 from .core import State
+from .users import get as get_user
+
+
+async def trigger_new_journal_actions(db: State, user: User, entry_date: datetime):
+    streak_data = calculate_streak_changes(
+        entry_date=entry_date,
+        last_journal_date=user.lastJournalDate,
+        current_streak_start=user.currentStreakStart,
+        current_streak=user.currentStreak,
+        longest_streak=user.longestStreak,
+    )
+    if streak_data:
+        # update user data
+        (await get_user(db, uid=user.uid)).update(streak_data)
 
 
 async def create(db: State, entry: JournalEntry, user: User) -> None | UserError:
     """Create a journal entry."""
     db.journal_entries[entry.authorId].append(entry)
+    await trigger_new_journal_actions(db, user, entry.creationTime)
     db.save()
     return None
 
@@ -39,6 +57,7 @@ async def update(db: State, user: User, entry_id: str, journal_entry: JournalEnt
         if entry.uid == entry_id:
             # Replace the entry
             db.journal_entries[user.uid][i].update(journal_entry.model_dump(exclude_unset=True))
+            await trigger_new_journal_actions(db, user, entry.creationTime)
             db.save()
             return None
 
