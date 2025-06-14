@@ -10,7 +10,6 @@ def calculate_streak_changes(
     entry_date: datetime,
     last_journal_date: datetime | None = None,
     current_streak_start: datetime | None = None,
-    current_streak: int = 0,
     longest_streak: int = 0,
 ) -> dict[str, Any]:
     """
@@ -20,7 +19,6 @@ def calculate_streak_changes(
         entry_date: The date of the new journal entry
         last_journal_date: The date of the user's last journal entry
         current_streak_start: The start date of the current streak
-        current_streak: The current streak count
         longest_streak: The longest streak achieved
 
     Returns:

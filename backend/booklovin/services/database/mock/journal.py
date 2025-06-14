@@ -14,7 +14,6 @@ async def trigger_new_journal_actions(db: State, user: User, entry_date: datetim
         entry_date=entry_date,
         last_journal_date=user.lastJournalDate,
         current_streak_start=user.currentStreakStart,
-        current_streak=user.currentStreak,
         longest_streak=user.longestStreak,
     )
     if streak_data:

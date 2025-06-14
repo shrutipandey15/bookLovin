@@ -19,7 +19,6 @@ async def trigger_new_journal_actions(db: Database, user: User, entry_date: date
         entry_date=entry_date,
         last_journal_date=user.lastJournalDate.replace(tzinfo=timezone.utc) if user.lastJournalDate else None,
         current_streak_start=user.currentStreakStart.replace(tzinfo=timezone.utc) if user.currentStreakStart else None,
-        current_streak=user.currentStreak,
         longest_streak=user.longestStreak,
     )
 
