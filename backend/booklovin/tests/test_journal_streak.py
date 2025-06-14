@@ -17,10 +17,10 @@ async def test_streak_starts_at_zero(aclient):
     user_data = response.json()
 
     # Verify initial streak values
-    assert user_data["current_streak"] == 0
-    assert user_data["longest_streak"] == 0
-    assert user_data["streak_start_date"] is None
-    assert user_data["last_journal_date"] is None
+    assert user_data["currentStreak"] == 0
+    assert user_data["longestStreak"] == 0
+    assert user_data["currentStreakStart"] is None
+    assert user_data["lastJournalDate"] is None
 
 
 @pytest.mark.skip(reason="Skipping streak tests until fixed")
@@ -44,10 +44,10 @@ async def test_streak_increments_on_first_entry(aclient):
         user_data = response.json()
 
         # Verify streak was incremented
-        assert user_data["current_streak"] == 1
-        assert user_data["longest_streak"] == 1
-        assert datetime.fromtimestamp(user_data["streak_start_date"], tz=timezone.utc).date() == datetime(2023, 1, 1).date()
-        assert datetime.fromtimestamp(user_data["last_journal_date"], tz=timezone.utc).date() == datetime(2023, 1, 1).date()
+        assert user_data["currentStreak"] == 1
+        assert user_data["longestStreak"] == 1
+        assert datetime.fromtimestamp(user_data["currentStreakStart"], tz=timezone.utc).date() == datetime(2023, 1, 1).date()
+        assert datetime.fromtimestamp(user_data["lastJournalDate"], tz=timezone.utc).date() == datetime(2023, 1, 1).date()
 
 
 @pytest.mark.skip(reason="Skipping streak tests until fixed")
@@ -69,10 +69,10 @@ async def test_streak_continues_on_consecutive_days(aclient):
         user_data = response.json()
 
         # Verify streak was incremented
-        assert user_data["current_streak"] == 2
-        assert user_data["longest_streak"] == 2
-        assert datetime.fromtimestamp(user_data["streak_start_date"], tz=timezone.utc).date() == datetime(2023, 1, 1).date()
-        assert datetime.fromtimestamp(user_data["last_journal_date"], tz=timezone.utc).date() == datetime(2023, 1, 2).date()
+        assert user_data["currentStreak"] == 2
+        assert user_data["longestStreak"] == 2
+        assert datetime.fromtimestamp(user_data["currentStreakStart"], tz=timezone.utc).date() == datetime(2023, 1, 1).date()
+        assert datetime.fromtimestamp(user_data["lastJournalDate"], tz=timezone.utc).date() == datetime(2023, 1, 2).date()
 
 
 @pytest.mark.skip(reason="Skipping streak tests until fixed")
@@ -94,15 +94,15 @@ async def test_streak_breaks_on_missed_day(aclient):
         user_data = response.json()
 
         # Verify streak was reset and started again
-        assert user_data["current_streak"] == 1
-        assert user_data["longest_streak"] == 1  # Should be 1 since we're resetting test data each time
-        assert datetime.fromtimestamp(user_data["streak_start_date"], tz=timezone.utc).date() == datetime(2023, 1, 3).date()
-        assert datetime.fromtimestamp(user_data["last_journal_date"], tz=timezone.utc).date() == datetime(2023, 1, 3).date()
+        assert user_data["currentStreak"] == 1
+        assert user_data["longestStreak"] == 1  # Should be 1 since we're resetting test data each time
+        assert datetime.fromtimestamp(user_data["currentStreakStart"], tz=timezone.utc).date() == datetime(2023, 1, 3).date()
+        assert datetime.fromtimestamp(user_data["lastJournalDate"], tz=timezone.utc).date() == datetime(2023, 1, 3).date()
 
 
 @pytest.mark.skip(reason="Skipping streak tests until fixed")
 @pytest.mark.asyncio
-async def test_longest_streak_tracking(aclient):
+async def test_longestStreak_tracking(aclient):
     """Test that longest streak is tracked correctly when current streak breaks."""
     # Build a 3-day streak
     with freeze_time("2023-01-01 12:00:00"):
@@ -117,8 +117,8 @@ async def test_longest_streak_tracking(aclient):
         # Check streak is 3
         response = await aclient.get(ME_PAGE)
         user_data = response.json()
-        assert user_data["current_streak"] == 3
-        assert user_data["longest_streak"] == 3
+        assert user_data["currentStreak"] == 3
+        assert user_data["longestStreak"] == 3
 
     # Skip a day, breaking the streak
     with freeze_time("2023-01-05 12:00:00"):
@@ -127,5 +127,5 @@ async def test_longest_streak_tracking(aclient):
         # Check current streak reset but longest remains
         response = await aclient.get(ME_PAGE)
         user_data = response.json()
-        assert user_data["current_streak"] == 1
-        assert user_data["longest_streak"] == 3
+        assert user_data["currentStreak"] == 1
+        assert user_data["longestStreak"] == 3

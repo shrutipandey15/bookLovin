@@ -12,12 +12,12 @@ def to_midnight(dt):
     return dt.replace(hour=0, minute=0, second=0, microsecond=0)
 
 
-async def _update_user_streak(db: Database, user: User, entry_date: datetime):
+async def trigger_new_journal_actions(db: Database, user: User, entry_date: datetime):
     """
     Update and calculate the user's journaling streak based on a new entry.
 
     Takes the created_at timestamp of the journal entry and updates the user's
-    streaks accordingly using a streak_start_date field.
+    streaks accordingly using a currentStreakStart field.
     """
 
     # Initialize update document
@@ -25,46 +25,45 @@ async def _update_user_streak(db: Database, user: User, entry_date: datetime):
     entry_day = to_midnight(entry_date)
 
     # Check for existing last journal date
-    if user.last_journal_date:
-        last_date = to_midnight(user.last_journal_date.replace(tzinfo=timezone.utc))  # Mongo looses timezone info
+    if user.lastJournalDate:
+        # Mongo looses timezone info:
+        last_date = to_midnight(user.lastJournalDate.replace(tzinfo=timezone.utc))
         days_diff = (entry_day - last_date).days
 
-        if days_diff == 0:
-            # Same day entry, no streak change
-            pass
-        elif days_diff == 1:
+        if days_diff == 1:
+            streak_start = to_midnight(user.currentStreakStart.replace(tzinfo=timezone.utc)) if user.currentStreakStart else None
             # Consecutive day - streak continues
             # If no streak in progress, start one
-            if not user.streak_start_date:
-                update_doc["streak_start_date"] = last_date
-                update_doc["current_streak"] = 2  # Yesterday + today
+            if not streak_start:
+                update_doc["currentStreakStart"] = last_date
+                update_doc["currentStreak"] = 2  # Yesterday + today
             else:
                 # Calculate streak directly from start date
-                current_streak = (entry_day - user.streak_start_date).days + 1
-                update_doc["current_streak"] = current_streak
+                currentStreak = (entry_day - streak_start).days + 1
+                update_doc["currentStreak"] = currentStreak
 
                 # Update longest streak if needed
-                if current_streak > user.longest_streak:
-                    update_doc["longest_streak"] = current_streak
-        else:
+                if currentStreak > user.longestStreak:
+                    update_doc["longestStreak"] = currentStreak
+        elif days_diff:
             # Streak broken, reset if journaling today
             if entry_day == to_midnight(datetime.now(timezone.utc)):
-                update_doc.update({"streak_start_date": entry_day, "current_streak": 1})
+                update_doc.update({"currentStreakStart": entry_day, "currentStreak": 1})
             else:
-                update_doc.update({"streak_start_date": None, "current_streak": 0})
+                update_doc.update({"currentStreakStart": None, "currentStreak": 0})
     else:
         # First journal entry ever
-        update_doc.update({"streak_start_date": entry_day, "current_streak": 1, "longest_streak": 1})
+        update_doc.update({"currentStreakStart": entry_day, "currentStreak": 1, "longestStreak": 1})
 
     # Only update if we have changes
     if update_doc:
-        update_doc["last_journal_date"] = entry_day
+        update_doc["lastJournalDate"] = entry_day
         await db.users.update_one({"uid": user.uid}, {"$set": update_doc})
 
 
 async def create(db: Database, entry: JournalEntry, user: User) -> None | UserError:
     await db.journals.insert_one(entry.model_dump())
-    await _update_user_streak(db, user, entry.creationTime)
+    await trigger_new_journal_actions(db, user, entry.creationTime)
     return None
 
 
@@ -87,7 +86,7 @@ async def update(db: Database, user: User, entry_id: str, journal_entry: Journal
     existing_entry_doc = await db.journals.find_one({"uid": entry_id, "authorId": user.uid})
     if existing_entry_doc:
         existing_entry = JournalEntry.from_dict(existing_entry_doc)
-        await _update_user_streak(db, user, existing_entry.creationTime)
+        await trigger_new_journal_actions(db, user, existing_entry.creationTime)
     return None
 
 
