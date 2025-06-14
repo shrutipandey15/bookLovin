@@ -1,4 +1,5 @@
 import httpx
+import pytest
 from asgi_lifespan import LifespanManager
 from booklovin.core.config import TEST_PASSWORD, TEST_USERNAME, get_test_password
 from booklovin.main import booklovin as app
@@ -44,16 +45,18 @@ async def aclient():
             yield client_instance
 
 
-def pytest_configure():
+@pytest.fixture(scope="module", autouse=True)
+def database_setup():
     """
     Fixture to clear the users collection and add the default test user ONCE per session.
-    WARNING: Tests will share database state. Prefer scope="function" for isolation.
     """
 
     # Create the test user document
     from booklovin.services import database
 
     database.test_setup.setup(user_data)  # type: ignore
+    yield
+    # Optional teardown code here if needed
 
 
 def assert_error(request):
