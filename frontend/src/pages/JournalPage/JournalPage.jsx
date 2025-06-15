@@ -56,7 +56,7 @@ const JournalPage = () => {
         _id: entry.uid,
         writing_time: entry.writingTime,
         favorite: entry.favorite,
-        word_count: getWordCount(entry.description),
+        word_count: getWordCount(entry.content),
         created_at: entry.creationTime,
         updated_at: entry.updatedAt,
       }));
@@ -72,7 +72,7 @@ const JournalPage = () => {
   const fetchUserProfile = useCallback(async () => {
     try {
       const response = await axiosInstance.get('/auth/me');
-      setUserProfile(response.data.data);
+      setUserProfile(response.data);
     } catch (err) {
       console.error("Failed to fetch user profile:", err);
     }
@@ -157,6 +157,11 @@ const JournalPage = () => {
 
       const updatedFavoriteStatus = !entryToToggle.favorite;
       const payload = {
+        title: entryToToggle.title,
+        content: entryToToggle.content,
+        mood: entryToToggle.mood,
+        writingTime: entryToToggle.writing_time,
+        tags: entryToToggle.tags,
         favorite: updatedFavoriteStatus
       };
 
@@ -344,7 +349,7 @@ const JournalPage = () => {
                 }}
               >
                 <div className="flex items-center space-x-3">
-                  {userProfile.current_streak > 0 ? (
+                  {userProfile.currentStreak > 0 ? (
                     <Flame
                       className="w-8 h-8 animate-pulse"
                       style={{ color: 'var(--mood-primary)' }}
@@ -360,7 +365,7 @@ const JournalPage = () => {
                       className="text-2xl font-bold"
                       style={{ color: 'var(--mood-text)' }}
                     >
-                      {userProfile.current_streak}
+                      {userProfile.currentStreak}
                     </p>
                     <p
                       className="text-sm"
@@ -375,12 +380,12 @@ const JournalPage = () => {
                   className="text-xs mt-3 text-center"
                   style={{ color: 'var(--mood-primary)' }}
                 >
-                  {getStreakMessage(userProfile.current_streak)}
+                  {getStreakMessage(userProfile.currentStreak)}
                 </p>
               </div>
             )}
 
-            {userProfile && ( // Only render if userProfile is loaded
+            {userProfile && (
               <div
                 className="p-6 rounded-xl shadow-sm border"
                 style={{
@@ -398,7 +403,7 @@ const JournalPage = () => {
                       className="text-2xl font-bold"
                       style={{ color: 'var(--mood-text)' }}
                     >
-                      {userProfile.longest_streak}
+                      {userProfile.longestStreak}
                     </p>
                     <p
                       className="text-sm"

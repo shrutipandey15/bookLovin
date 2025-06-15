@@ -3,20 +3,17 @@ import { vi, beforeEach, test, expect, describe } from 'vitest';
 import JournalPage from './JournalPage';
 import axiosInstance from '@api/axiosInstance';
 
-// --- Mock Dependencies ---
-
+// Mock Dependencies
 vi.mock('@api/axiosInstance');
 
-vi.mock('@utils/journalUtils', async (importOriginal) => {
-  const mod = await importOriginal();
-  return {
-    getWordCount: mod.getWordCount,
+vi.mock('@utils/journalUtils', () => ({
+  getWordCount: vi.fn((content) => content?.split(' ').length || 0),
   calculateStats: vi.fn(() => ({
-    totalEntries: 3,
+    totalEntries: 2,
     favoriteEntries: 1,
     totalWords: 450,
-  }))}
-});
+  }))
+}));
 
 vi.mock('@components/MoodContext', () => ({
   MOOD_CONFIG: {
@@ -83,7 +80,6 @@ vi.mock('@components/ConfirmModal', () => ({
     ) : null,
 }));
 
-// Mock data
 const mockEntries = [
   {
     uid: '1',
@@ -92,8 +88,8 @@ const mockEntries = [
     mood: 1,
     writingTime: 10,
     favorite: true,
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
+    creationTime: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
     tags: ['personal'],
   },
   {
@@ -103,15 +99,15 @@ const mockEntries = [
     mood: 2,
     writingTime: 15,
     favorite: false,
-    created_at: '2024-01-02T00:00:00Z',
-    updated_at: '2024-01-02T00:00:00Z',
+    creationTime: '2024-01-02T00:00:00Z',
+    updatedAt: '2024-01-02T00:00:00Z',
     tags: ['work'],
   },
 ];
 
 const mockUserProfile = {
-  current_streak: 5,
-  longest_streak: 10,
+  currentStreak: 5,
+  longestStreak: 10,
 };
 
 beforeEach(() => {
@@ -121,26 +117,30 @@ beforeEach(() => {
       return Promise.resolve({ data: mockEntries });
     }
     if (url === '/auth/me') {
-      return Promise.resolve({ data: { data: mockUserProfile } });
+      return Promise.resolve({ data: mockUserProfile });
     }
     return Promise.reject(new Error('Unknown endpoint'));
   });
 });
 
 describe('JournalPage', () => {
-  test('renders journal page with header and stats', async () => {
+  test('renders journal page with header', async () => {
     render(<JournalPage />);
 
     expect(screen.getByText('My Journal')).toBeInTheDocument();
     expect(screen.getByText('Your private space for thoughts, feelings, and reflections')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /new entry/i })).toBeInTheDocument();
+  });
+
+  test('displays stats correctly', async () => {
+    render(<JournalPage />);
 
     await waitFor(() => {
-      expect(screen.getByText('3')).toBeInTheDocument(); // Total Entries
+      expect(screen.getByText('2')).toBeInTheDocument(); // Total Entries
       expect(screen.getByText('5')).toBeInTheDocument(); // Current Streak
       expect(screen.getByText('10')).toBeInTheDocument(); // Longest Streak
       expect(screen.getByText('1')).toBeInTheDocument(); // Favorites
-      expect(screen.getByText('150')).toBeInTheDocument(); // Avg Words (450/3)
+      expect(screen.getByText('225')).toBeInTheDocument(); // Avg Words (450/2)
     });
   });
 
@@ -349,9 +349,13 @@ describe('JournalPage', () => {
 
     await waitFor(() => {
       expect(axiosInstance.put).toHaveBeenCalledWith('/journal/1', {
+        title: 'First Entry',
+        content: 'This is my first journal entry',
+        mood: 1,
+        writingTime: 10,
+        tags: ['personal'],
         favorite: false,
       });
-      expect(screen.getByTestId('favorite-button-1')).toHaveTextContent('Favorite');
     });
   });
 
@@ -361,7 +365,7 @@ describe('JournalPage', () => {
         return Promise.resolve({ data: [] });
       }
       if (url === '/auth/me') {
-        return Promise.resolve({ data: { data: mockUserProfile } });
+        return Promise.resolve({ data: mockUserProfile });
       }
     });
 

@@ -7,7 +7,7 @@ export const formatDate = (date) => {
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit'
-  }).format(new Date(date));
+  }).format(new Date(date * 1000));
 };
 
 export const formatTime = (seconds) => {
