@@ -59,7 +59,7 @@ describe('EntryCard', () => {
   test('renders entry with title and content', () => {
     render(<EntryCard {...defaultProps} entry={mockEntry} />);
 
-    expect(screen.getAllByText('Test Entry')).toHaveLength(2); // Title appears twice in component
+    expect(screen.getByText('Test Entry')).toBeInTheDocument(); // Expect the title to be present once
     expect(screen.getByText('This is a test journal entry.')).toBeInTheDocument();
   });
 

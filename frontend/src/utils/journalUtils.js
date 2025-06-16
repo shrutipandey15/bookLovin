@@ -1,5 +1,16 @@
 import { MOOD_ENUM_TO_KEY } from '@components/MoodContext';
 
+const toDate = (dateValue) => {
+  if (!dateValue) return null;
+  // If it's already a Date object, return it.
+  if (dateValue instanceof Date) return dateValue;
+
+  if(typeof dateValue === 'number') {
+    // Assumes Unix timestamp in seconds
+    return new Date(dateValue * 1000);
+  }
+  return new Date(dateValue);
+}
 export const formatDate = (date) => {
   if (!date) return '';
   return new Intl.DateTimeFormat('en-US', {
@@ -7,7 +18,7 @@ export const formatDate = (date) => {
     day: 'numeric',
     hour: '2-digit',
     minute: '2-digit'
-  }).format(new Date(date * 1000));
+  }).format(toDate(date));
 };
 
 export const formatTime = (seconds) => {
@@ -23,7 +34,7 @@ export const formatDateLong = (date) => {
     year: 'numeric',
     month: 'long',
     day: 'numeric'
-  }).format(new Date(date));
+  }).format(toDate(date));
 };
 
 export const getWordCount = (text) => {
@@ -32,20 +43,16 @@ export const getWordCount = (text) => {
 };
 
 export const calculateStats = (entries) => {
-  const mappedEntries = entries.map(entry => ({
-    ...entry,
-    moodKey: MOOD_ENUM_TO_KEY[entry.mood] || 'healing'
-  }));
-
+  // The moodKey is now expected to be pre-calculated on the entry object.
   return {
-    totalEntries: mappedEntries.length,
-    totalWords: mappedEntries.reduce((sum, entry) => sum + (entry.word_count || 0), 0),
-    totalWritingTime: mappedEntries.reduce((sum, entry) => sum + (entry.writing_time || 0), 0),
-    favoriteEntries: mappedEntries.filter(entry => entry.favorite).length,
+    totalEntries: entries.length,
+    totalWords: entries.reduce((sum, entry) => sum + (entry.wordCount || 0), 0),
+    totalWritingTime: entries.reduce((sum, entry) => sum + (entry.writingTime || 0), 0),
+    favoriteEntries: entries.filter(entry => entry.favorite).length,
     entriesByMood: {
-      heartbroken: mappedEntries.filter(entry => entry.moodKey === 'heartbroken').length,
-      healing: mappedEntries.filter(entry => entry.moodKey === 'healing').length,
-      empowered: mappedEntries.filter(entry => entry.moodKey === 'empowered').length
+      heartbroken: entries.filter(entry => entry.moodKey === 'heartbroken').length,
+      healing: entries.filter(entry => entry.moodKey === 'healing').length,
+      empowered: entries.filter(entry => entry.moodKey === 'empowered').length
     },
   };
 };
