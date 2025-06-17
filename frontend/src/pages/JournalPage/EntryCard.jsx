@@ -1,72 +1,53 @@
-import { useState } from 'react';
+// This component now uses Tailwind's `group` utility for hover effects.
 import { Star, Trash2 } from 'lucide-react';
-import { MOOD_CONFIG, MOOD_ICONS } from '@components/MoodContext';
+import { MOOD_CONFIG, MOOD_ICONS } from '@config/moods';
 import EntryStats from './EntryStats';
 
 const EntryCard = ({ entry, onEdit, onDelete, onToggleFavorite }) => {
-  const [isHovered, setIsHovered] = useState(false);
-
-  // moodKey is now directly on the entry object
   const { moodKey = 'healing' } = entry;
   const MoodIcon = MOOD_ICONS[moodKey];
 
-  const handleCardClick = () => onEdit(entry);
-  const handleFavoriteClick = (e) => {
-    e.stopPropagation();
-    onToggleFavorite(entry._id);
-  };
-  const handleDeleteClick = (e) => {
-    e.stopPropagation();
-    onDelete(entry._id);
-  };
-
   return (
     <div
-      className="rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer group relative p-6 flex flex-col"
-      onClick={handleCardClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      style={{ backgroundColor: 'var(--mood-contrast)', color: 'var(--mood-text)', fontFamily: 'var(--mood-font)', border: `1px solid var(--mood-secondary)` }}
+      onClick={() => onEdit(entry)}
+      className="group relative flex flex-col cursor-pointer rounded-xl border border-secondary bg-background p-6 shadow-sm transition-all hover:border-primary hover:shadow-md font-body"
     >
       <div className="flex-grow">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center space-x-2 min-w-0 pr-2">
-            {MoodIcon && <MoodIcon className="w-5 h-5 flex-shrink-0" style={{ color: MOOD_CONFIG[moodKey]?.color || 'var(--mood-primary)' }} />}
-            <h3 className="text-lg font-semibold truncate flex-grow" style={{ color: 'var(--mood-primary)' }}>{entry.title || 'Untitled Entry'}</h3>
+        <div className="mb-4 flex items-start justify-between">
+          <div className="flex min-w-0 items-center space-x-2 pr-2">
+            {MoodIcon && <MoodIcon className="h-5 w-5 flex-shrink-0 text-primary" />}
+            <h3 className="flex-grow truncate text-lg font-semibold text-primary">{entry.title || 'Untitled Entry'}</h3>
           </div>
-
-          <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <button onClick={handleFavoriteClick} className="p-1 rounded-md hover:bg-opacity-20 transition-colors" style={{ color: entry.favorite ? 'var(--mood-primary)' : 'var(--mood-secondary)', backgroundColor: entry.favorite ? 'var(--mood-primary-rgb) / 0.1' : 'transparent' }}>
-              <Star className={`w-5 h-5 ${entry.favorite ? 'fill-current' : ''}`} />
+          <div className="flex items-center space-x-1 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+            <button
+              onClick={(e) => { e.stopPropagation(); onToggleFavorite(entry._id); }}
+              className={`rounded-md p-1 transition-colors ${entry.favorite ? 'text-primary bg-primary/10 hover:bg-primary/20' : 'text-secondary hover:bg-secondary/10'}`}
+            >
+              <Star className={`h-5 w-5 ${entry.favorite ? 'fill-current' : ''}`} />
             </button>
-            <button onClick={handleDeleteClick} className="p-1 rounded-md hover:bg-opacity-20 transition-colors" style={{ backgroundColor: 'transparent', color: 'var(--mood-secondary)' }}>
-              <Trash2 className="w-5 h-5" />
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(entry._id); }}
+              className="rounded-md p-1 text-secondary transition-colors hover:bg-secondary/10"
+            >
+              <Trash2 className="h-5 w-5" />
             </button>
           </div>
         </div>
-
-        <p className="text-sm mb-4 line-clamp-3 leading-relaxed" style={{ color: 'var(--mood-text)' }}>{entry.content}</p>
-
-        {entry.tags && entry.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-4">
-            {entry.tags.slice(0, 3).map((tag, index) => (
-              <span key={index} className="px-2 py-1 text-xs rounded-full" style={{ backgroundColor: 'var(--mood-secondary)', color: 'var(--mood-contrast)', opacity: 0.8 }}>#{tag}</span>
+        <p className="mb-4 text-sm leading-relaxed line-clamp-3 text-text-primary">{entry.content}</p>
+        {entry.tags?.length > 0 && (
+          <div className="mb-4 flex flex-wrap gap-1">
+            {entry.tags.slice(0, 3).map((tag, i) => (
+              <span key={i} className="rounded-full bg-secondary/80 px-2 py-1 text-xs text-text-contrast">#{tag}</span>
             ))}
             {entry.tags.length > 3 && (
-              <span className="px-2 py-1 text-xs rounded-full" style={{ backgroundColor: 'var(--mood-secondary)', color: 'var(--mood-contrast)', opacity: 0.6 }}>+{entry.tags.length - 3} more</span>
+              <span className="rounded-full bg-secondary/60 px-2 py-1 text-xs text-text-contrast">+{entry.tags.length - 3} more</span>
             )}
           </div>
         )}
       </div>
-
       <div className="mt-auto">
         <EntryStats entry={entry} />
       </div>
-
-      <div
-        className={`absolute inset-0 border-2 rounded-xl transition-all pointer-events-none ${isHovered ? 'border-opacity-50' : 'border-transparent'}`}
-        style={{ borderColor: isHovered ? 'var(--mood-primary)' : 'transparent' }}
-      ></div>
     </div>
   );
 };

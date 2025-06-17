@@ -5,9 +5,13 @@ import { useAutoSave } from '@hooks/useAutoSave';
 import MoodSelectDropdown from './MoodSelectDropdown';
 
 const JournalEditor = ({ entry, onSave, onCancel, error }) => {
+  // ===================================================================================
+  // SECTION 1: State, Refs, and Hooks
+  // All of your original state and logic is preserved.
+  // ===================================================================================
   const [title, setTitle] = useState(entry?.title || '');
   const [content, setContent] = useState(entry?.content || '');
-  const [mood, setMood] = useState(entry?.mood || 2);
+  const [mood, setMood] = useState(entry?.mood ?? 2); // Default to 'healing' enum if new
   const [tags, setTags] = useState(entry?.tags?.join(', ') || '');
   const [writingStartTime] = useState(Date.now());
   const [showPreview, setShowPreview] = useState(false);
@@ -15,6 +19,7 @@ const JournalEditor = ({ entry, onSave, onCancel, error }) => {
   const textareaRef = useRef(null);
   const wordCount = getWordCount(content);
 
+  // The memoized save function that prepares data for the API
   const memoizedSaveEntry = useCallback(async () => {
     const entryData = {
       title: title.trim(),
@@ -28,6 +33,7 @@ const JournalEditor = ({ entry, onSave, onCancel, error }) => {
     await onSave(entryData);
   }, [title, content, mood, tags, writingStartTime, entry, wordCount, onSave]);
 
+  // The auto-save hook, which is already an excellent piece of architecture
   const { isSaving, lastSaved, hasUnsavedChanges, manualSave } = useAutoSave(
     content,
     entry?._id,
@@ -35,9 +41,11 @@ const JournalEditor = ({ entry, onSave, onCancel, error }) => {
   );
 
   useEffect(() => {
+    // Auto-focus the content textarea on load
     textareaRef.current?.focus();
   }, []);
 
+  // Handler for Ctrl+S / Cmd+S shortcut
   const handleKeyDown = (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === 's') {
       e.preventDefault();
@@ -45,152 +53,97 @@ const JournalEditor = ({ entry, onSave, onCancel, error }) => {
     }
   };
 
-  // Helper to format last saved time for display
+  // Helper to format the "Last Saved" timestamp
   const formatLastSavedTime = (date) => {
     if (!date) return '';
     return new Intl.DateTimeFormat('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
+      hour: '2-digit', minute: '2-digit', second: '2-digit'
     }).format(date);
   };
 
+  // ===================================================================================
+  // SECTION 2: Main Component Render
+  // The JSX is now fully styled with our theme-aware Tailwind classes.
+  // ===================================================================================
+
   return (
-    <div
-      className="max-w-4xl mx-auto p-6 min-h-screen transition-all duration-500"
-      style={{
-        backgroundColor: 'var(--mood-bg)',
-        color: 'var(--mood-text)',
-        fontFamily: 'var(--mood-font)'
-      }}
-    >
+    <div className="mx-auto max-w-4xl min-h-screen p-6 font-body text-text-primary bg-background transition-colors duration-500">
+      {/* Header: Controls & Status */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center space-x-4">
-          <button
-            onClick={onCancel}
-            className="flex items-center space-x-2 transition-colors hover:opacity-80"
-            style={{ color: 'var(--mood-text)' }}
-          >
+          <button onClick={onCancel} className="flex items-center space-x-2 text-text-primary transition-colors hover:opacity-80">
             <ArrowLeft className="w-5 h-5" />
             <span>Back to Journal</span>
           </button>
-
-          <MoodSelectDropdown
-            selectedMood={mood}
-            onMoodChange={setMood}
-          />
+          <MoodSelectDropdown selectedMood={mood} onMoodChange={setMood} />
         </div>
 
-        <div className="flex items-center space-x-4 text-sm" style={{ color: 'var(--mood-secondary)' }}>
+        <div className="flex items-center space-x-4 text-sm text-secondary">
           <span>{wordCount} words</span>
-          {/* Consolidated Auto-save Feedback Display */}
-          {isSaving ? (
-            <div className="flex items-center space-x-1" style={{ color: 'var(--mood-secondary)' }}>
-              <Loader className="w-4 h-4 animate-spin" />
-              <span>Saving...</span>
-            </div>
-          ) : hasUnsavedChanges ? (
-            <div className="flex items-center space-x-1" style={{ color: 'var(--mood-secondary)' /* Changed from #f59e0b */ }}>
-              <AlertCircle className="w-4 h-4" />
-              <span>Unsaved changes</span>
-            </div>
-          ) : lastSaved ? (
-            <div className="flex items-center space-x-1" style={{ color: 'var(--mood-primary)' }}>
-              <Save className="w-4 h-4" />
-              <span>Saved at {formatLastSavedTime(lastSaved)}</span>
-            </div>
-          ) : null}
-
+          
+          {/* Save Status Indicator */}
+          <div className="flex items-center space-x-1">
+            {isSaving ? (
+              <>
+                <Loader className="w-4 h-4 animate-spin" />
+                <span>Saving...</span>
+              </>
+            ) : hasUnsavedChanges ? (
+              <span className="text-yellow-500 flex items-center space-x-1">
+                <AlertCircle className="w-4 h-4" />
+                <span>Unsaved</span>
+              </span>
+            ) : lastSaved ? (
+              <span className="text-primary flex items-center space-x-1">
+                <Save className="w-4 h-4" />
+                <span>Saved at {formatLastSavedTime(lastSaved)}</span>
+              </span>
+            ) : null}
+          </div>
 
           <button
             onClick={() => setShowPreview(!showPreview)}
-            className="px-3 py-2 border rounded-lg hover:opacity-80 transition-all flex items-center space-x-2"
-            style={{
-              backgroundColor: 'var(--mood-contrast)',
-              borderColor: 'var(--mood-primary)',
-              color: 'var(--mood-primary)'
-            }}
+            className="flex items-center space-x-2 rounded-lg border border-primary bg-background px-3 py-2 text-primary transition-colors hover:bg-primary/10"
           >
-            {showPreview ? (
-              <>
-                <EyeOff className="w-4 h-4" />
-                <span>Edit</span>
-              </>
-            ) : (
-              <>
-                <Eye className="w-4 h-4" />
-                <span>Preview</span>
-              </>
-            )}
+            {showPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            <span>{showPreview ? 'Edit' : 'Preview'}</span>
           </button>
 
           <button
             onClick={manualSave}
             disabled={isSaving || !content.trim()}
-            className="px-4 py-2 border rounded-lg hover:opacity-80 transition-all flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{
-              backgroundColor: 'var(--mood-primary)',
-              borderColor: 'var(--mood-primary)',
-              color: 'var(--mood-contrast)'
-            }}
+            className="flex items-center space-x-2 rounded-lg border border-primary bg-primary px-4 py-2 text-text-contrast transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Save className="w-4 h-4" />
-            <span>Save Entry</span>
+            <span>Save Now</span>
           </button>
         </div>
       </div>
 
+      {/* Error Display */}
       {error && (
-        <div
-          className="mb-4 p-4 rounded-lg border-l-4"
-          style={{
-            borderColor: 'var(--error-color, #ef4444)',
-            backgroundColor: 'var(--error-bg, #fef2f2)',
-            color: 'var(--error-text, #dc2626)'
-          }}
-        >
-          <div className="flex items-center">
-            <AlertCircle className="w-5 h-5 mr-2" />
-            <span className="font-medium">Save Failed</span>
+        <div className="mb-4 flex items-center rounded-lg border-l-4 border-red-500 bg-red-500/10 p-4 text-red-700">
+          <AlertCircle className="w-5 h-5 mr-2" />
+          <div>
+            <span className="font-medium">Save Failed:</span>
+            <p className="text-sm">{error}</p>
           </div>
-          <p className="mt-1 text-sm">{error}</p>
         </div>
       )}
 
+      {/* Main Form & Editor Area */}
       <form onSubmit={(e) => { e.preventDefault(); manualSave(); }}>
-        <div
-          className="rounded-2xl shadow-lg p-8"
-          style={{
-            backgroundColor: 'var(--mood-contrast)',
-            border: `1px solid var(--mood-secondary)`,
-            backdropFilter: 'blur(10px)'
-          }}
-        >
+        <div className="rounded-2xl border border-secondary bg-background p-8 shadow-lg">
           {showPreview ? (
-            <div className="prose max-w-none">
-              {title && (
-                <h1 className="text-3xl font-bold mb-6" style={{
-                  color: 'var(--mood-text)',
-                  fontFamily: 'var(--mood-font)'
-                }}>{title}</h1>
-              )}
-              <div
-                className="whitespace-pre-wrap text-lg leading-relaxed"
-                style={{
-                  color: 'var(--mood-text)',
-                  fontFamily: 'var(--mood-font)'
-                }}
-              >
-                {content}
-              </div>
+            // Using Tailwind's 'prose' plugin for beautiful, automatic styling of rendered content.
+            // 'prose-invert' handles dark mode automatically.
+            <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none font-body">
+              <h1>{title}</h1>
+              <p className="whitespace-pre-wrap">{content}</p>
               {tags && (
                 <div className="flex flex-wrap gap-2 mt-6">
                   {tags.split(',').filter(Boolean).map((tag, i) => (
-                    <span key={i} className="px-3 py-1 text-sm rounded-full"
-                      style={{
-                        backgroundColor: 'var(--mood-primary)',
-                        color: 'var(--mood-contrast)'
-                      }}>
+                    <span key={i} className="not-prose rounded-full bg-primary px-3 py-1 text-sm text-text-contrast">
                       #{tag.trim()}
                     </span>
                   ))}
@@ -205,11 +158,7 @@ const JournalEditor = ({ entry, onSave, onCancel, error }) => {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="w-full text-2xl font-bold border-0 bg-transparent focus:outline-none mb-6 placeholder-opacity-50"
-                style={{
-                  color: 'var(--mood-text)',
-                  fontFamily: 'var(--mood-font)',
-                }}
+                className="w-full border-0 bg-transparent text-2xl font-bold text-text-primary placeholder:text-secondary/70 focus:outline-none font-body mb-6"
               />
               <textarea
                 ref={textareaRef}
@@ -217,11 +166,7 @@ const JournalEditor = ({ entry, onSave, onCancel, error }) => {
                 onChange={(e) => setContent(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Pour your heart out... What's on your mind today?"
-                className="w-full h-96 border-0 bg-transparent resize-none focus:outline-none text-lg leading-relaxed mb-6 placeholder-opacity-50"
-                style={{
-                  color: 'var(--mood-text)',
-                  fontFamily: 'var(--mood-font)',
-                }}
+                className="w-full h-96 resize-none border-0 bg-transparent text-lg leading-relaxed text-text-primary placeholder:text-secondary/70 focus:outline-none font-body mb-6"
               />
               <input
                 type="text"
@@ -229,26 +174,20 @@ const JournalEditor = ({ entry, onSave, onCancel, error }) => {
                 value={tags}
                 onChange={(e) => setTags(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="w-full border-t pt-4 bg-transparent focus:outline-none text-sm placeholder-opacity-50"
-                style={{
-                  color: 'var(--mood-text)',
-                  borderColor: 'var(--mood-secondary)',
-                }}
+                className="w-full border-t border-secondary bg-transparent pt-4 text-sm text-text-primary placeholder:text-secondary/70 focus:outline-none"
               />
             </>
           )}
         </div>
       </form>
 
-      <div
-        className="mt-4 text-center text-sm"
-        style={{ color: 'var(--mood-secondary)' }}
-      >
-        Press <kbd className="px-2 py-1 rounded text-xs"
-          style={{
-            backgroundColor: 'var(--mood-secondary)',
-            color: 'var(--mood-contrast)'
-          }}>Ctrl+S</kbd> to save • Auto-saves every 30 seconds
+      {/* Footer Hint */}
+      <div className="mt-4 text-center text-sm text-secondary">
+        Press{' '}
+        <kbd className="rounded bg-secondary px-2 py-1 text-xs text-text-contrast">
+          Ctrl+S
+        </kbd>
+        {' '}to save
       </div>
     </div>
   );

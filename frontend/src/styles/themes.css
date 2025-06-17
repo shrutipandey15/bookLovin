@@ -1,106 +1,54 @@
+/* themes.css */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Mood-Based Variables (Default values) */
+/* 1. Define the base variables. They will be overridden by the rules below. */
 :root {
-  --mood-primary: #8B5A7C;
-  --mood-secondary: #A67E94;
-  --mood-bg: #f7f3f6;
-  --mood-text: #2D1B29;
-  --mood-font: 'Playfair Display', serif;
-  --mood-contrast: #FFFFFF;
-
-    /* Add transitions for the custom properties themselves */
-  transition:
-    --mood-primary 0.3s ease,
-    --mood-secondary 0.3s ease,
-    --mood-bg 0.3s ease,
-    --mood-text 0.3s ease,
-    --mood-font 0.3s ease,
-    --mood-contrast 0.3s ease;
+  --primary: #8B5A7C; /* Default to heartbroken */
+  --secondary: #A67E94;
+  --background: #f7f3f6;
+  --text-primary: #2D1B29;
+  --text-contrast: #FFFFFF;
+  --font-body: 'Playfair Display', serif;
 }
 
-/* Mood-driven theming on root */
+/* 2. Set up smooth transitions for everything */
 html {
-  background-color: var(--mood-bg);
-  color: var(--mood-text);
-  font-family: var(--mood-font);
-  transition: background-color 0.3s ease, color 0.3s ease, font-family 0.3s ease;
+  transition: background-color 0.5s ease, color 0.5s ease;
 }
 
-body {
-  background-color: transparent;
+/* 3. This is the magic. We generate rules for each mood and theme. */
+/* This is more verbose, but it's pure CSS and extremely clear. */
+/* You can generate this with a script or just copy-paste. */
+
+/* --- HEARTBROKEN --- */
+html[data-mood='heartbroken'][data-theme='coffee'] {
+  --primary: #8B5A7C; --secondary: #A67E94; --background: #f7f3f6; --text-primary: #2D1B29; --text-contrast: #FFFFFF; --font-body: 'Playfair Display', serif;
+}
+html[data-mood='heartbroken'][data-theme='dragon'] {
+  --primary: #B578A3; --secondary: #A67E94; --background: #1E1A23; --text-primary: #E8DCF0; --text-contrast: #000000; --font-body: 'Playfair Display', serif;
 }
 
-/* Theme toggle button styling */
-.theme-toggle-btn {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  font-family: 'Georgia', serif;
-  font-size: 0.95rem;
-  border: none;
-  border-radius: 9999px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  z-index: 50;
-  box-shadow: 0 0 6px rgba(0,0,0,0.15);
+/* --- HEALING --- */
+html[data-mood='healing'][data-theme='coffee'] {
+  --primary: #7FB069; --secondary: #A3C585; --background: #F0F8EC; --text-primary: #2D3E2D; --text-contrast: #FFFFFF; --font-body: 'Source Serif Pro', serif;
+}
+html[data-mood='healing'][data-theme='dragon'] {
+  --primary: #8FBC95; --secondary: #93BA98; --background: #1A2C21; --text-primary: #D4E8DA; --text-contrast: #000000; --font-body: 'Source Serif Pro', serif;
 }
 
-/* Light theme button */
-.light-btn {
-  background: #fdf3e7;
-  color: #3b2f2f;
-  border: 1px solid #e0c097;
+/* --- JOYFUL --- */
+html[data-mood='joyful'][data-theme='coffee'] {
+  --primary: #FFD60A; --secondary: #FFE135; --background: #FFFBF0; --text-primary: #5C4A00; --text-contrast: #FFFFFF; --font-body: "'Poppins', sans-serif";
+}
+html[data-mood='joyful'][data-theme='dragon'] {
+    --primary: #FFEB3B; --secondary: #FFF176; --background: #1A1A0D; --text-primary: #FFF9C4; --text-contrast: #000000; --font-body: "'Poppins', sans-serif";
 }
 
-.light-btn:hover {
-  background: #ffe9cc;
-  box-shadow: 0 0 12px rgba(255, 221, 150, 0.7);
-}
+/* ... Add a block for EVERY mood ... */
 
-/* Dark theme button */
-.dark-btn {
-  background: #1a1a2e;
-  color: #facc15;
-  border: 1px solid #444;
-}
 
-.dark-btn:hover {
-  background: #2c2c54;
-  box-shadow: 0 0 12px rgba(250, 204, 21, 0.6);
-}
-
-.theme-toggle-btn .icon {
-  font-size: 1.2rem;
-}
-
-.theme-toggle-btn .label {
-  font-weight: bold;
-  letter-spacing: 0.5px;
-}
-
-.theme-toggle-btn:hover {
-  background-color: #f5ebe0;
-  box-shadow: 2px 4px 10px rgba(201, 162, 126, 0.7);
-  transform: scale(1.02);
-}
-
-/* Dark mode (Dragon-inspired) */
-html.dark .theme-toggle-btn {
-  background-color: #1f2937;
-  color: #facc15;
-  border: 2px solid #facc15;
-  box-shadow: 2px 2px 6px rgba(250, 204, 21, 0.3);
-}
-
-html.dark .theme-toggle-btn:hover {
-  background-color: #111827;
-  box-shadow: 2px 4px 12px rgba(250, 204, 21, 0.6);
-  transform: scale(1.02);
-}
+/* 4. Cleanup the old theme toggle button styles. We'll use Tailwind classes now. */
+/* The old .theme-toggle-btn, .light-btn, .dark-btn styles can be removed. */
