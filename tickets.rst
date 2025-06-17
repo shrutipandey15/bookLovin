@@ -1,7 +1,7 @@
 Tickets
 =======
 
-:total-count: 8
+:total-count: 9
 
 --------------------------------------------------------------------------------
 
@@ -28,4 +28,13 @@ Add NO_AUTH env to disable autticatiion and avoid need for bearerer token
 
 :bugid: 8
 :created: 2025-06-07T01:34:55
+:priority: 0
+
+--------------------------------------------------------------------------------
+
+back button
+===========
+
+:bugid: 9
+:created: 2025-06-17T21:38:13
 :priority: 0
