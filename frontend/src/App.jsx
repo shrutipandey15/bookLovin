@@ -4,7 +4,7 @@ import ProtectedRoute from '@components/ProtectedRoute'; // Import our new prote
 import { MoodProvider } from '@components/MoodContext';
 
 // Import Pages
-import LandingPage from './landingPage'; // We will use this again
+// import LandingPage from './landingPage'; // We will use this again
 import HomePage from '@pages/HomePage';
 import LoginPage from '@pages/LoginPage/LoginPage';
 import RegistrationPage from '@pages/RegistrationPage/RegistrationPage';
