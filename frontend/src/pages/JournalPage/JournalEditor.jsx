@@ -4,13 +4,12 @@ import { getWordCount } from '@utils/journalUtils';
 import { useAutoSave } from '@hooks/useAutoSave';
 import MoodSelectDropdown from './MoodSelectDropdown';
 import { useMood } from '@components/MoodContext';
-import { MOOD_ENUM_TO_KEY } from '@config/moods';
+import { MOOD_ENUM_TO_KEY, MOOD_KEY_TO_ENUM } from '@config/moods';
 
 const JournalEditor = ({ entry, onSave, onCancel, error }) => {
   const { mood: globalMood, setMood: setGlobalMood } = useMood();
   const [title, setTitle] = useState(entry?.title || '');
   const [content, setContent] = useState(entry?.content || '');
-  // const [mood, setMood] = useState(entry?.mood ?? 2); // Default to 'healing' enum if new
   const [tags, setTags] = useState(entry?.tags?.join(', ') || '');
   const [writingStartTime] = useState(Date.now());
   const [showPreview, setShowPreview] = useState(false);
@@ -32,7 +31,7 @@ const JournalEditor = ({ entry, onSave, onCancel, error }) => {
     const entryData = {
       title: title.trim(),
       content: content.trim(),
-      mood: globalMood,
+      mood: MOOD_KEY_TO_ENUM[globalMood],
       tags: tags.split(',').map(tag => tag.trim()).filter(Boolean),
       writing_time: Math.floor((Date.now() - writingStartTime) / 1000),
       favorite: entry?.favorite || false,

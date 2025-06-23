@@ -14,9 +14,7 @@ import LetterComposer from './LetterComposer';
 import { LettersNavButton } from './LetterNavButton';
 
 const JournalPage = () => {
-  // ===================================================================================
-  // SECTION 1: State Management (for UI and active items)
-  // ===================================================================================
+
   const [currentView, setCurrentView] = useState('journal');
   const [activeEntry, setActiveEntry] = useState(null);
   const [activeLetter, setActiveLetter] = useState(null);
@@ -30,9 +28,6 @@ const JournalPage = () => {
   const [userProfile, setUserProfile] = useState(null);
   const [editorError, setEditorError] = useState(null);
 
-  // ===================================================================================
-  // SECTION 2: Calling Custom Hooks for Data Logic
-  // ===================================================================================
   const { entries, isLoading: journalLoading, error: journalError, saveEntry, deleteEntry, toggleFavorite, refetchEntries } = useJournalEntries({ searchTerm, moodFilter });
   const { letters, hasReadyLetters, saveLetter, deleteLetter, markLetterAsOpened } = useLetters();
 
@@ -49,10 +44,6 @@ const JournalPage = () => {
     fetchUserProfile();
   }, [fetchUserProfile]);
 
-
-  // ===================================================================================
-  // SECTION 3: UI Handlers (Orchestrating actions and data refreshing)
-  // ===================================================================================
   const handleNewEntry = () => {
     setActiveEntry(null);
     setCurrentView('editor');
@@ -112,9 +103,6 @@ const JournalPage = () => {
     setActiveLetter(null);
   };
 
-  // ===================================================================================
-  // SECTION 4: Render Logic
-  // ===================================================================================
   const stats = calculateStats(entries);
   const getStreakMessage = (currentStreak) => {
     if (currentStreak === 0) return "Start a new streak today!";

@@ -1,11 +1,10 @@
 import { Heart, Sparkles, Zap, Sun, Cloud, Star, Coffee, Moon, Smile, Frown, CloudRain, Flame, AlertTriangle, Gift, Mountain } from 'lucide-react';
 
-// This is the single source of truth for all mood-related configuration.
 export const MOOD_CONFIG = Object.freeze({
   heartbroken: {
     label: "Heartbroken",
     emoji: "💔",
-    enum: 1, // FIX: Re-added the enum property
+    enum: 1,
     description: "Processing difficult emotions",
     font: "'Playfair Display', serif",
     themes: {
@@ -16,7 +15,7 @@ export const MOOD_CONFIG = Object.freeze({
   healing: {
     label: "Healing",
     emoji: "🌸",
-    enum: 2, // FIX: Re-added the enum property
+    enum: 2,
     description: "Finding strength and growth",
     font: "'Source Serif Pro', serif",
     themes: {
@@ -27,7 +26,7 @@ export const MOOD_CONFIG = Object.freeze({
   joyful: {
     label: "Joyful",
     emoji: "😊",
-    enum: 4, // FIX: Re-added the enum property
+    enum: 3,
     description: "Feeling happy and content",
     font: "'Poppins', sans-serif",
     themes: {
@@ -35,27 +34,20 @@ export const MOOD_CONFIG = Object.freeze({
         dragon: { "--primary": "#FFEB3B", "--secondary": "#FFF176", "--background": "#1A1A0D", "--text-primary": "#FFF9C4", "--text-contrast": "#000000" }
     }
   },
-  // IMPORTANT: Make sure to copy the rest of your moods from your original
-  // MoodContext.jsx file here, ensuring each one has its 'enum' property.
 });
 
-// A much simpler theme config
 export const THEME_CONFIG = Object.freeze({
   coffee: { label: "Coffee", emoji: "☕" },
   dragon: { label: "Dragon", emoji: "🐉" }
 });
 
-// Icons remain the same
 export const MOOD_ICONS = Object.freeze({
   heartbroken: Heart,
   healing: Sparkles,
   empowered: Zap,
   joyful: Sun,
-  // ... etc, ensure this matches all moods in MOOD_CONFIG
 });
 
-// FIX: Add the self-generating mappers at the bottom.
-// This code automatically creates the mapping objects based on MOOD_CONFIG.
 export const MOOD_KEY_TO_ENUM = Object.fromEntries(
   Object.entries(MOOD_CONFIG).map(([key, { enum: moodEnum }]) => [key, moodEnum])
 );

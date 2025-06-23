@@ -1,17 +1,24 @@
-// This component is now styled entirely with Tailwind classes.
+// src/pages/JournalPage/MoodSelectDropdown.jsx
+
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { MOOD_CONFIG, MOOD_ENUM_TO_KEY, MOOD_KEY_TO_ENUM, MOOD_ICONS } from '@config/moods';
+// FIX: We no longer need the mappers here, simplifying the component.
+import { MOOD_CONFIG, MOOD_ICONS } from '@config/moods';
 
 const MoodSelectDropdown = ({ selectedMood, onMoodChange, className = '' }) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  const currentMoodKey = MOOD_ENUM_TO_KEY[selectedMood] || 'healing';
+  // FIX 1: The `selectedMood` prop is now the string key itself (e.g., "healing").
+  // We no longer need to convert it from a number. Default to "healing" if it's invalid.
+  const currentMoodKey = selectedMood in MOOD_CONFIG ? selectedMood : 'healing';
+  
   const currentMood = MOOD_CONFIG[currentMoodKey];
   const CurrentIcon = MOOD_ICONS[currentMoodKey];
 
   const handleMoodSelect = (moodKey) => {
-    onMoodChange(MOOD_KEY_TO_ENUM[moodKey]);
+    // FIX 2: Call onMoodChange directly with the selected string key.
+    // The component no longer does any conversion.
+    onMoodChange(moodKey);
     setIsOpen(false);
   };
 
@@ -22,7 +29,7 @@ const MoodSelectDropdown = ({ selectedMood, onMoodChange, className = '' }) => {
         className="flex items-center space-x-2 px-4 py-2 border rounded-lg hover:opacity-80 transition-all bg-background border-primary text-primary font-body"
       >
         {CurrentIcon && <CurrentIcon className="w-5 h-5" />}
-        <span className="font-medium">{currentMood?.label || currentMoodKey}</span>
+        <span className="font-medium">{currentMood?.label}</span>
         <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
@@ -35,7 +42,7 @@ const MoodSelectDropdown = ({ selectedMood, onMoodChange, className = '' }) => {
               return (
                 <button
                   key={key}
-                  onClick={() => handleMoodSelect(key)}
+                  onClick={() => handleMoodSelect(key)} // This now correctly passes the string key
                   className={`w-full flex items-center space-x-3 px-4 py-3 hover:bg-primary/10 transition-colors text-left text-text-primary font-body ${currentMoodKey === key ? 'bg-primary/20' : ''}`}
                 >
                   <span className="text-lg">{moodConfig.emoji}</span>

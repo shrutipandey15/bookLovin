@@ -8,7 +8,6 @@ export function useJournalEntries({ searchTerm, moodFilter }) {
   const [error, setError] = useState(null);
 
   const fetchEntries = useCallback(async () => {
-    // This part remains the same
     setIsLoading(true);
     setError(null);
     try {
@@ -34,7 +33,6 @@ export function useJournalEntries({ searchTerm, moodFilter }) {
     fetchEntries();
   }, [fetchEntries]);
 
-  // FIX: Action functions now ONLY perform the action. They no longer refetch.
   const saveEntry = useCallback(async (entryData, entryId) => {
     const payload = { ...entryData };
     if (entryId) {
@@ -49,19 +47,16 @@ export function useJournalEntries({ searchTerm, moodFilter }) {
   }, []);
 
   const toggleFavorite = useCallback(async (entryToToggle) => {
-    // The optimistic update remains here, as it's a UI concern of this hook's state.
     setEntries(prev => prev.map(e => e._id === entryToToggle._id ? { ...e, favorite: !e.favorite } : e));
     try {
       const payload = { ...entryToToggle, favorite: !entryToToggle.favorite };
       await axiosInstance.put(`/journal/${entryToToggle._id}`, payload);
     } catch (error) {
-      // Revert on failure
       setEntries(prev => prev.map(e => e._id === entryToToggle._id ? { ...e, favorite: entryToToggle.favorite } : e));
       console.error("Failed to toggle favorite", error);
       throw error; // Re-throw error so the component can handle it if needed
     }
   }, []);
 
-  // FIX: We now explicitly export the fetchEntries function as 'refetch'.
   return { entries, isLoading, error, saveEntry, deleteEntry, toggleFavorite, refetchEntries: fetchEntries };
 }
