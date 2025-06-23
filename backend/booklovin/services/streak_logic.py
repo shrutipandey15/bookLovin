@@ -4,6 +4,11 @@ from typing import Any
 
 def to_midnight(dt):
     return dt.replace(hour=0, minute=0, second=0, microsecond=0)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    else:
+        dt = dt.astimezone(timezone.utc)
+    return dt.replace(hour=0, minute=0, second=0, microsecond=0)
 
 
 def calculate_streak_changes(
@@ -28,37 +33,38 @@ def calculate_streak_changes(
     entry_day = to_midnight(entry_date)
 
     # Check for existing last journal date
-    if last_journal_date:
-        # MongoDB loses timezone info:
+    if last_journal_date is None:
+        update_doc["currentStreakStart"] = entry_day
+        update_doc["currentStreak"] = 1
+        update_doc["longestStreak"] = 1
+    else:
         last_date = to_midnight(last_journal_date)
         days_diff = (entry_day - last_date).days
 
-        if days_diff == 1:
-            streak_start = to_midnight(current_streak_start) if current_streak_start else None
-            # Consecutive day - streak continues
-            # If no streak in progress, start one
-            if not streak_start:
+        # If entry is for the same day, do nothing
+        if days_diff == 0:
+            return {}
+
+        # If entry is for the next day, continue the streak
+        elif days_diff == 1:
+            # If no streak was in progress, this is day 2
+            if not current_streak_start:
                 update_doc["currentStreakStart"] = last_date
-                update_doc["currentStreak"] = 2  # Yesterday + today
+                update_doc["currentStreak"] = 2
             else:
-                # Calculate streak directly from start date
-                new_streak = (entry_day - streak_start).days + 1
-                update_doc["currentStreak"] = new_streak
+                # Otherwise, increment existing streak
+                update_doc["currentStreak"] = current_streak + 1
 
-                # Update longest streak if needed
-                if new_streak > longest_streak:
-                    update_doc["longestStreak"] = new_streak
-        elif days_diff:
-            # Streak broken, reset if journaling today
-            if entry_day == to_midnight(datetime.now(timezone.utc)):
-                update_doc.update({"currentStreakStart": entry_day, "currentStreak": 1})
-            else:
-                update_doc.update({"currentStreakStart": None, "currentStreak": 0})
-    else:
-        # First journal entry ever
-        update_doc.update({"currentStreakStart": entry_day, "currentStreak": 1, "longestStreak": 1})
-
-    # Always update last journal date if we have any changes
+            # Update longest streak if the new streak is greater
+            if update_doc.get("currentStreak", current_streak + 1) > longest_streak:
+                update_doc["longestStreak"] = update_doc.get("currentStreak", current_streak + 1)
+        
+        # If a day or more was missed, streak is broken. Start a new one.
+        else:
+            update_doc["currentStreakStart"] = entry_day
+            update_doc["currentStreak"] = 1
+            
+    # Always update the last journal date if a new day's entry is made
     if update_doc:
         update_doc["lastJournalDate"] = entry_day
 

@@ -6,9 +6,6 @@ import { useMood } from '@components/MoodContext';
 import AuthCard from '@components/AuthCard';
 
 const LoginPage = () => {
-  // ===================================================================================
-  // SECTION 1: State, Refs, and Hooks
-  // ===================================================================================
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -31,9 +28,6 @@ const LoginPage = () => {
   const BLOCK_DURATION = 15 * 60 * 1000; // 15 minutes
   const REQUEST_TIMEOUT = 30000; // 30 seconds
 
-  // ===================================================================================
-  // SECTION 2: Logic and Handlers (FULLY IMPLEMENTED)
-  // ===================================================================================
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 254;
   const validatePassword = (password) => password.length >= 8 && password.length <= 128;
 
@@ -188,13 +182,10 @@ const LoginPage = () => {
     return `${remaining} minute${remaining !== 1 ? 's' : ''}`;
   };
 
-  // ===================================================================================
-  // SECTION 3: Main Component Render
-  // ===================================================================================
-
   if (isLoggedIn && user) {
     const currentMoodLabel = moodConfig[mood]?.label || '...';
     return (
+      <div className="flex min-h-screen items-center justify-center p-4">
       <AuthCard title="Welcome Back!">
         <div className="text-center font-body">
             <p className="mb-4 text-text-primary">
@@ -225,10 +216,12 @@ const LoginPage = () => {
             </button>
         </div>
       </AuthCard>
+    </div>
     );
   }
 
   return (
+    <div className="flex min-h-screen items-center justify-center p-4">
     <AuthCard title="Enter the Realm">
       <form onSubmit={handleLogin} className="space-y-4" noValidate>
         <div>
@@ -286,6 +279,7 @@ const LoginPage = () => {
         </Link>
       </p>
     </AuthCard>
+  </div>
   );
 };
 

@@ -3,15 +3,14 @@ import { Save, ArrowLeft, Eye, EyeOff, AlertCircle, Loader } from 'lucide-react'
 import { getWordCount } from '@utils/journalUtils';
 import { useAutoSave } from '@hooks/useAutoSave';
 import MoodSelectDropdown from './MoodSelectDropdown';
+import { useMood } from '@components/MoodContext';
+import { MOOD_ENUM_TO_KEY } from '@config/moods';
 
 const JournalEditor = ({ entry, onSave, onCancel, error }) => {
-  // ===================================================================================
-  // SECTION 1: State, Refs, and Hooks
-  // All of your original state and logic is preserved.
-  // ===================================================================================
+  const { mood: globalMood, setMood: setGlobalMood } = useMood();
   const [title, setTitle] = useState(entry?.title || '');
   const [content, setContent] = useState(entry?.content || '');
-  const [mood, setMood] = useState(entry?.mood ?? 2); // Default to 'healing' enum if new
+  // const [mood, setMood] = useState(entry?.mood ?? 2); // Default to 'healing' enum if new
   const [tags, setTags] = useState(entry?.tags?.join(', ') || '');
   const [writingStartTime] = useState(Date.now());
   const [showPreview, setShowPreview] = useState(false);
@@ -19,21 +18,29 @@ const JournalEditor = ({ entry, onSave, onCancel, error }) => {
   const textareaRef = useRef(null);
   const wordCount = getWordCount(content);
 
+    useEffect(() => {
+    if (entry?.mood) {
+      const moodKey = MOOD_ENUM_TO_KEY[entry.mood];
+      if (moodKey) {
+        setGlobalMood(moodKey);
+      }
+    }
+  }, [entry, setGlobalMood]);
+
   // The memoized save function that prepares data for the API
   const memoizedSaveEntry = useCallback(async () => {
     const entryData = {
       title: title.trim(),
       content: content.trim(),
-      mood,
+      mood: globalMood,
       tags: tags.split(',').map(tag => tag.trim()).filter(Boolean),
       writing_time: Math.floor((Date.now() - writingStartTime) / 1000),
       favorite: entry?.favorite || false,
       word_count: wordCount
     };
     await onSave(entryData);
-  }, [title, content, mood, tags, writingStartTime, entry, wordCount, onSave]);
+  }, [title, content, globalMood, tags, writingStartTime, entry, wordCount, onSave]);
 
-  // The auto-save hook, which is already an excellent piece of architecture
   const { isSaving, lastSaved, hasUnsavedChanges, manualSave } = useAutoSave(
     content,
     entry?._id,
@@ -41,7 +48,6 @@ const JournalEditor = ({ entry, onSave, onCancel, error }) => {
   );
 
   useEffect(() => {
-    // Auto-focus the content textarea on load
     textareaRef.current?.focus();
   }, []);
 
@@ -61,11 +67,6 @@ const JournalEditor = ({ entry, onSave, onCancel, error }) => {
     }).format(date);
   };
 
-  // ===================================================================================
-  // SECTION 2: Main Component Render
-  // The JSX is now fully styled with our theme-aware Tailwind classes.
-  // ===================================================================================
-
   return (
     <div className="mx-auto max-w-4xl min-h-screen p-6 font-body text-text-primary bg-background transition-colors duration-500">
       {/* Header: Controls & Status */}
@@ -75,7 +76,7 @@ const JournalEditor = ({ entry, onSave, onCancel, error }) => {
             <ArrowLeft className="w-5 h-5" />
             <span>Back to Journal</span>
           </button>
-          <MoodSelectDropdown selectedMood={mood} onMoodChange={setMood} />
+          <MoodSelectDropdown selectedMood={globalMood} onMoodChange={setGlobalMood} />
         </div>
 
         <div className="flex items-center space-x-4 text-sm text-secondary">

@@ -4,9 +4,6 @@ import axiosInstance from '@api/axiosInstance';
 import AuthCard from '@components/AuthCard';
 
 const RegistrationPage = () => {
-  // ===================================================================================
-  // SECTION 1: State, Refs, and Hooks
-  // ===================================================================================
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,10 +28,6 @@ const RegistrationPage = () => {
   const REQUEST_TIMEOUT = 30000;
   const PASSWORD_MIN_LENGTH = 8;
   const PASSWORD_MAX_LENGTH = 128;
-
-  // ===================================================================================
-  // SECTION 2: Validation, Logic, and Handler Functions (FULLY IMPLEMENTED)
-  // ===================================================================================
 
   const validateUsername = (u) => {
     const trimmed = u.trim();
@@ -209,12 +202,9 @@ const RegistrationPage = () => {
     return `${remaining} minute${remaining !== 1 ? 's' : ''}`;
   };
 
-  // ===================================================================================
-  // SECTION 3: Main Component Render (JSX is now fully connected to logic)
-  // ===================================================================================
-
   if (success) {
     return (
+      <div className="flex min-h-screen items-center justify-center p-4">
       <AuthCard title="Your Legend Begins!">
         <div className="text-center font-body">
           <div className="text-4xl mb-4 text-primary animate-pulse">✓</div>
@@ -222,10 +212,12 @@ const RegistrationPage = () => {
           <p className="text-sm text-secondary">Redirecting you to the realm's entrance...</p>
         </div>
       </AuthCard>
+      </div>
     );
   }
 
   return (
+    <div className="flex min-h-screen items-center justify-center p-4">
     <AuthCard title="Begin Your Chapter">
       <form onSubmit={handleRegister} className="space-y-4" noValidate>
         <div>
@@ -306,6 +298,7 @@ const RegistrationPage = () => {
         </Link>
       </p>
     </AuthCard>
+    </div>
   );
 };
 
