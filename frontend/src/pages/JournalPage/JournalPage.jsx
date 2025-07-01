@@ -181,6 +181,10 @@ const JournalPage = () => {
           setCurrentView("viewLetter");
         }}
         onDeleteLetter={deleteLetter}
+        onCompose={() => {
+          setActiveLetter(null);
+          setCurrentView("composeLetter");
+        }}
       />
     );
   }

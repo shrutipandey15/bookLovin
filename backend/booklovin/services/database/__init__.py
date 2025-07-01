@@ -5,7 +5,7 @@ import importlib
 from booklovin.core import config
 from booklovin.services.interfaces import PostService, ServiceSetup, UserService, JournalService
 
-sub_services = ["post", "users", "journal"]
+sub_services = ["post", "users", "journal", "letters"]
 if config.DEBUG:
     sub_services.append("test_setup")
 

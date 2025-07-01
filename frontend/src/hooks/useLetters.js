@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect } from 'react';
-import { mockLetterApi } from '@utils/mockLetter';
-import { MOOD_ENUM_TO_KEY } from '@config/moods';
+import { useState, useCallback, useEffect } from "react";
+import lettersService from "@api/letters";
+import { MOOD_ENUM_TO_KEY } from "@config/moods";
 
 export function useLetters() {
   const [letters, setLetters] = useState([]);
@@ -11,16 +11,18 @@ export function useLetters() {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await mockLetterApi.fetchLetters();
-      const formattedLetters = data.map(letter => ({
+      const data = await lettersService.fetchLetters();
+
+      const formattedLetters = data.map((letter) => ({
         ...letter,
+        _id: letter.uid,
+        createdAt: letter.creationTime,
         targetDate: letter.target_date,
-        writingTime: letter.writing_time,
         wordCount: letter.word_count,
-        createdAt: letter.created_at,
         openedAt: letter.opened_at,
-        moodKey: MOOD_ENUM_TO_KEY[letter.mood] || 'healing',
+        moodKey: MOOD_ENUM_TO_KEY[letter.mood] || "healing",
       }));
+
       setLetters(formattedLetters);
     } catch (err) {
       setError(err.message || "Failed to load letters.");
@@ -32,23 +34,50 @@ export function useLetters() {
   useEffect(() => {
     fetchLetters();
   }, [fetchLetters]);
-  
-  const saveLetter = useCallback(async (letterData, letterId) => {
-    await mockLetterApi.saveLetter({ ...letterData, _id: letterId });
-    await fetchLetters();
-  }, [fetchLetters]);
+
+  const saveLetter = useCallback(
+    async (letterData, letterId) => {
+      await lettersService.saveLetter(letterData, letterId);
+      await fetchLetters();
+    },
+    [fetchLetters]
+  );
 
   const deleteLetter = useCallback(async (letterId) => {
-    await mockLetterApi.deleteLetter(letterId);
-    await fetchLetters();
-  }, [fetchLetters]);
+    await lettersService.deleteLetter(letterId);
+    setLetters((prev) => prev.filter((l) => l._id !== letterId));
+  }, []);
 
   const markLetterAsOpened = useCallback(async (letterId) => {
-    await mockLetterApi.markLetterAsOpened(letterId);
-    await fetchLetters();
-  }, [fetchLetters]);
+    const updatedLetterFromServer = await lettersService.markLetterAsOpened(
+      letterId
+    );
+    const formattedUpdatedLetter = {
+      ...updatedLetterFromServer,
+      _id: updatedLetterFromServer.uid,
+      createdAt: updatedLetterFromServer.creationTime,
+      targetDate: updatedLetterFromServer.target_date,
+      wordCount: updatedLetterFromServer.word_count,
+      openedAt: updatedLetterFromServer.opened_at,
+      moodKey: MOOD_ENUM_TO_KEY[updatedLetterFromServer.mood] || "healing",
+    };
 
-  const hasReadyLetters = letters.some(l => l.status === 'scheduled' && new Date(l.targetDate) <= new Date());
+    setLetters((prev) =>
+      prev.map((l) => (l._id === letterId ? formattedUpdatedLetter : l))
+    );
+  }, []);
 
-  return { letters, isLoading, error, saveLetter, deleteLetter, markLetterAsOpened, hasReadyLetters };
+  const hasReadyLetters = letters.some(
+    (l) => l.status === "scheduled" && new Date(l.targetDate) <= new Date()
+  );
+
+  return {
+    letters,
+    isLoading,
+    error,
+    saveLetter,
+    deleteLetter,
+    markLetterAsOpened,
+    hasReadyLetters,
+  };
 }

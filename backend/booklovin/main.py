@@ -8,7 +8,7 @@ from booklovin.services import database
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-providers = ("auth", "posts", "journal")
+providers = ("auth", "posts", "journal", "letters")
 database_config = database.init(config.DB_TYPE)
 
 
