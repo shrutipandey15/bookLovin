@@ -84,7 +84,10 @@ const JournalPage = () => {
       setActiveEntry(null);
       await Promise.all([refetchEntries(), fetchUserProfile()]);
     } catch (err) {
-      console.error("Failed to save entry. Server response:", err.response?.data || err.message);
+      console.error(
+        "Failed to save entry. Server response:",
+        err.response?.data || err.message
+      );
       setEditorError("Failed to save the entry. Please try again.");
     }
   };
@@ -137,7 +140,10 @@ const JournalPage = () => {
       <JournalEditor
         entry={activeEntry}
         onSave={handleSaveEntry}
-        onCancel={() => setCurrentView("journal")}
+        onCancel={() => {
+          setCurrentView("journal");
+          setActiveEntry(null);
+        }}
         error={editorError}
       />
     );
@@ -147,7 +153,10 @@ const JournalPage = () => {
       <LetterComposer
         letter={activeLetter}
         onSave={handleSaveLetter}
-        onCancel={() => setCurrentView("lettersInbox")}
+        onCancel={() => {
+          setCurrentView("lettersInbox");
+          setActiveLetter(null);
+        }}
       />
     );
   }
@@ -155,7 +164,10 @@ const JournalPage = () => {
     return (
       <LetterViewer
         letter={activeLetter}
-        onClose={() => setCurrentView("lettersInbox")}
+        onClose={() => {
+          setCurrentView("lettersInbox");
+          setActiveLetter(null);
+        }}
         onMarkAsOpened={markLetterAsOpened}
       />
     );
