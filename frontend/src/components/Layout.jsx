@@ -1,41 +1,41 @@
-import { useEffect } from 'react';
-import DarkLightIcon from './DarkLightIcon';
-import { useMood } from '@components/MoodContext';
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
+import DarkLightIcon from "./DarkLightIcon";
+import { useMood } from "@components/MoodContext";
+import Navbar from "./Navbar";
 
 const Layout = ({ children }) => {
   const { theme, setTheme } = useMood();
-  const isDark = theme === 'dragon';
+  const location = useLocation();
+  const isDark = theme === "dragon";
+
+  const noNavPages = ["/login", "/register"];
+  const showNav = !noNavPages.includes(location.pathname);
 
   const toggleTheme = () => {
-    const newTheme = isDark ? 'coffee' : 'dragon';
+    const newTheme = isDark ? "coffee" : "dragon";
     setTheme(newTheme);
   };
-  
-  // This logic for setting the theme class is perfect.
+
   useEffect(() => {
     if (isDark) {
-      document.documentElement.classList.add('dark');
+      document.documentElement.classList.add("dark");
     } else {
-      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.remove("dark");
     }
   }, [isDark]);
 
   return (
-    // This is now just a simple container for the current page.
     <div className="min-h-screen bg-background text-text-primary font-body transition-colors duration-500">
-      
-      {/* The theme toggle button remains as a global element */}
+      {showNav && <Navbar />}
       <button
         onClick={toggleTheme}
         className="fixed top-4 right-4 z-50 rounded-full bg-primary p-2 text-text-contrast shadow-lg transition-all duration-300 hover:scale-110"
-        aria-label={`Switch to ${isDark ? 'light' : 'dark'} theme`}
+        aria-label={`Switch to ${isDark ? "light" : "dark"} theme`}
       >
         <DarkLightIcon isDark={isDark} size={24} />
       </button>
-
-      {/* The 'children' prop renders whatever page is active (e.g., HomePage) */}
       <main>{children}</main>
-
     </div>
   );
 };
