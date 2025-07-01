@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { mockConfessionApi } from '@api/confession';
 
-// Thunks will call the mock API service
 export const fetchConfessions = createAsyncThunk('confessions/fetchAll', async () => {
   const response = await mockConfessionApi.fetchConfessions();
   return response;
@@ -34,7 +33,6 @@ const confessionsSlice = createSlice({
         state.error = action.error.message;
       })
       .addCase(createConfession.fulfilled, (state, action) => {
-        // Add the new confession to the top of the list
         state.items.unshift(action.payload);
       });
   },

@@ -10,10 +10,10 @@ import FeedPage from '@pages/PostPage/Feed';
 import PostEditor from '@components/PostEditor';
 import SinglePostPage from '@pages/PostPage/SinglePostPage';
 import ConfessionsPage from '@pages/ConfessionPage/ConfessionWallPage';
+import ConfessionEditor from '@pages/ConfessionPage/ConfessionEditor';
 
 import './App.css';
 import './styles/themes.css';
-
 function App() {
   return (
     <MoodProvider>
@@ -30,6 +30,7 @@ function App() {
               <Route path="/posts/:id" element={<SinglePostPage />} />
               <Route path="/posts/:id/edit" element={<PostEditor />} />
               <Route path="/confessions" element={<ConfessionsPage />} />
+              <Route path="/confessions/new" element={<ConfessionEditor />} />
             </Route>
           </Routes>
         </Layout>
