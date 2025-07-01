@@ -1,23 +1,30 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Save, ArrowLeft, Eye, EyeOff, AlertCircle, Loader } from 'lucide-react';
-import { getWordCount } from '@utils/journalUtils';
-import { useAutoSave } from '@hooks/useAutoSave';
-import MoodSelectDropdown from './MoodSelectDropdown';
-import { useMood } from '@components/MoodContext';
-import { MOOD_ENUM_TO_KEY, MOOD_KEY_TO_ENUM } from '@config/moods';
+import { useState, useEffect, useRef, useCallback } from "react";
+import {
+  Save,
+  ArrowLeft,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  Loader,
+} from "lucide-react";
+import { getWordCount } from "@utils/journalUtils";
+import { useAutoSave } from "@hooks/useAutoSave";
+import MoodSelectDropdown from "./MoodSelectDropdown";
+import { useMood } from "@components/MoodContext";
+import { MOOD_ENUM_TO_KEY, MOOD_KEY_TO_ENUM } from "@config/moods";
 
 const JournalEditor = ({ entry, onSave, onCancel, error }) => {
   const { mood: globalMood, setMood: setGlobalMood } = useMood();
-  const [title, setTitle] = useState(entry?.title || '');
-  const [content, setContent] = useState(entry?.content || '');
-  const [tags, setTags] = useState(entry?.tags?.join(', ') || '');
+  const [title, setTitle] = useState(entry?.title || "");
+  const [content, setContent] = useState(entry?.content || "");
+  const [tags, setTags] = useState(entry?.tags?.join(", ") || "");
   const [writingStartTime] = useState(Date.now());
   const [showPreview, setShowPreview] = useState(false);
 
   const textareaRef = useRef(null);
   const wordCount = getWordCount(content);
 
-    useEffect(() => {
+  useEffect(() => {
     if (entry?.mood) {
       const moodKey = MOOD_ENUM_TO_KEY[entry.mood];
       if (moodKey) {
@@ -32,13 +39,23 @@ const JournalEditor = ({ entry, onSave, onCancel, error }) => {
       title: title.trim(),
       content: content.trim(),
       mood: MOOD_KEY_TO_ENUM[globalMood],
-      tags: tags.split(',').map(tag => tag.trim()).filter(Boolean),
+      tags: tags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean),
       writing_time: Math.floor((Date.now() - writingStartTime) / 1000),
       favorite: entry?.favorite || false,
-      word_count: wordCount
     };
     await onSave(entryData);
-  }, [title, content, globalMood, tags, writingStartTime, entry, wordCount, onSave]);
+  }, [
+    title,
+    content,
+    globalMood,
+    tags,
+    writingStartTime,
+    entry,
+    onSave,
+  ]);
 
   const { isSaving, lastSaved, hasUnsavedChanges, manualSave } = useAutoSave(
     content,
@@ -52,7 +69,7 @@ const JournalEditor = ({ entry, onSave, onCancel, error }) => {
 
   // Handler for Ctrl+S / Cmd+S shortcut
   const handleKeyDown = (e) => {
-    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+    if ((e.ctrlKey || e.metaKey) && e.key === "s") {
       e.preventDefault();
       manualSave();
     }
@@ -60,9 +77,11 @@ const JournalEditor = ({ entry, onSave, onCancel, error }) => {
 
   // Helper to format the "Last Saved" timestamp
   const formatLastSavedTime = (date) => {
-    if (!date) return '';
-    return new Intl.DateTimeFormat('en-US', {
-      hour: '2-digit', minute: '2-digit', second: '2-digit'
+    if (!date) return "";
+    return new Intl.DateTimeFormat("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
     }).format(date);
   };
 
@@ -71,16 +90,22 @@ const JournalEditor = ({ entry, onSave, onCancel, error }) => {
       {/* Header: Controls & Status */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center space-x-4">
-          <button onClick={onCancel} className="flex items-center space-x-2 text-text-primary transition-colors hover:opacity-80">
+          <button
+            onClick={onCancel}
+            className="flex items-center space-x-2 text-text-primary transition-colors hover:opacity-80"
+          >
             <ArrowLeft className="w-5 h-5" />
             <span>Back to Journal</span>
           </button>
-          <MoodSelectDropdown selectedMood={globalMood} onMoodChange={setGlobalMood} />
+          <MoodSelectDropdown
+            selectedMood={globalMood}
+            onMoodChange={setGlobalMood}
+          />
         </div>
 
         <div className="flex items-center space-x-4 text-sm text-secondary">
           <span>{wordCount} words</span>
-          
+
           {/* Save Status Indicator */}
           <div className="flex items-center space-x-1">
             {isSaving ? (
@@ -105,8 +130,12 @@ const JournalEditor = ({ entry, onSave, onCancel, error }) => {
             onClick={() => setShowPreview(!showPreview)}
             className="flex items-center space-x-2 rounded-lg border border-primary bg-background px-3 py-2 text-primary transition-colors hover:bg-primary/10"
           >
-            {showPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            <span>{showPreview ? 'Edit' : 'Preview'}</span>
+            {showPreview ? (
+              <EyeOff className="w-4 h-4" />
+            ) : (
+              <Eye className="w-4 h-4" />
+            )}
+            <span>{showPreview ? "Edit" : "Preview"}</span>
           </button>
 
           <button
@@ -132,7 +161,12 @@ const JournalEditor = ({ entry, onSave, onCancel, error }) => {
       )}
 
       {/* Main Form & Editor Area */}
-      <form onSubmit={(e) => { e.preventDefault(); manualSave(); }}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          manualSave();
+        }}
+      >
         <div className="rounded-2xl border border-secondary bg-background p-8 shadow-lg">
           {showPreview ? (
             // Using Tailwind's 'prose' plugin for beautiful, automatic styling of rendered content.
@@ -142,11 +176,17 @@ const JournalEditor = ({ entry, onSave, onCancel, error }) => {
               <p className="whitespace-pre-wrap">{content}</p>
               {tags && (
                 <div className="flex flex-wrap gap-2 mt-6">
-                  {tags.split(',').filter(Boolean).map((tag, i) => (
-                    <span key={i} className="not-prose rounded-full bg-primary px-3 py-1 text-sm text-text-contrast">
-                      #{tag.trim()}
-                    </span>
-                  ))}
+                  {tags
+                    .split(",")
+                    .filter(Boolean)
+                    .map((tag, i) => (
+                      <span
+                        key={i}
+                        className="not-prose rounded-full bg-primary px-3 py-1 text-sm text-text-contrast"
+                      >
+                        #{tag.trim()}
+                      </span>
+                    ))}
                 </div>
               )}
             </div>
@@ -183,11 +223,11 @@ const JournalEditor = ({ entry, onSave, onCancel, error }) => {
 
       {/* Footer Hint */}
       <div className="mt-4 text-center text-sm text-secondary">
-        Press{' '}
+        Press{" "}
         <kbd className="rounded bg-secondary px-2 py-1 text-xs text-text-contrast">
           Ctrl+S
-        </kbd>
-        {' '}to save
+        </kbd>{" "}
+        to save
       </div>
     </div>
   );

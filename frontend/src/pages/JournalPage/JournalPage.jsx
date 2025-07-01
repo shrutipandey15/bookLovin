@@ -84,7 +84,7 @@ const JournalPage = () => {
       setActiveEntry(null);
       await Promise.all([refetchEntries(), fetchUserProfile()]);
     } catch (err) {
-      console.error("Failed to save entry:", err);
+      console.error("Failed to save entry. Server response:", err.response?.data || err.message);
       setEditorError("Failed to save the entry. Please try again.");
     }
   };

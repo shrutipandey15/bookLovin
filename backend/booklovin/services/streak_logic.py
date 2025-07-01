@@ -15,6 +15,7 @@ def calculate_streak_changes(
     entry_date: datetime,
     last_journal_date: datetime | None = None,
     current_streak_start: datetime | None = None,
+    current_streak: int = 0,
     longest_streak: int = 0,
 ) -> dict[str, Any]:
     """
