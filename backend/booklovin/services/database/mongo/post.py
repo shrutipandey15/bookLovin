@@ -105,11 +105,24 @@ async def get_popular(db: Database) -> list[Post] | UserError:
     return [Post.from_dict(doc) for doc in popular_post_docs]
 
 
-async def like(db: Database, post_id: str, user_id: str) -> None | UserError:
-    """Likes a post by its ID, storing the timestamp of the like."""
-    like_document = {"post_id": post_id, "user_id": user_id, "liked_at": datetime.now(timezone.utc)}
-    with suppress(pymongo.errors.DuplicateKeyError):
-        await db.likes.insert_one(like_document)
+async def react(db: Database, post_id: str, user_id: str, reaction_type: str) -> None:
+    """Adds a reaction to a post, preventing duplicate reactions from the same user."""
+    reaction_document = {
+        "post_id": post_id,
+        "user_id": user_id,
+        "reaction_type": reaction_type
+    }
+    
+    result = await db.reactions.update_one(
+        reaction_document,
+        {"$setOnInsert": {"reacted_at": datetime.now(timezone.utc)}},
+        upsert=True
+    )
+    if result.upserted_id:
+        await db.posts.update_one(
+            {"uid": post_id},
+            {"$inc": {f"reactions.{reaction_type}": 1}}
+        )
     return None
 
 

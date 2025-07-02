@@ -8,6 +8,7 @@ from booklovin.models.users import User
 from booklovin.services import database, errors
 from booklovin.utils.user_token import get_from_token
 from fastapi import APIRouter, Depends, Request
+from booklovin.models.reactions import ReactionRequest 
 
 router = APIRouter(tags=["posts"])
 
@@ -60,10 +61,15 @@ async def update_post(request: Request, post_id: str, post: Post, user: User = D
     await database.post.update(db=request.app.state.db, post_id=post_id, post_data=post)
 
 
-@router.put("/{post_id}/like", response_model=None | UserError, response_class=APIResponse)
-async def like_post(request: Request, post_id: str, user: User = Depends(get_from_token)) -> None:
-    """Like a specific post."""
-    await database.post.like(db=request.app.state.db, post_id=post_id, user_id=user.uid)
+@router.put("/{post_id}/react", response_model=None, response_class=APIResponse)
+async def react_to_post(request: Request, post_id: str, payload: ReactionRequest, user: User = Depends(get_from_token)):
+    """React to a specific post."""
+    await database.post.react(
+        db=request.app.state.db, 
+        post_id=post_id, 
+        user_id=user.uid, 
+        reaction_type=payload.reaction
+    )
     return None
 
 

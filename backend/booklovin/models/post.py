@@ -10,8 +10,10 @@ class NewPost(FlexModel):
 
 
 class Post(NewPost, UserObject):
-    lastLike: int = 0
-    likes: int = 0
+    # lastLike: int = 0
+    # likes: int = 0
+    reactions: dict[str, int] = Field(default_factory=dict)
+
 
 
 class Count(BaseModel):
