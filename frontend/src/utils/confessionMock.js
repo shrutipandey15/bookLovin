@@ -1,6 +1,4 @@
-// This file represents the data that would normally live in your database.
-
-export const mockConfessionsData = [
+export let mockConfessionsData = [
   {
     _id: 'conf1',
     content: "Sometimes I re-read a chapter of my favorite book just to feel safe again. It's like visiting an old friend.",

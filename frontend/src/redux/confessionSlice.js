@@ -11,19 +11,24 @@ export const createConfession = createAsyncThunk('confessions/create', async (co
   return response;
 });
 
+export const fetchSingleConfession = createAsyncThunk('confessions/fetchOne', async (confessionId) => {
+  const response = await mockConfessionApi.fetchSingleConfession(confessionId);
+  return response;
+});
+
+
 const confessionsSlice = createSlice({
   name: 'confessions',
   initialState: {
     items: [],
-    status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
+    currentConfession: null, 
+    status: 'idle', 
     error: null,
   },
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(fetchConfessions.pending, (state) => {
-        state.status = 'loading';
-      })
+      .addCase(fetchConfessions.pending, (state) => { state.status = 'loading'; })
       .addCase(fetchConfessions.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.items = action.payload;
@@ -34,6 +39,18 @@ const confessionsSlice = createSlice({
       })
       .addCase(createConfession.fulfilled, (state, action) => {
         state.items.unshift(action.payload);
+      })
+      .addCase(fetchSingleConfession.pending, (state) => {
+        state.status = 'loading';
+        state.currentConfession = null;
+      })
+      .addCase(fetchSingleConfession.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.currentConfession = action.payload;
+      })
+      .addCase(fetchSingleConfession.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message;
       });
   },
 });

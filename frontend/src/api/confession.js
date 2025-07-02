@@ -6,7 +6,7 @@ export const mockConfessionApi = {
     return new Promise((resolve) => {
       setTimeout(() => {
         console.log("MOCK API: Responded with confessions.");
-        resolve(mockConfessionsData);
+        resolve([...mockConfessionsData]);
       }, 500); 
     });
   },
@@ -28,4 +28,18 @@ export const mockConfessionApi = {
       }, 500);
     });
   },
+  fetchSingleConfession: (confessionId) => {
+    console.log(`MOCK API: Fetching confession with ID: ${confessionId}`);
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const confession = mockConfessionsData.find(c => c._id === confessionId);
+        if (confession) {
+          console.log("MOCK API: Found confession.", confession);
+          resolve(confession);
+        } else {
+          reject(new Error("Confession not found"));
+        }
+      }, 300);
+    });
+  }
 };
