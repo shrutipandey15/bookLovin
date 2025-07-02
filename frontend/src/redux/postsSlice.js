@@ -54,10 +54,10 @@ export const deletePost = createAsyncThunk("posts/delete", async (postId) => {
 export const reactToPost = createAsyncThunk(
   "posts/react",
   async ({ postId, reactionType }) => {
-    await axiosInstance.put(`/posts/${postId}/react`, {
+    const updatedReactions = await axiosInstance.put(`/posts/${postId}/react`, {
       reaction: reactionType,
     });
-    return { postId, reactionType };
+    return { postId, updatedReactions: updatedReactions.data };
   }
 );
 
@@ -103,7 +103,6 @@ const postsSlice = createSlice({
         state.status = "loading";
       })
 
-      // --- Fulfilled actions ---
       .addCase(fetchRecentPosts.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.recent = action.payload;
@@ -123,7 +122,7 @@ const postsSlice = createSlice({
       .addCase(updatePost.fulfilled, (state, action) => {
         state.status = "succeeded";
         const updatedPost = action.payload;
-        const postId = updatedPost.uid; 
+        const postId = updatedPost.uid;
         const update = (p) => (p.uid === postId ? updatedPost : p);
         state.recent = state.recent.map(update);
         state.popular = state.popular.map(update);
@@ -138,17 +137,15 @@ const postsSlice = createSlice({
         state.popular = state.popular.filter((p) => p.uid !== postId);
       })
       .addCase(reactToPost.fulfilled, (state, action) => {
-        const { postId, reactionType } = action.payload;
-        const findAndReact = (post) => {
+        const { postId, updatedReactions } = action.payload;
+        const findAndApplyReactions = (post) => {
           if (post?.uid === postId) {
-            if (!post.reactions) post.reactions = {};
-            post.reactions[reactionType] =
-              (post.reactions[reactionType] || 0) + 1;
+            post.reactions = updatedReactions;
           }
         };
-        state.recent.forEach(findAndReact);
-        state.popular.forEach(findAndReact);
-        findAndReact(state.currentPost);
+        state.recent.forEach(findAndApplyReactions);
+        state.popular.forEach(findAndApplyReactions);
+        findAndApplyReactions(state.currentPost);
       })
       .addCase(addComment.fulfilled, (state, action) => {
         const { postId, newComment } = action.payload;

@@ -60,17 +60,22 @@ async def update_post(request: Request, post_id: str, post: Post, user: User = D
     """Update a specific post."""
     await database.post.update(db=request.app.state.db, post_id=post_id, post_data=post)
 
-
-@router.put("/{post_id}/react", response_model=None, response_class=APIResponse)
+@router.put("/{post_id}/react", response_model=dict, response_class=APIResponse)
 async def react_to_post(request: Request, post_id: str, payload: ReactionRequest, user: User = Depends(get_from_token)):
     """React to a specific post."""
+    db = request.app.state.db 
     await database.post.react(
-        db=request.app.state.db, 
+        db=db, 
         post_id=post_id, 
         user_id=user.uid, 
         reaction_type=payload.reaction
     )
-    return None
+    
+    updated_post = await database.post.get_one(db=db, post_id=post_id)
+    if not updated_post:
+        raise HTTPException(status_code=404, detail="Post not found after reaction.")
+        
+    return updated_post.reactions
 
 
 @router.delete("/{post_id}", response_model=None | UserError, response_class=APIResponse)

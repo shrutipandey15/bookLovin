@@ -104,27 +104,38 @@ async def get_popular(db: Database) -> list[Post] | UserError:
 
     return [Post.from_dict(doc) for doc in popular_post_docs]
 
-
 async def react(db: Database, post_id: str, user_id: str, reaction_type: str) -> None:
-    """Adds a reaction to a post, preventing duplicate reactions from the same user."""
-    reaction_document = {
+    """
+    Adds, removes, or changes a user's reaction to a post.
+    A user can only have one reaction per post.
+    """
+    existing_reaction = await db.reactions.find_one_and_delete({
+        "post_id": post_id,
+        "user_id": user_id
+    })
+
+    update_query = {}
+
+    if existing_reaction:
+        old_reaction_type = existing_reaction["reaction_type"]
+        update_query[f"reactions.{old_reaction_type}"] = -1
+
+        if old_reaction_type == reaction_type:
+            if update_query:
+                await db.posts.update_one({"uid": post_id}, {"$inc": update_query})
+            return
+
+    new_reaction_document = {
         "post_id": post_id,
         "user_id": user_id,
-        "reaction_type": reaction_type
+        "reaction_type": reaction_type,
+        "reacted_at": datetime.now(timezone.utc)
     }
+    await db.reactions.insert_one(new_reaction_document)
     
-    result = await db.reactions.update_one(
-        reaction_document,
-        {"$setOnInsert": {"reacted_at": datetime.now(timezone.utc)}},
-        upsert=True
-    )
-    if result.upserted_id:
-        await db.posts.update_one(
-            {"uid": post_id},
-            {"$inc": {f"reactions.{reaction_type}": 1}}
-        )
-    return None
-
+    update_query[f"reactions.{reaction_type}"] = 1
+    
+    await db.posts.update_one({"uid": post_id}, {"$inc": update_query})
 
 async def add_comment(db: Database, comment: Comment) -> None | UserError:
     """Add a comment to a post.
