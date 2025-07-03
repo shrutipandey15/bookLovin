@@ -87,20 +87,24 @@ async def delete_post(request: Request, post_id: str, user: User = Depends(get_f
     )
 
 
-@crouter.post("/{post_id}/comments", response_model=None | UserError, summary="Add a comment to a post", response_class=APIResponse)
-async def add_comment_to_post(
-    request: Request,
-    comment: NewComment,
-    user: User = Depends(get_from_token),
-) -> None | UserError:
+@crouter.post(
+    "/{post_id}/comments", response_model=Comment, summary="Add a comment to a post", response_class=APIResponse
+)
+async def add_comment_to_post(request: Request, comment: NewComment, user: User = Depends(get_from_token),) -> Comment: 
     """Add a comment to a specific post."""
-    if not await database.post.exists(db=request.app.state.db, post_id=comment.postId):
+    db = request.app.state.db
+    if not await database.post.exists(db=db, post_id=comment.postId):
         return errors.POST_NOT_FOUND
 
     new_comment = Comment.from_new_model(comment, user.uid)
 
-    return await database.post.add_comment(db=request.app.state.db, comment=new_comment)
+    await database.post.add_comment(db=db, comment=new_comment)
 
+    author_details = {"penName": user.name}
+    comment_response_dict = new_comment.model_dump()
+    comment_response_dict["author"] = author_details
+    
+    return Comment.from_dict(comment_response_dict)
 
 @crouter.get(
     "/{post_id}/comments", response_model=list[Comment] | UserError, summary="Get all comments for a post", response_class=APIResponse
