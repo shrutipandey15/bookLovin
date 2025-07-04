@@ -49,6 +49,12 @@ const Navbar = () => {
             >
               Confessions
             </NavLink>
+            <NavLink
+              to="/books"
+              style={({ isActive }) => (isActive ? activeLinkStyle : undefined)}
+              >
+                Books
+              </NavLink>
           </nav>
         )}
 

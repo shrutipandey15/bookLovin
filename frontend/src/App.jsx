@@ -12,6 +12,7 @@ import SinglePostPage from '@pages/PostPage/SinglePostPage';
 import ConfessionsPage from '@pages/ConfessionPage/ConfessionWallPage';
 import ConfessionEditor from '@pages/ConfessionPage/ConfessionEditor';
 import SingleConfessionPage from '@pages/ConfessionPage/SingleConfessionPage';
+import BookSearchPage from '@pages/BookSearchPage/BookSearchPage';
 
 import './App.css';
 import './styles/themes.css';
@@ -33,6 +34,7 @@ function App() {
               <Route path="/confessions" element={<ConfessionsPage />} />
               <Route path="/confessions/new" element={<ConfessionEditor />} />
               <Route path="/confessions/:id" element={<SingleConfessionPage />} />
+              <Route path="/books/search" element={<BookSearchPage />} /> 
             </Route>
           </Routes>
         </Layout>
