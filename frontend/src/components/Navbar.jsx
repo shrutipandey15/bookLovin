@@ -50,10 +50,16 @@ const Navbar = () => {
               Confessions
             </NavLink>
             <NavLink
-              to="/books"
+              to="/books/search"
               style={({ isActive }) => (isActive ? activeLinkStyle : undefined)}
               >
                 Books
+              </NavLink>
+            <NavLink
+              to="/profile/MockUser"
+              style={({ isActive }) => (isActive ? activeLinkStyle : undefined)}
+              >
+                Profile
               </NavLink>
           </nav>
         )}

@@ -4,6 +4,7 @@ import confessionsReducer from './confessionSlice';
 import journalReducer from './journalSlice';
 import letterReducer from './letterSlice';
 import booksReducer from './booksSlice';
+import profileReducer from './profileSlice';
 
 const store = configureStore({
   reducer: {
@@ -11,7 +12,8 @@ const store = configureStore({
     confessions: confessionsReducer,
     journal: journalReducer,
     letter: letterReducer,
-    books: booksReducer
+    books: booksReducer,
+    profile: profileReducer
 
   },
 });

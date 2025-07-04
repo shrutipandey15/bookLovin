@@ -22,9 +22,15 @@ const mockBookSearchResults = [
   },
 ];
 
-let mockUserShelves = [
-    // This will be populated as we add books
+const mockUserPosts = [
+    { uid: 'post1', title: 'On the nature of solitude', content: 'Just finished a quiet afternoon with a good book...', author: { penName: 'Mock User' }, reactions: { heart: 5, sparkles: 2 }, moodKey: 'healing' },
+    { uid: 'post2', title: 'Feeling empowered!', content: 'Read a book that completely changed my perspective...', author: { penName: 'Mock User' }, reactions: { zap: 12, sun: 4 }, moodKey: 'empowered' }
 ];
+
+let mockUserShelves = JSON.parse(localStorage.getItem('mockUserShelves')) || [];
+const persistShelves = () => {
+    localStorage.setItem('mockUserShelves', JSON.stringify(mockUserShelves));
+};
 
 const simulateDelay = (ms = 400) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -33,12 +39,11 @@ export const mockBookService = {
     console.log(`MOCK SEARCH: Searching for "${query}"`);
     await simulateDelay();
     if (!query) return [];
-    // In a real mock, you might filter, but for now, we'll just return the list
     return mockBookSearchResults;
   },
 
   getShelves: async () => {
-    console.log("MOCK SHELVES: Fetching user's shelves");
+    console.log("MOCK SHELVES: Fetching user's shelves from localStorage");
     await simulateDelay();
     return [...mockUserShelves];
   },
@@ -46,20 +51,31 @@ export const mockBookService = {
   addToShelf: async (book, status) => {
     console.log(`MOCK SHELVES: Adding "${book.title}" to "${status}"`);
     await simulateDelay();
-    const existingEntry = mockUserShelves.find(item => item.book.googleBooksId === book.googleBooksId);
-    if (existingEntry) {
-        // If book is already on a shelf, just update its status
-        existingEntry.status = status;
+    const existingEntryIndex = mockUserShelves.findIndex(item => item.book.googleBooksId === book.googleBooksId);
+    
+    if (existingEntryIndex > -1) {
+        mockUserShelves[existingEntryIndex].status = status;
     } else {
-        // Otherwise, add a new entry
         const newShelfItem = {
             id: `shelf_${Date.now()}`,
             user_id: 'mock_user_123',
-            status: status, // 'read', 'reading', 'want_to_read'
+            status: status,
             book: book,
         };
         mockUserShelves.push(newShelfItem);
     }
+    
+    persistShelves();
     return [...mockUserShelves];
+  },
+
+  getUserProfile: async (username) => {
+    console.log(`MOCK PROFILE: Fetching profile for ${username}`);
+    await simulateDelay(500);
+    return {
+      user: { username: 'Mock User', email: 'user@example.com' },
+      shelves: [...mockUserShelves],
+      posts: [...mockUserPosts],
+    };
   }
 };
