@@ -77,5 +77,18 @@ export const mockBookService = {
       shelves: [...mockUserShelves],
       posts: [...mockUserPosts],
     };
+  },
+  generateAiImage: async (prompt) => {
+    console.log(`MOCK AI: Generating image for prompt: "${prompt}"`);
+    // Simulate the AI taking time to generate the image
+    await new Promise(res => setTimeout(res, 4000));
+    
+    // In our mock, we just return a cool placeholder image.
+    // The real backend would return the URL of the newly created art.
+    console.log("MOCK AI: Generation complete.");
+    return {
+        // Using a placeholder image from Unsplash
+        imageUrl: 'https://images.unsplash.com/photo-1531565637446-3236fe18fac7?q=80&w=1974&auto=format&fit=crop',
+    };
   }
 };
