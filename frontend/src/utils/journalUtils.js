@@ -1,6 +1,3 @@
-// FIX: Removed the unnecessary import.
-// import { MOOD_ENUM_TO_KEY } from '@components/MoodContext';
-
 const toDate = (dateValue) => {
   if (!dateValue) return null;
   if (dateValue instanceof Date) return dateValue;

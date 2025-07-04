@@ -1,23 +1,16 @@
-// src/pages/JournalPage/MoodSelectDropdown.jsx
-
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
-// FIX: We no longer need the mappers here, simplifying the component.
 import { MOOD_CONFIG, MOOD_ICONS } from '@config/moods';
 
 const MoodSelectDropdown = ({ selectedMood, onMoodChange, className = '' }) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  // FIX 1: The `selectedMood` prop is now the string key itself (e.g., "healing").
-  // We no longer need to convert it from a number. Default to "healing" if it's invalid.
   const currentMoodKey = selectedMood in MOOD_CONFIG ? selectedMood : 'healing';
   
   const currentMood = MOOD_CONFIG[currentMoodKey];
   const CurrentIcon = MOOD_ICONS[currentMoodKey];
 
   const handleMoodSelect = (moodKey) => {
-    // FIX 2: Call onMoodChange directly with the selected string key.
-    // The component no longer does any conversion.
     onMoodChange(moodKey);
     setIsOpen(false);
   };

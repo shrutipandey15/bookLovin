@@ -1,10 +1,7 @@
-/* themes.css */
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* 1. Define the base variables. They will be overridden by the rules below. */
 :root {
   --primary: #8B5A7C; /* Default to heartbroken */
   --secondary: #A67E94;
@@ -14,16 +11,10 @@
   --font-body: 'Playfair Display', serif;
 }
 
-/* 2. Set up smooth transitions for everything */
 html {
   transition: background-color 0.5s ease, color 0.5s ease;
 }
 
-/* 3. This is the magic. We generate rules for each mood and theme. */
-/* This is more verbose, but it's pure CSS and extremely clear. */
-/* You can generate this with a script or just copy-paste. */
-
-/* --- HEARTBROKEN --- */
 html[data-mood='heartbroken'][data-theme='coffee'] {
   --primary: #8B5A7C; --secondary: #A67E94; --background: #f7f3f6; --text-primary: #2D1B29; --text-contrast: #FFFFFF; --font-body: 'Playfair Display', serif;
 }
@@ -46,9 +37,3 @@ html[data-mood='joyful'][data-theme='coffee'] {
 html[data-mood='joyful'][data-theme='dragon'] {
     --primary: #FFEB3B; --secondary: #FFF176; --background: #1A1A0D; --text-primary: #FFF9C4; --text-contrast: #000000; --font-body: "'Poppins', sans-serif";
 }
-
-/* ... Add a block for EVERY mood ... */
-
-
-/* 4. Cleanup the old theme toggle button styles. We'll use Tailwind classes now. */
-/* The old .theme-toggle-btn, .light-btn, .dark-btn styles can be removed. */

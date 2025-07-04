@@ -1,5 +1,15 @@
+// src/pages/JournalPage/JournalPage.jsx
+
 import { useState, useCallback, useEffect } from "react";
 import { Routes, Route, useNavigate, Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchEntries,
+  createEntry,
+  updateEntry,
+  deleteEntry,
+  toggleFavorite,
+} from "@redux/journalSlice"; // CHANGED: Import Redux actions
 import {
   Search,
   Plus,
@@ -12,8 +22,7 @@ import {
 } from "lucide-react";
 import { MOOD_CONFIG } from "@config/moods";
 import { calculateStats } from "@utils/journalUtils";
-import { useJournalEntries } from "@hooks/useJournalEntries";
-import { useLetters } from "@hooks/useLetters";
+import { useLetters } from "@hooks/useLetters"; // NOTE: This is kept for now, can be refactored later
 import axiosInstance from "@api/axiosInstance";
 import JournalEditor from "./JournalEditor";
 import EntryCard from "./EntryCard";
@@ -34,24 +43,25 @@ const JournalPage = () => {
   const [editorError, setEditorError] = useState(null);
 
   const navigate = useNavigate();
+  const dispatch = useDispatch(); // NEW: Get the dispatch function
 
+  // CHANGED: Select state from the Redux store instead of using the custom hook
   const {
-    entries,
-    isLoading: journalLoading,
+    items: entries,
+    status: journalLoading,
     error: journalError,
-    saveEntry,
-    deleteEntry,
-    toggleFavorite,
-    refetchEntries,
-  } = useJournalEntries({ searchTerm, moodFilter });
+  } = useSelector((state) => state.journal);
+
+  // NOTE: Letter logic is unchanged for now, to be refactored separately if desired
   const {
     letters,
     hasReadyLetters,
     saveLetter,
-    deleteLetter,
+    deleteLetter: deleteLetterFromHook, // Renamed to avoid conflict
     markLetterAsOpened,
   } = useLetters();
 
+  // NOTE: This can also be moved into a user/auth slice later
   const fetchUserProfile = useCallback(async () => {
     try {
       const response = await axiosInstance.get("/auth/me");
@@ -65,6 +75,11 @@ const JournalPage = () => {
     fetchUserProfile();
   }, [fetchUserProfile]);
 
+  // CHANGED: Fetch entries by dispatching the Redux thunk
+  useEffect(() => {
+    dispatch(fetchEntries({ searchTerm, moodFilter }));
+  }, [dispatch, searchTerm, moodFilter]);
+
   const handleNewEntry = () => {
     setActiveEntry(null);
     navigate("/journal/new");
@@ -75,26 +90,28 @@ const JournalPage = () => {
     navigate(`/journal/edit/${entry._id}`);
   };
 
+  // CHANGED: handleSaveEntry now dispatches createEntry or updateEntry
   const handleSaveEntry = async (entryData) => {
     setEditorError(null);
+    const action = activeEntry
+      ? updateEntry({ entryId: activeEntry._id, entryData })
+      : createEntry(entryData);
+
     try {
-      await saveEntry(entryData, activeEntry?._id);
+      await dispatch(action).unwrap(); // .unwrap() will throw an error on rejection
       navigate("/journal");
-      await Promise.all([refetchEntries(), fetchUserProfile()]);
+      fetchUserProfile(); // Refetch profile to update stats
     } catch (err) {
-      console.error(
-        "Failed to save entry. Server response:",
-        err.response?.data || err.message
-      );
-      setEditorError("Failed to save the entry. Please try again.");
+      console.error("Failed to save entry:", err);
+      setEditorError(err.details || "Failed to save the entry. Please try again.");
     }
   };
 
+  // CHANGED: handleDeleteEntry now dispatches the deleteEntry thunk
   const handleDeleteEntry = async () => {
     if (!entryToDeleteId) return;
     try {
-      await deleteEntry(entryToDeleteId);
-      await refetchEntries(); // Refetch after delete
+      await dispatch(deleteEntry(entryToDeleteId)).unwrap();
     } catch (error) {
       console.error("Failed to delete entry", error);
     } finally {
@@ -103,14 +120,10 @@ const JournalPage = () => {
     }
   };
 
-  const handleToggleFavorite = async (entryId) => {
-    const entry = entries.find((e) => e._id === entryId);
+  // CHANGED: handleToggleFavorite now dispatches the toggleFavorite thunk
+  const handleToggleFavorite = (entry) => {
     if (entry) {
-      try {
-        await toggleFavorite(entry);
-      } catch (error) {
-        console.error("Favorite toggle failed on the server.", error);
-      }
+      dispatch(toggleFavorite(entry));
     }
   };
 
@@ -157,6 +170,8 @@ const JournalPage = () => {
         </div>
       </header>
 
+      {/* --- UI and JSX from here is largely unchanged --- */}
+
       <div className="mb-8 rounded-xl border border-secondary bg-background p-4 shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row">
           <div className="relative flex-1">
@@ -190,7 +205,7 @@ const JournalPage = () => {
         </div>
       </div>
 
-      {journalLoading ? (
+      {journalLoading === 'loading' ? (
         <div className="py-8 text-center text-secondary">
           Loading your stories...
         </div>
@@ -201,6 +216,7 @@ const JournalPage = () => {
       ) : (
         <>
           <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+            {/* ... stats display JSX ... */}
             <div className="flex items-center space-x-3 rounded-xl border border-secondary bg-background p-4 shadow-sm">
               <BookOpen className="h-8 w-8 flex-shrink-0 text-primary" />
               <div>
@@ -289,11 +305,11 @@ const JournalPage = () => {
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {entries.map((entry) => (
                 <EntryCard
-                  key={entry._id}
+                  key={entry.uid}
                   entry={entry}
                   onEdit={() => handleEditEntry(entry)}
-                  onDelete={() => confirmDelete(entry._id)}
-                  onToggleFavorite={() => handleToggleFavorite(entry._id)}
+                  onDelete={() => confirmDelete(entry.uid)}
+                  onToggleFavorite={() => handleToggleFavorite(entry)}
                 />
               ))}
             </div>
@@ -342,8 +358,7 @@ const JournalPage = () => {
                 setActiveLetter(null);
                 navigate("/journal/letters/new");
               }}
-              onBackToJournal={() => navigate("/journal")}
-              onDeleteLetter={deleteLetter}
+              onDeleteLetter={deleteLetterFromHook}
             />
           }
         />
