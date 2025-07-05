@@ -1,4 +1,3 @@
-// This component now uses Tailwind's `group` utility for hover effects.
 import { Star, Trash2 } from 'lucide-react';
 import { MOOD_CONFIG, MOOD_ICONS } from '@config/moods';
 import EntryStats from './EntryStats';
@@ -20,7 +19,8 @@ const EntryCard = ({ entry, onEdit, onDelete, onToggleFavorite }) => {
           </div>
           <div className="flex items-center space-x-1 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
             <button
-              onClick={(e) => { e.stopPropagation(); onToggleFavorite(entry._id); }}
+              // FIX: Pass the entire 'entry' object, not just its ID.
+              onClick={(e) => { e.stopPropagation(); onToggleFavorite(entry); }}
               className={`rounded-md p-1 transition-colors ${entry.favorite ? 'text-primary bg-primary/10 hover:bg-primary/20' : 'text-secondary hover:bg-secondary/10'}`}
             >
               <Star className={`h-5 w-5 ${entry.favorite ? 'fill-current' : ''}`} />

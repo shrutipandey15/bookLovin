@@ -34,7 +34,15 @@ export const fetchCommentsForPost = createAsyncThunk(
 );
 
 export const createPost = createAsyncThunk("posts/create", async (postData) => {
-  const response = await axiosInstance.post("/posts/", postData);
+  // FIX: Transform the frontend data to match the backend's expected model.
+  // The frontend sends a flexible object, but the backend currently expects 'title' and 'content'.
+  const transformedData = {
+    title: postData.caption_text.substring(0, 80) || "Untitled Post", // Use a snippet of the caption as a title
+    content: postData.caption_text,
+    imageUrl: postData.mediaUrl || "", // Ensure imageUrl is a string, not null
+    links: [], // Add default empty array if backend requires it
+  };
+  const response = await axiosInstance.post("/posts/", transformedData);
   return response.data;
 });
 
@@ -54,10 +62,11 @@ export const deletePost = createAsyncThunk("posts/delete", async (postId) => {
 export const reactToPost = createAsyncThunk(
   "posts/react",
   async ({ postId, reactionType }) => {
-    const updatedReactions = await axiosInstance.put(`/posts/${postId}/react`, {
+    // FIX: The URL was incorrect. It needs to include the /posts/ segment.
+    const response = await axiosInstance.put(`/posts/${postId}/react`, {
       reaction: reactionType,
     });
-    return { postId, updatedReactions: updatedReactions.data };
+    return { postId, updatedReactions: response.data };
   }
 );
 
@@ -102,7 +111,6 @@ const postsSlice = createSlice({
       .addCase(fetchSinglePost.pending, (state) => {
         state.status = "loading";
       })
-
       .addCase(fetchRecentPosts.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.recent = action.payload;

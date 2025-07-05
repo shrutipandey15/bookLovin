@@ -1,3 +1,5 @@
+import mockAIImage from '../assets/ai-art-sample.png';
+
 const mockBookSearchResults = [
   {
     googleBooksId: 'h9f2CgAAQBAJ',
@@ -88,7 +90,8 @@ export const mockBookService = {
     console.log("MOCK AI: Generation complete.");
     return {
         // Using a placeholder image from Unsplash
-        imageUrl: 'https://images.unsplash.com/photo-1531565637446-3236fe18fac7?q=80&w=1974&auto=format&fit=crop',
+        imageUrl: mockAIImage
+
     };
   }
 };

@@ -27,7 +27,8 @@ export const updateEntry = createAsyncThunk('journal/updateEntry', async ({ entr
 
 export const deleteEntry = createAsyncThunk('journal/deleteEntry', async (entryId, { rejectWithValue }) => {
   try {
-    return await journalService.deleteEntry(entryId);
+    await journalService.deleteEntry(entryId);
+    return entryId; 
   } catch (error) {
     return rejectWithValue(error.response.data);
   }
@@ -35,7 +36,12 @@ export const deleteEntry = createAsyncThunk('journal/deleteEntry', async (entryI
 
 export const toggleFavorite = createAsyncThunk('journal/toggleFavorite', async (entry, { rejectWithValue }) => {
   try {
-    return await journalService.toggleFavorite(entry);
+    await journalService.toggleFavorite(entry);
+
+    return {
+      ...entry,
+      favorite: !entry.favorite 
+    };
   } catch (error) {
     return rejectWithValue(error.response.data);
   }
@@ -64,20 +70,25 @@ const journalSlice = createSlice({
       })
 
       .addCase(createEntry.fulfilled, (state, action) => {
-        state.items.unshift(action.payload);
+        if (action.payload) {
+          state.items.unshift(action.payload);
+        }
       })
       
       .addCase(deleteEntry.fulfilled, (state, action) => {
-        state.items = state.items.filter((entry) => entry.uid !== action.payload);
+        const deletedEntryId = action.payload;
+        state.items = state.items.filter((entry) => entry.uid !== deletedEntryId);
       })
 
       .addMatcher(
         (action) => action.type === updateEntry.fulfilled.type || action.type === toggleFavorite.fulfilled.type,
         (state, action) => {
             const updatedEntry = action.payload;
-            const index = state.items.findIndex(entry => entry.uid === updatedEntry.uid);
-            if (index !== -1) {
-                state.items[index] = updatedEntry;
+            if (updatedEntry && updatedEntry.uid) {
+                const index = state.items.findIndex(entry => entry.uid === updatedEntry.uid);
+                if (index !== -1) {
+                    state.items[index] = { ...state.items[index], ...updatedEntry };
+                }
             }
         }
       )

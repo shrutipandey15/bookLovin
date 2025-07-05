@@ -1,25 +1,34 @@
 import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { generateImage, clearImage } from '@redux/studioSlice';
-import { Wand2, Sparkles, Download, ArrowLeft, Image as ImageIcon } from 'lucide-react';
+import { generateImage, saveCreation, clearGeneratedImage } from '@redux/creationsSlice';
+import { Wand2, Sparkles, Save, ArrowLeft, Image as ImageIcon } from 'lucide-react';
 
 const AIStudioPage = () => {
-    const { bookId } = useParams(); // We get the bookId to provide context
+    const { bookId } = useParams();
     const dispatch = useDispatch();
+    const navigate = useNavigate();
 
     const [prompt, setPrompt] = useState('A melancholic girl under a glass bell jar, surreal 1950s New York City skyline, distorted colors, style of an old photograph.');
-    const { generatedImageUrl, status, error } = useSelector((state) => state.aiStudio);
+    const { generatedImageUrl, status, error } = useSelector((state) => state.creations);
 
     const handleGenerate = () => {
         if (!prompt.trim()) return;
         dispatch(generateImage(prompt));
     };
     
-    const handleClear = () => {
-        dispatch(clearImage());
+    const handleSaveCreation = () => {
+        if (!generatedImageUrl) return;
+        const creationData = {
+            imageUrl: generatedImageUrl,
+            prompt,
+            bookId,
+        };
+        dispatch(saveCreation(creationData));
+        dispatch(clearGeneratedImage()); // Clear the studio for the next use
+        navigate('/profile/MockUser'); // Navigate to profile to see the new creation
     };
-
+    
     return (
         <div className="mx-auto max-w-5xl p-8 font-body">
             <header className="mb-8">
@@ -28,9 +37,7 @@ const AIStudioPage = () => {
                     <span>Back to Profile</span>
                 </Link>
                 <div className="text-center mt-4">
-                    <h1 className="text-4xl font-bold text-primary flex items-center justify-center gap-3">
-                        <Wand2 /> AI Art Studio
-                    </h1>
+                    <h1 className="text-4xl font-bold text-primary flex items-center justify-center gap-3"><Wand2 /> AI Art Studio</h1>
                     <p className="text-secondary">Bring your vision of the book to life.</p>
                 </div>
             </header>
@@ -38,55 +45,30 @@ const AIStudioPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Left Side: Controls */}
                 <div className="space-y-4">
-                    <label htmlFor="prompt" className="block text-lg font-semibold text-text-primary">
-                        Describe your vision
-                    </label>
+                    <label htmlFor="prompt" className="block text-lg font-semibold text-text-primary">Describe your vision</label>
                     <textarea
-                        id="prompt"
-                        value={prompt}
-                        onChange={(e) => setPrompt(e.target.value)}
-                        placeholder="e.g., A lone astronaut on a red desert planet, style of vintage sci-fi comics..."
+                        id="prompt" value={prompt} onChange={(e) => setPrompt(e.target.value)}
+                        placeholder="e.g., A lone astronaut on a red desert planet..."
                         className="w-full h-48 resize-y rounded-lg border border-secondary bg-background/80 p-4 text-text-primary focus:border-primary focus:ring-primary"
                     />
-                    <button
-                        onClick={handleGenerate}
-                        disabled={status === 'generating'}
-                        className="w-full flex items-center justify-center gap-2 rounded-lg bg-primary py-3 text-lg font-bold text-text-contrast transition-opacity hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
+                    <button onClick={handleGenerate} disabled={status === 'generating'} className="w-full flex items-center justify-center gap-2 rounded-lg bg-primary py-3 text-lg font-bold text-text-contrast transition-opacity hover:opacity-90 disabled:opacity-50">
                         {status === 'generating' ? 'Generating...' : <><Sparkles size={20} /> Generate</>}
                     </button>
-                    <button onClick={handleClear} className="w-full text-sm text-secondary hover:text-primary">Start Over</button>
                 </div>
 
                 {/* Right Side: Image Display */}
-                <div className="flex h-96 min-h-full items-center justify-center rounded-lg border-2 border-dashed border-secondary bg-background/50 p-4">
-                    {status === 'generating' && (
-                        <div className="text-center text-secondary animate-pulse">
-                            <Wand2 className="h-12 w-12 mx-auto mb-4" />
-                            <p>The AI is painting your vision...</p>
-                        </div>
-                    )}
+                <div className="flex flex-col h-96 min-h-full items-center justify-center rounded-lg border-2 border-dashed border-secondary bg-background/50 p-4">
+                    {status === 'generating' && <div className="text-center text-secondary animate-pulse"><Wand2 className="h-12 w-12 mx-auto mb-4" /><p>The AI is painting your vision...</p></div>}
                     {status === 'succeeded' && generatedImageUrl && (
-                        <div className="relative group w-full h-full">
-                            <img src={generatedImageUrl} alt="AI generated art based on the user's prompt" className="w-full h-full object-contain" />
-                            <a 
-                                href={generatedImageUrl} 
-                                download={`booklovin-art-${Date.now()}.png`}
-                                className="absolute bottom-4 right-4 flex items-center gap-2 rounded-lg bg-black/50 px-3 py-2 text-white opacity-0 transition-opacity group-hover:opacity-100"
-                            >
-                                <Download size={16}/> Download
-                            </a>
-                        </div>
+                        <>
+                            <img src={generatedImageUrl} alt="AI generated art" className="flex-1 w-full h-full object-contain" />
+                            <button onClick={handleSaveCreation} className="w-full flex items-center justify-center gap-2 rounded-lg bg-primary py-3 mt-4 text-lg font-bold text-text-contrast hover:opacity-90">
+                                <Save size={20} /> Save to My Creations
+                            </button>
+                        </>
                     )}
-                     {status === 'idle' && !generatedImageUrl && (
-                        <div className="text-center text-secondary">
-                            <ImageIcon className="h-12 w-12 mx-auto mb-4" />
-                            <p>Your generated art will appear here.</p>
-                        </div>
-                    )}
-                     {status === 'failed' && (
-                        <div className="text-center text-red-500">{error || "Something went wrong."}</div>
-                    )}
+                    {status === 'idle' && !generatedImageUrl && <div className="text-center text-secondary"><ImageIcon className="h-12 w-12 mx-auto mb-4" /><p>Your generated art will appear here.</p></div>}
+                    {status === 'failed' && <div className="text-center text-red-500">{error || "Something went wrong."}</div>}
                 </div>
             </div>
         </div>

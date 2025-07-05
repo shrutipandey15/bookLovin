@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchRecentPosts, fetchPopularPosts } from '@redux/postsSlice';
 import { Link } from 'react-router-dom';
-import PostCard from '@components/PostCard'; // Assuming PostCard is in components
+import PostCard from '@components/PostCard';
 
 const FeedPage = () => {
   const dispatch = useDispatch();
-  const [activeFeed, setActiveFeed] = useState('recent'); // 'recent' or 'popular'
+  const [activeFeed, setActiveFeed] = useState('recent');
   
   const { recent, popular, status, error } = useSelector((state) => state.posts);
   const postsToShow = activeFeed === 'recent' ? recent : popular;
@@ -32,7 +32,8 @@ const FeedPage = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {postsToShow.map((post) => (
-          <PostCard key={post._id || post.id} post={post} />
+          // FIX: Added the unique key prop using the post's uid.
+          <PostCard key={post.uid} post={post} />
         ))}
       </div>
     );

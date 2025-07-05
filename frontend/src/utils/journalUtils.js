@@ -33,9 +33,7 @@ export const getWordCount = (text) => {
 };
 
 export const calculateStats = (entries) => {
-  // FIX: This function now correctly groups entries by the 'moodKey'
-  // which is already provided on each entry object.
-  const entriesByMood = entries.reduce((acc, entry) => {
+    const entriesByMood = entries.reduce((acc, entry) => {
     const key = entry.moodKey || 'unknown';
     if (!acc[key]) {
       acc[key] = 0;

@@ -7,7 +7,7 @@ from booklovin.models.post import NewPost, Post
 from booklovin.models.users import User
 from booklovin.services import database, errors
 from booklovin.utils.user_token import get_from_token
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, HTTPException
 from booklovin.models.reactions import ReactionRequest 
 
 router = APIRouter(tags=["posts"])
