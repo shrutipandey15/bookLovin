@@ -1,7 +1,6 @@
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Layout from '@components/Layout';
+import { Route, Routes } from 'react-router-dom';
 import ProtectedRoute from '@components/ProtectedRoute';
-import { MoodProvider } from '@components/MoodContext';
+import Layout from '@components/Layout';
 import HomePage from '@pages/HomePage';
 import LoginPage from '@pages/LoginPage/LoginPage';
 import RegistrationPage from '@pages/RegistrationPage/RegistrationPage';
@@ -17,12 +16,9 @@ import UserProfilePage from '@pages/UserProfilePage/UserProfilePage';
 import AIStudioPage from '@pages/StudioPage/AiStudioPage';
 
 import './App.css';
-import './styles/themes.css';
 function App() {
   return (
-    <MoodProvider>
-      <Router>
-        <Layout>
+    <Layout>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegistrationPage />} />
@@ -41,9 +37,7 @@ function App() {
               <Route path="/studio/create/:bookId" element={<AIStudioPage />} />              
             </Route>
           </Routes>
-        </Layout>
-      </Router>
-    </MoodProvider>
+          </Layout>
   );
 }
 

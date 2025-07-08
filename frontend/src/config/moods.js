@@ -1,44 +1,47 @@
-import { Heart, Sparkles, Zap, Sun, Cloud, Star, Coffee, Moon, Smile, Frown, CloudRain, Flame, AlertTriangle, Gift, Mountain } from 'lucide-react';
+import { Heart, Sparkles, Zap, Sun } from 'lucide-react';
 
 export const MOOD_CONFIG = Object.freeze({
   heartbroken: {
     label: "Heartbroken",
     emoji: "💔",
-    enum: 1,
+    enum: 1, // Kept for backward compatibility
     description: "Processing difficult emotions",
-    font: "'Playfair Display', serif",
-    themes: {
-      coffee: { "--primary": "#8B5A7C", "--secondary": "#A67E94", "--background": "#f7f3f6", "--text-primary": "#2D1B29", "--text-contrast": "#FFFFFF" },
-      dragon: { "--primary": "#B578A3", "--secondary": "#A67E94", "--background": "#1E1A23", "--text-primary": "#E8DCF0", "--text-contrast": "#000000" }
+    // New 'accents' object for the new theme system
+    accents: {
+      daydream: { primary: "#8B5A7C", secondary: "#A67E94" },
+      starlight: { primary: "#D8B4FE", secondary: "#B983FF" }
     }
   },
   healing: {
     label: "Healing",
     emoji: "🌸",
-    enum: 2,
+    enum: 2, // Kept for backward compatibility
     description: "Finding strength and growth",
-    font: "'Source Serif Pro', serif",
-    themes: {
-        coffee: { "--primary": "#7FB069", "--secondary": "#A3C585", "--background": "#F0F8EC", "--text-primary": "#2D3E2D", "--text-contrast": "#FFFFFF" },
-        dragon: { "--primary": "#8FBC95", "--secondary": "#93BA98", "--background": "#1A2C21", "--text-primary": "#D4E8DA", "--text-contrast": "#000000" }
+    accents: {
+      daydream: { primary: "#7FB069", secondary: "#A3C585" },
+      starlight: { primary: "#A3F7B5", secondary: "#8FBC95" }
     }
   },
   joyful: {
     label: "Joyful",
     emoji: "😊",
-    enum: 3,
+    enum: 3, // Kept for backward compatibility
     description: "Feeling happy and content",
-    font: "'Poppins', sans-serif",
-    themes: {
-        coffee: { "--primary": "#FFD60A", "--secondary": "#FFE135", "--background": "#FFFBF0", "--text-primary": "#5C4A00", "--text-contrast": "#FFFFFF" },
-        dragon: { "--primary": "#FFEB3B", "--secondary": "#FFF176", "--background": "#1A1A0D", "--text-primary": "#FFF9C4", "--text-contrast": "#000000" }
+    accents: {
+      daydream: { primary: "#FF8C42", secondary: "#FFB347" },
+      starlight: { primary: "#FFD180", secondary: "#FFAB40" }
     }
   },
-});
-
-export const THEME_CONFIG = Object.freeze({
-  coffee: { label: "Coffee", emoji: "☕" },
-  dragon: { label: "Dragon", emoji: "🐉" }
+  empowered: {
+    label: "Empowered",
+    emoji: "🔥",
+    enum: 4, // Kept for backward compatibility
+    description: "Feeling strong and capable",
+    accents: {
+      daydream: { primary: "#F9A826", secondary: "#FBC02D" },
+      starlight: { primary: "#FFD60A", secondary: "#FFEA00" }
+    }
+  },
 });
 
 export const MOOD_ICONS = Object.freeze({
@@ -48,6 +51,7 @@ export const MOOD_ICONS = Object.freeze({
   joyful: Sun,
 });
 
+// FIX: Re-adding the helper exports that other components depend on.
 export const MOOD_KEY_TO_ENUM = Object.fromEntries(
   Object.entries(MOOD_CONFIG).map(([key, { enum: moodEnum }]) => [key, moodEnum])
 );
