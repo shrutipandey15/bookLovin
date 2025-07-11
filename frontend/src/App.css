@@ -9,7 +9,7 @@
   --secondary: #EABDA0;
   --background: #FEF7F4;
   --background-end: #FCEEE6;
-  --text-primary: #5A3D3D;
+  --text-primary: #4C3333;
   --text-secondary: #B98A8A;
   --text-contrast: #FFFFFF;
   --card-background: rgba(255, 255, 255, 0.6);
@@ -43,4 +43,16 @@ html[data-mood='joyful'][data-theme='starlight'] { --primary: #FFD180; --seconda
 body {
   background-color: var(--background);
   transition: background-color 0.5s ease;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px) translateX(10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
 }
