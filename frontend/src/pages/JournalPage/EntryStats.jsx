@@ -1,11 +1,10 @@
 import { Clock, Hash, Calendar, Star } from 'lucide-react';
 import { formatDate, formatTime } from '@utils/journalUtils';
 
-// This component is now styled entirely with Tailwind classes.
 const EntryStats = ({ entry, showDetailed = false }) => {
   if (showDetailed) {
     return (
-      <div className="grid grid-cols-2 gap-4 p-4 rounded-lg bg-background border border-secondary">
+      <div className="grid grid-cols-2 gap-4 p-4 rounded-lg bg-card-background border border-secondary">
         <div className="flex items-center space-x-2 text-sm text-text-primary">
           <Hash className="w-4 h-4 text-secondary" />
           <span>{entry.wordCount || 0} words</span>

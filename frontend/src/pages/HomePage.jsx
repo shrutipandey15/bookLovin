@@ -6,7 +6,6 @@ import MoodSelectDropdown from '@pages/JournalPage/MoodSelectDropdown';
 import { BookText, Mail, Feather, Zap, Flame } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-// Helper component for the "glass" action buttons
 const ActionCard = ({ to, icon, text }) => (
     <motion.div
         variants={{
@@ -24,7 +23,6 @@ const ActionCard = ({ to, icon, text }) => (
     </motion.div>
 );
 
-// Helper component for the "glass" snippet cards
 const SnippetCard = ({ icon, title, children }) => (
     <motion.div 
         className="rounded-xl border border-white/20 bg-white/10 p-4 shadow-lg backdrop-blur-md"
@@ -40,7 +38,6 @@ const SnippetCard = ({ icon, title, children }) => (
     </motion.div>
 );
 
-
 const HomePage = () => {
   const { mood, setMood } = useMood();
   const { user, stats, lastEntry, nextLetter, isLoading } = useDashboardData();
@@ -50,7 +47,7 @@ const HomePage = () => {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col items-center justify-center p-8 bg-background font-body transition-colors duration-500">
+    <div className="flex min-h-screen w-full flex-col items-center justify-center p-8 font-body transition-colors duration-500">
       
       <motion.div 
         className="text-center"

@@ -9,7 +9,7 @@ const EntryCard = ({ entry, onEdit, onDelete, onToggleFavorite }) => {
   return (
     <div
       onClick={() => onEdit(entry)}
-      className="group relative flex flex-col cursor-pointer rounded-xl border border-secondary bg-background p-6 shadow-sm transition-all hover:border-primary hover:shadow-md font-body"
+      className="group relative flex flex-col cursor-pointer rounded-xl border border-secondary bg-card-background p-6 shadow-sm transition-all hover:border-primary hover:shadow-md font-body"
     >
       <div className="flex-grow">
         <div className="mb-4 flex items-start justify-between">
@@ -19,7 +19,6 @@ const EntryCard = ({ entry, onEdit, onDelete, onToggleFavorite }) => {
           </div>
           <div className="flex items-center space-x-1 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
             <button
-              // FIX: Pass the entire 'entry' object, not just its ID.
               onClick={(e) => { e.stopPropagation(); onToggleFavorite(entry); }}
               className={`rounded-md p-1 transition-colors ${entry.favorite ? 'text-primary bg-primary/10 hover:bg-primary/20' : 'text-secondary hover:bg-secondary/10'}`}
             >

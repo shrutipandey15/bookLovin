@@ -7,7 +7,6 @@ import { createPost } from "@redux/postsSlice";
 import { User, BookOpen, MessageSquare, Loader, Image, Wand2, X } from "lucide-react";
 import PostCard from "@components/PostCard";
 
-// Modal Component for posting a creation (no changes needed here)
 const PostCreationModal = ({ creation, onClose, onShare }) => {
     const [caption, setCaption] = useState('');
     const handleShare = () => {
@@ -32,7 +31,6 @@ const PostCreationModal = ({ creation, onClose, onShare }) => {
     );
 };
 
-// Card for the private creations gallery (no changes needed here)
 const PrivateCreationCard = ({ creation, onPost }) => (
     <div className="relative group">
         <img src={creation.imageUrl} alt={creation.prompt} className="w-full h-48 object-cover rounded-md" />
@@ -42,7 +40,6 @@ const PrivateCreationCard = ({ creation, onPost }) => (
     </div>
 );
 
-// Card for the bookshelf (no changes needed here)
 const ShelfBookCard = ({ shelfItem }) => (
     <div className="text-center group relative">
         <img src={shelfItem.book.cover_image_url} alt={shelfItem.book.title} className="w-full h-48 object-cover rounded-md shadow-lg" />
@@ -91,8 +88,6 @@ const UserProfilePage = () => {
         navigate('/feed'); // Navigate to the public feed after posting
     };
 
-    // --- THE FIX IS HERE ---
-    // We wait until the status is 'succeeded' and the profile object exists before rendering the main content.
     if (status === 'loading') {
         return <div className="flex h-screen items-center justify-center"><Loader className="animate-spin h-10 w-10 text-primary" /></div>;
     }
@@ -101,13 +96,12 @@ const UserProfilePage = () => {
         return <div className="text-center text-red-500 py-10">Could not load profile. {error}</div>;
     }
     
-    // Now that we know 'profile' is not null, we can safely destructure it.
     const { user, shelves, posts } = profile;
 
     return (
         <>
             {isPostModalOpen && <PostCreationModal creation={creationToPost} onClose={() => setIsPostModalOpen(false)} onShare={handleSharePost} />}
-            <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 bg-background font-body">
+            <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 font-body">
                 <header className="mb-10 flex flex-col items-center text-center">
                     <div className="w-28 h-28 rounded-full bg-primary/20 flex items-center justify-center mb-4">
                         <User className="w-16 h-16 text-primary" />

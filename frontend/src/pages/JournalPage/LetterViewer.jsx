@@ -16,7 +16,7 @@ export const LetterViewer = ({ letter, onClose, onMarkAsOpened }) => {
   const moodEmoji = MOOD_CONFIG[letter.moodKey]?.emoji || '💙';
 
   return (
-    <div className="mx-auto max-w-4xl min-h-screen p-6 bg-background text-text-primary font-body">
+    <div className="mx-auto max-w-4xl min-h-screen p-6 text-text-primary font-body">
       <header className="mb-8 flex items-center justify-between">
         <button onClick={onClose} className="flex items-center space-x-2 text-text-primary transition-colors hover:opacity-80"><ArrowLeft className="h-5 w-5" /><span>Back to Inbox</span></button>
         <div className="flex items-center space-x-2 text-lg font-semibold text-primary"><Mail className="h-5 w-5" /><span>Letter {letter.type === 'future' ? 'from Your Past' : 'to Your Past'}</span></div>

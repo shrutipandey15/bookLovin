@@ -33,7 +33,7 @@ export const LettersInbox = ({ letters, onViewLetter, onCompose }) => {
   );
 
   return (
-    <div className="mx-auto max-w-4xl p-6 bg-background text-text-primary font-body">
+    <div className="mx-auto max-w-4xl p-6 text-text-primary font-body">
       <header className="mb-8 flex items-center justify-between">
         <h1 className="text-3xl font-bold text-primary">Letters</h1>
         <button onClick={onCompose} className="rounded-lg bg-primary px-5 py-2 font-medium text-text-contrast transition-transform hover:scale-105">Write New Letter</button>

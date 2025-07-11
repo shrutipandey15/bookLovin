@@ -1,5 +1,3 @@
-// src/pages/JournalPage/JournalPage.jsx
-
 import { useState, useCallback, useEffect } from "react";
 import { Routes, Route, useNavigate, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -9,7 +7,7 @@ import {
   updateEntry,
   deleteEntry,
   toggleFavorite,
-} from "@redux/journalSlice"; // CHANGED: Import Redux actions
+} from "@redux/journalSlice";
 import {
   Search,
   Plus,
@@ -22,7 +20,7 @@ import {
 } from "lucide-react";
 import { MOOD_CONFIG } from "@config/moods";
 import { calculateStats } from "@utils/journalUtils";
-import { useLetters } from "@hooks/useLetters"; // NOTE: This is kept for now, can be refactored later
+import { useLetters } from "@hooks/useLetters";
 import axiosInstance from "@api/axiosInstance";
 import JournalEditor from "./JournalEditor";
 import EntryCard from "./EntryCard";
@@ -43,25 +41,22 @@ const JournalPage = () => {
   const [editorError, setEditorError] = useState(null);
 
   const navigate = useNavigate();
-  const dispatch = useDispatch(); // NEW: Get the dispatch function
+  const dispatch = useDispatch();
 
-  // CHANGED: Select state from the Redux store instead of using the custom hook
   const {
     items: entries,
     status: journalLoading,
     error: journalError,
   } = useSelector((state) => state.journal);
 
-  // NOTE: Letter logic is unchanged for now, to be refactored separately if desired
   const {
     letters,
     hasReadyLetters,
     saveLetter,
-    deleteLetter: deleteLetterFromHook, // Renamed to avoid conflict
+    deleteLetter: deleteLetterFromHook,
     markLetterAsOpened,
   } = useLetters();
 
-  // NOTE: This can also be moved into a user/auth slice later
   const fetchUserProfile = useCallback(async () => {
     try {
       const response = await axiosInstance.get("/auth/me");
@@ -75,7 +70,6 @@ const JournalPage = () => {
     fetchUserProfile();
   }, [fetchUserProfile]);
 
-  // CHANGED: Fetch entries by dispatching the Redux thunk
   useEffect(() => {
     dispatch(fetchEntries({ searchTerm, moodFilter }));
   }, [dispatch, searchTerm, moodFilter]);
@@ -89,8 +83,6 @@ const JournalPage = () => {
     setActiveEntry(entry);
     navigate(`/journal/edit/${entry._id}`);
   };
-
-  // CHANGED: handleSaveEntry now dispatches createEntry or updateEntry
   const handleSaveEntry = async (entryData) => {
     setEditorError(null);
     const action = activeEntry
@@ -107,7 +99,6 @@ const JournalPage = () => {
     }
   };
 
-  // CHANGED: handleDeleteEntry now dispatches the deleteEntry thunk
   const handleDeleteEntry = async () => {
     if (!entryToDeleteId) return;
     try {
@@ -119,8 +110,6 @@ const JournalPage = () => {
       setEntryToDeleteId(null);
     }
   };
-
-  // CHANGED: handleToggleFavorite now dispatches the toggleFavorite thunk
   const handleToggleFavorite = (entry) => {
     if (entry) {
       dispatch(toggleFavorite(entry));
@@ -170,8 +159,6 @@ const JournalPage = () => {
         </div>
       </header>
 
-      {/* --- UI and JSX from here is largely unchanged --- */}
-
       <div className="mb-8 rounded-xl border border-secondary bg-background p-4 shadow-sm">
         <div className="flex flex-col gap-4 md:flex-row">
           <div className="relative flex-1">
@@ -216,7 +203,6 @@ const JournalPage = () => {
       ) : (
         <>
           <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-            {/* ... stats display JSX ... */}
             <div className="flex items-center space-x-3 rounded-xl border border-secondary bg-background p-4 shadow-sm">
               <BookOpen className="h-8 w-8 flex-shrink-0 text-primary" />
               <div>

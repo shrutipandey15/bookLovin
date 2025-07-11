@@ -32,7 +32,6 @@ const FeedPage = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {postsToShow.map((post) => (
-          // FIX: Added the unique key prop using the post's uid.
           <PostCard key={post.uid} post={post} />
         ))}
       </div>
@@ -40,7 +39,7 @@ const FeedPage = () => {
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 bg-background font-body">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 font-body">
       <header className="mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-secondary pb-4">
         <div>
           <h1 className="text-3xl font-bold text-primary">Shared Reflections</h1>
@@ -54,7 +53,6 @@ const FeedPage = () => {
         </Link>
       </header>
 
-      {/* Feed Toggle Tabs */}
       <div className="mb-8 flex border-b border-secondary">
         <button
           onClick={() => setActiveFeed('recent')}
