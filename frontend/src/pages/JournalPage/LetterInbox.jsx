@@ -61,7 +61,7 @@ export const LettersInbox = ({ letters, onViewLetter, onCompose }) => {
         <h2 className="text-lg font-semibold mb-4 text-text-primary">Scheduled</h2>
         {scheduledLetters.length > 0 ? <div className="space-y-3">{scheduledLetters.map((letter) => <LetterItem key={letter._id} letter={letter} icon={<Clock className="h-5 w-5" />} />)}</div> : <p className="rounded-lg bg-background/50 p-4 text-center text-sm text-secondary">No scheduled letters.</p>}
       </section>
-      
+
       <section>
         <h2 className="text-lg font-semibold mb-4 text-text-primary">Collection</h2>
         {openedLetters.length > 0 ? <div className="space-y-3">{openedLetters.map((letter) => <LetterItem key={letter._id} letter={letter} icon={<Eye className="h-5 w-5" />} onClick={() => onViewLetter(letter)} />)}</div> : <p className="rounded-lg bg-background/50 p-4 text-center text-sm text-secondary">Your opened letters will appear here.</p>}

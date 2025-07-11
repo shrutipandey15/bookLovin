@@ -91,8 +91,8 @@ const StarlightConstellations = () => {
                         return { star: other, distance };
                     })
                     .sort((a, b) => a.distance - b.distance);
-                
-                star.neighbors = neighbors.slice(1, 3); 
+
+                star.neighbors = neighbors.slice(1, 3);
             });
         };
 
@@ -147,7 +147,7 @@ const Layout = ({ children }) => {
 
   return (
     <div className={`min-h-screen font-body text-text-primary relative ${theme === 'daydream' ? daydreamBg : starlightBg}`}>
-        
+
         {theme === 'daydream' ? <DaydreamDoodles /> : <StarlightConstellations />}
 
         <div className="relative z-10 bg-transparent">

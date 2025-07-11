@@ -7,7 +7,7 @@ import PostCard from '@components/PostCard';
 const FeedPage = () => {
   const dispatch = useDispatch();
   const [activeFeed, setActiveFeed] = useState('recent');
-  
+
   const { recent, popular, status, error } = useSelector((state) => state.posts);
   const postsToShow = activeFeed === 'recent' ? recent : popular;
 

@@ -13,8 +13,8 @@ const ActionCard = ({ to, icon, text }) => (
             visible: { opacity: 1, scale: 1 },
         }}
     >
-        <Link 
-            to={to} 
+        <Link
+            to={to}
             className="flex h-28 w-28 flex-col items-center justify-center rounded-2xl border border-white/20 bg-white/10 p-4 text-center text-text-primary shadow-lg backdrop-blur-md transition-all duration-300 hover:border-white/40 hover:bg-white/20"
         >
             <div className="mb-2 text-primary">{icon}</div>
@@ -24,7 +24,7 @@ const ActionCard = ({ to, icon, text }) => (
 );
 
 const SnippetCard = ({ icon, title, children }) => (
-    <motion.div 
+    <motion.div
         className="rounded-xl border border-white/20 bg-white/10 p-4 shadow-lg backdrop-blur-md"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -48,8 +48,8 @@ const HomePage = () => {
 
   return (
     <div className="flex min-h-screen w-full flex-col items-center justify-center p-8 font-body transition-colors duration-500">
-      
-      <motion.div 
+
+      <motion.div
         className="text-center"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -66,7 +66,7 @@ const HomePage = () => {
         </div>
       </motion.div>
 
-      <motion.div 
+      <motion.div
         className="my-12 grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6"
         initial="hidden"
         animate="visible"
@@ -77,7 +77,7 @@ const HomePage = () => {
         <ActionCard to="/posts" icon={<BookText size={28}/>} text="Reflections" />
         <ActionCard to="/confessions" icon={<Zap size={28}/>} text="Confess" />
       </motion.div>
-      
+
       <div className="w-full max-w-2xl space-y-4">
         {stats.streak > 0 && (
             <SnippetCard icon={<Flame className="text-orange-500" />} title="Writing Streak">

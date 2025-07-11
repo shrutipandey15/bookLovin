@@ -70,7 +70,7 @@ const UserProfilePage = () => {
             dispatch(fetchPrivateCreations());
         }
     }, [dispatch, username]);
-    
+
     const handleOpenPostModal = (creation) => {
         setCreationToPost(creation);
         setIsPostModalOpen(true);
@@ -95,7 +95,7 @@ const UserProfilePage = () => {
     if (status === 'failed' || !profile) {
         return <div className="text-center text-red-500 py-10">Could not load profile. {error}</div>;
     }
-    
+
     const { user, shelves, posts } = profile;
 
     return (
