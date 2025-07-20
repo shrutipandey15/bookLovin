@@ -4,20 +4,29 @@ import Navbar from "./Navbar";
 import { Sun, Moon } from 'lucide-react';
 
 const ThemeContext = createContext();
+
 export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState('daydream');
+  const [theme, setTheme] = useState(() => {
+    const savedTheme = localStorage.getItem('booklovin-theme');
+    return savedTheme || 'daydream';
+  });
+
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('booklovin-theme', theme);
   }, [theme]);
+
   const toggleTheme = () => {
     setTheme(prevTheme => prevTheme === 'daydream' ? 'starlight' : 'daydream');
   };
+
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );
 };
+
 export const useTheme = () => useContext(ThemeContext);
 
 const DaydreamDoodles = () => {
@@ -47,7 +56,6 @@ const DaydreamDoodles = () => {
         { type: 'star', className: 'w-6 h-6 text-yellow-300 opacity-90', style: { top: '55%', left: '6%' }, depth: 0.9, duration: '8s' },
         { type: 'simpleStar', className: 'w-4 h-4 text-blue-200 opacity-80', style: { top: '70%', left: '12%' }, depth: 0.4, duration: '15s' },
         { type: 'petal', className: 'w-5 h-5 text-pink-300 opacity-70', style: { top: '85%', left: '8%' }, depth: 0.7, duration: '11s' },
-
         { type: 'petal', className: 'w-6 h-6 text-pink-300 opacity-70', style: { top: '15%', right: '6%' }, depth: 0.5, duration: '13s' },
         { type: 'simpleStar', className: 'w-5 h-5 text-blue-200 opacity-80', style: { top: '30%', right: '10%' }, depth: 0.8, duration: '9s' },
         { type: 'moon', className: 'w-5 h-5 text-blue-200 opacity-70', style: { top: '45%', right: '5%' }, depth: 0.6, duration: '14s' },
@@ -83,19 +91,16 @@ const DaydreamDoodles = () => {
 
 const StarlightConstellations = () => {
     const canvasRef = useRef(null);
-
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
         let stars = [];
-
         const resizeCanvas = () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
             stars = [];
             const numStars = Math.floor(canvas.width / 15);
-
             for (let i = 0; i < numStars; i++) {
                 stars.push({
                     x: Math.random() * canvas.width,
@@ -104,7 +109,6 @@ const StarlightConstellations = () => {
                     alpha: Math.random() * 0.8 + 0.2,
                 });
             }
-
             stars.forEach(star => {
                 const neighbors = stars
                     .map(other => {
@@ -112,11 +116,9 @@ const StarlightConstellations = () => {
                         return { star: other, distance };
                     })
                     .sort((a, b) => a.distance - b.distance);
-
                 star.neighbors = neighbors.slice(1, 3);
             });
         };
-
         const draw = () => {
             if (!ctx) return;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -132,7 +134,6 @@ const StarlightConstellations = () => {
                     }
                 });
             });
-
             stars.forEach(star => {
                 ctx.save();
                 ctx.globalAlpha = star.alpha;
@@ -143,16 +144,13 @@ const StarlightConstellations = () => {
                 ctx.restore();
             });
         };
-
         resizeCanvas();
         draw();
-
         window.addEventListener('resize', resizeCanvas);
         return () => {
             window.removeEventListener('resize', resizeCanvas);
         };
     }, []);
-
     return <canvas ref={canvasRef} className="absolute inset-0 z-0" />;
 };
 const Layout = ({ children }) => {
@@ -168,9 +166,7 @@ const Layout = ({ children }) => {
 
   return (
     <div className={`min-h-screen font-body text-text-primary relative ${theme === 'daydream' ? daydreamBg : starlightBg}`}>
-
         {theme === 'daydream' ? <DaydreamDoodles /> : <StarlightConstellations />}
-
         <div className="relative z-10 bg-transparent">
             {showNav && <Navbar />}
             <button

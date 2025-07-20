@@ -13,16 +13,13 @@ const PostEditor = () => {
   const { mood, moodConfig } = useMood();
   const { currentPost, status } = useSelector(state => state.posts);
 
-  // CHANGED: Simplified state to just a single caption text
   const [captionText, setCaptionText] = useState('');
 
-  // Fetch and populate data when editing a post
   useEffect(() => {
     if (isEditing && (!currentPost || currentPost.uid !== postId)) {
       dispatch(fetchSinglePost(postId));
     }
     if (isEditing && currentPost && currentPost.uid === postId) {
-      // Use caption_text if it exists from the new model, otherwise fallback to old fields
       setCaptionText(currentPost.caption_text || currentPost.content);
     }
   }, [dispatch, isEditing, postId, currentPost]);
@@ -31,12 +28,11 @@ const PostEditor = () => {
     e.preventDefault();
     const moodKey = Object.keys(moodConfig).find(key => moodConfig[key].enum === mood);
     
-    // CHANGED: The payload now reflects our final 'Post' model for a text-only post
     const postData = {
       caption_text: captionText,
       moodKey,
-      bookId: 'mockBookId123', // In a real app, you'd select a book
-      mediaUrl: null, // Explicitly null for text-only posts
+      bookId: 'mockBookId123',
+      mediaUrl: null,
     };
 
     if (isEditing) {
@@ -45,13 +41,13 @@ const PostEditor = () => {
       await dispatch(createPost(postData));
     }
     
-    navigate('/posts'); // Or to the new unified feed page
+    navigate('/posts');
   };
   
   const currentMoodLabel = moodConfig[Object.keys(moodConfig).find(key => moodConfig[key].enum === mood)]?.label || '...';
   
   return (
-    <div className="mx-auto max-w-3xl min-h-screen p-4 font-body text-text-primary bg-background">
+    <div className="mx-auto max-w-3xl p-4 font-body text-text-primary">
       <h1 className="mb-2 text-3xl font-bold text-primary">
         {isEditing ? 'Edit Reflection' : 'Share a Reflection'}
       </h1>
@@ -59,9 +55,8 @@ const PostEditor = () => {
         Writing in a {currentMoodLabel} mood
       </p>
 
-      <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-secondary bg-background p-6 shadow-md">
+      <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-secondary bg-card-background p-6 shadow-md backdrop-blur-md">
         
-        {/* CHANGED: Simplified form for just the reflection text */}
         <div>
           <label htmlFor="captionText" className="mb-1 block text-sm font-medium text-text-primary">Your Reflection</label>
           <textarea

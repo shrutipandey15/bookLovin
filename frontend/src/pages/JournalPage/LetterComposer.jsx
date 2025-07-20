@@ -61,7 +61,7 @@ const LetterComposer = ({ letter, onSave, onCancel }) => {
       : `Dear Past Me...\n\nI want you to know that...`;
 
   return (
-    <div className="mx-auto max-w-4xl min-h-screen p-6 bg-background text-text-primary font-body">
+    <div className="mx-auto max-w-4xl p-6 text-text-primary font-body">
       <header className="mb-8 flex items-center justify-between">
         <button
           onClick={onCancel}
