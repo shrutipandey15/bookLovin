@@ -1,22 +1,34 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Save, ArrowLeft, Calendar, Heart, Clock, User } from "lucide-react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import { getWordCount } from "@utils/journalUtils";
 import MoodSelectDropdown from "@pages/JournalPage/MoodSelectDropdown";
+import { useMood } from "@components/MoodContext";
 
 const LetterComposer = ({ letter, onSave, onCancel }) => {
+  const { mood: globalMood, setMood: setGlobalMood } = useMood();
+  
   const [letterType, setLetterType] = useState(letter?.type || "future");
-  const [targetDate, setTargetDate] = useState(letter?.targetDate || "");
+  const [targetDate, setTargetDate] = useState(
+    letter?.targetDate ? new Date(letter.targetDate) : null
+  );
   const [content, setContent] = useState(letter?.content || "");
-  const [mood, setMood] = useState(letter?.mood ?? 2);
+  const [mood, setMood] = useState(letter?.moodKey || globalMood);
   const textareaRef = useRef(null);
   const wordCount = getWordCount(content);
+
+  const handleMoodChange = (newMood) => {
+    setMood(newMood);
+    setGlobalMood(newMood);
+  };
 
   const handleSave = useCallback(() => {
     const letterData = {
       type: letterType,
-      target_date: targetDate,
+      target_date: targetDate ? targetDate.toISOString() : null,
       content: content.trim(),
-      mood,
+      moodKey: mood,
       word_count: wordCount,
     };
     onSave(letterData);
@@ -30,16 +42,19 @@ const LetterComposer = ({ letter, onSave, onCancel }) => {
     if (letterType === "future") {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
-      return tomorrow.toISOString().split("T")[0];
+      return tomorrow;
     }
+    return null;
   };
   const getMaxDate = () => {
     if (letterType === "past") {
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
-      return yesterday.toISOString().split("T")[0];
+      return yesterday;
     }
+    return null;
   };
+
   const getPlaceholderText = () =>
     letterType === "future"
       ? `Dear Future Me...\n\nI hope by the time you read this...`
@@ -59,7 +74,7 @@ const LetterComposer = ({ letter, onSave, onCancel }) => {
           <h1 className="text-xl font-semibold">
             Letter to {letterType === "future" ? "Future" : "Past"} Self
           </h1>
-          <MoodSelectDropdown selectedMood={mood} onMoodChange={setMood} />
+          <MoodSelectDropdown selectedMood={mood} onMoodChange={handleMoodChange} />
         </div>
       </header>
       <form
@@ -68,7 +83,7 @@ const LetterComposer = ({ letter, onSave, onCancel }) => {
           handleSave();
         }}
       >
-        <div className="mb-6 rounded-2xl border border-secondary bg-background p-8 shadow-lg">
+        <div className="mb-6 rounded-2xl border border-secondary bg-card-background p-8 shadow-lg backdrop-blur-md">
           <div className="mb-6 flex flex-col justify-between gap-6 sm:flex-row sm:items-center">
             <div>
               <label className="mb-2 block text-sm font-medium text-text-primary">
@@ -102,16 +117,20 @@ const LetterComposer = ({ letter, onSave, onCancel }) => {
               <label className="mb-2 block text-sm font-medium text-text-primary">
                 {letterType === "future" ? "Deliver On" : "Date to Remember"}
               </label>
-              <div className="flex items-center space-x-3 rounded-lg border border-secondary bg-background px-3 py-1.5 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/50">
-                <Calendar className="h-5 w-5 text-primary" />
-                <input
-                  type="date"
-                  value={targetDate}
-                  onChange={(e) => setTargetDate(e.target.value)}
-                  min={getMinDate()}
-                  max={getMaxDate()}
+              <div className="react-datepicker-wrapper">
+                <DatePicker
+                  selected={targetDate}
+                  onChange={(date) => setTargetDate(date)}
+                  minDate={getMinDate()}
+                  maxDate={getMaxDate()}
                   required
-                  className="bg-transparent text-text-primary focus:outline-none"
+                  placeholderText="dd/mm/yyyy"
+                  dateFormat="dd/MM/yyyy"
+                  className="w-full rounded-lg border border-secondary bg-background px-3 py-2 text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
+                  calendarClassName="font-body"
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
                 />
               </div>
             </div>

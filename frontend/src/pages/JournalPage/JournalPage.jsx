@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Routes, Route, useNavigate, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -17,6 +17,7 @@ import {
   Star,
   TrendingUp,
   Download,
+  ChevronDown,
 } from "lucide-react";
 import { MOOD_CONFIG } from "@config/moods";
 import { calculateStats } from "@utils/journalUtils";
@@ -29,6 +30,71 @@ import { LettersInbox } from "./LetterInbox";
 import { LetterViewer } from "./LetterViewer";
 import LetterComposer from "./LetterComposer";
 import { LettersNavButton } from "./LetterNavButton";
+import { useMood } from "@components/MoodContext";
+
+const CustomMoodDropdown = ({ selectedMood, onMoodChange }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleSelect = (moodKey) => {
+    onMoodChange(moodKey);
+    setIsOpen(false);
+  };
+
+  const selectedMoodConfig = MOOD_CONFIG[selectedMood] || { label: 'All Moods', emoji: '' };
+
+  return (
+    <div className="relative font-body" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex w-full items-center justify-between rounded-lg border border-secondary bg-background px-4 py-2 text-text-primary focus:outline-none focus:ring-2 focus:ring-primary md:w-auto"
+      >
+        <span>
+          {selectedMoodConfig.emoji} {selectedMoodConfig.label}
+        </span>
+        <ChevronDown className={`h-5 w-5 text-secondary transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-xl border border-secondary bg-card-background p-2 shadow-lg backdrop-blur-md">
+          <ul className="space-y-1">
+            <li>
+              <button
+                onClick={() => handleSelect('all')}
+                className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-text-primary hover:bg-primary/10"
+              >
+                All Moods
+              </button>
+            </li>
+            {Object.keys(MOOD_CONFIG).map((moodKey) => (
+              <li key={moodKey}>
+                <button
+                  onClick={() => handleSelect(moodKey)}
+                  className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-text-primary hover:bg-primary/10"
+                >
+                  {MOOD_CONFIG[moodKey].emoji} {MOOD_CONFIG[moodKey].label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
+
 
 const JournalPage = () => {
   const [activeEntry, setActiveEntry] = useState(null);
@@ -42,6 +108,8 @@ const JournalPage = () => {
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  
+  const { setMood: setGlobalMood } = useMood();
 
   const {
     items: entries,
@@ -56,6 +124,13 @@ const JournalPage = () => {
     deleteLetter: deleteLetterFromHook,
     markLetterAsOpened,
   } = useLetters();
+  
+  const handleMoodFilterChange = (newMood) => {
+    setMoodFilter(newMood); 
+    if (newMood && newMood !== 'all') {
+      setGlobalMood(newMood);
+    }
+  };
 
   const fetchUserProfile = useCallback(async () => {
     try {
@@ -90,9 +165,9 @@ const JournalPage = () => {
       : createEntry(entryData);
 
     try {
-      await dispatch(action).unwrap(); // .unwrap() will throw an error on rejection
+      await dispatch(action).unwrap();
       navigate("/journal");
-      fetchUserProfile(); // Refetch profile to update stats
+      fetchUserProfile();
     } catch (err) {
       console.error("Failed to save entry:", err);
       setEditorError(err.details || "Failed to save the entry. Please try again.");
@@ -159,7 +234,7 @@ const JournalPage = () => {
         </div>
       </header>
 
-      <div className="mb-8 rounded-xl border border-secondary bg-background p-4 shadow-sm">
+      <div className="relative z-20 mb-8 rounded-xl border border-secondary bg-card-background p-4 shadow-sm backdrop-blur-md">
         <div className="flex flex-col gap-4 md:flex-row">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-secondary" />
@@ -172,18 +247,8 @@ const JournalPage = () => {
             />
           </div>
           <div className="flex items-center gap-2">
-            <select
-              value={moodFilter}
-              onChange={(e) => setMoodFilter(e.target.value)}
-              className="w-full rounded-lg border border-secondary bg-background px-4 py-2 text-text-primary focus:outline-none focus:ring-2 focus:ring-primary md:w-auto"
-            >
-              <option value="all">All Moods</option>
-              {Object.keys(MOOD_CONFIG).map((moodKey) => (
-                <option key={moodKey} value={moodKey}>
-                  {MOOD_CONFIG[moodKey].emoji} {MOOD_CONFIG[moodKey].label}
-                </option>
-              ))}
-            </select>
+            <CustomMoodDropdown selectedMood={moodFilter} onMoodChange={handleMoodFilterChange} />
+            
             <button className="hidden items-center space-x-2 rounded-lg border border-secondary px-4 py-2 text-secondary transition-colors hover:border-primary hover:text-primary sm:flex">
               <Download className="h-5 w-5" />
               <span>Export</span>
@@ -203,7 +268,7 @@ const JournalPage = () => {
       ) : (
         <>
           <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-            <div className="flex items-center space-x-3 rounded-xl border border-secondary bg-background p-4 shadow-sm">
+            <div className="flex items-center space-x-3 rounded-xl border border-secondary bg-card-background p-4 shadow-sm backdrop-blur-md">
               <BookOpen className="h-8 w-8 flex-shrink-0 text-primary" />
               <div>
                 <p className="text-2xl font-bold text-text-primary">
@@ -214,7 +279,7 @@ const JournalPage = () => {
             </div>
             {userProfile && (
               <>
-                <div className="flex flex-col justify-between rounded-xl border border-secondary bg-background p-4 shadow-sm">
+                <div className="flex flex-col justify-between rounded-xl border border-secondary bg-card-background p-4 shadow-sm backdrop-blur-md">
                   <div className="flex items-center space-x-3">
                     <Flame
                       className={`h-8 w-8 flex-shrink-0 text-primary ${
@@ -232,7 +297,7 @@ const JournalPage = () => {
                     {getStreakMessage(userProfile.currentStreak)}
                   </p>
                 </div>
-                <div className="flex items-center space-x-3 rounded-xl border border-secondary bg-background p-4 shadow-sm">
+                <div className="flex items-center space-x-3 rounded-xl border border-secondary bg-card-background p-4 shadow-sm backdrop-blur-md">
                   <Award className="h-8 w-8 flex-shrink-0 text-primary" />
                   <div>
                     <p className="text-2xl font-bold text-text-primary">
@@ -243,7 +308,7 @@ const JournalPage = () => {
                 </div>
               </>
             )}
-            <div className="flex items-center space-x-3 rounded-xl border border-secondary bg-background p-4 shadow-sm">
+            <div className="flex items-center space-x-3 rounded-xl border border-secondary bg-card-background p-4 shadow-sm backdrop-blur-md">
               <Star className="h-8 w-8 flex-shrink-0 text-primary" />
               <div>
                 <p className="text-2xl font-bold text-text-primary">
@@ -252,7 +317,7 @@ const JournalPage = () => {
                 <p className="text-sm text-secondary">Favorites</p>
               </div>
             </div>
-            <div className="flex items-center space-x-3 rounded-xl border border-secondary bg-background p-4 shadow-sm">
+            <div className="flex items-center space-x-3 rounded-xl border border-secondary bg-card-background p-4 shadow-sm backdrop-blur-md">
               <TrendingUp className="h-8 w-8 flex-shrink-0 text-primary" />
               <div>
                 <p className="text-2xl font-bold text-text-primary">
