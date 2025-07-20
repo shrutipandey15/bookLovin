@@ -31,7 +31,7 @@ const SingleConfessionPage = () => {
     );
   }
 
-  const moodColor = MOOD_CONFIG[currentConfession.moodKey]?.themes.dragon['--primary'] || '#9ca3af';
+  const moodColor = MOOD_CONFIG[currentConfession.moodKey]?.themes?.starlight?.['--primary'] || '#9ca3af';
 
   return (
     <div className="mx-auto max-w-3xl p-8 font-body text-text-primary">

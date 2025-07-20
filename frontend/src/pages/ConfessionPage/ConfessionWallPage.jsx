@@ -12,55 +12,51 @@ const ConfessionWallPage = () => {
   );
 
   useEffect(() => {
-    if (confessions.length === 0) {
+    if (status === 'idle') {
       dispatch(fetchConfessions());
     }
-  }, [dispatch, confessions.length]);
+  }, [dispatch, status]);
 
   const renderContent = () => {
     if (status === "loading") {
       return (
-        <p className="text-center text-white/70">
+        <p className="text-center text-text-secondary py-10">
           Gathering echoes from the constellation...
         </p>
       );
     }
     if (status === "failed") {
       return (
-        <p className="text-center text-red-400">
+        <p className="text-center text-red-500 py-10">
           The stars are not aligned. Could not fetch reflections.
         </p>
       );
     }
 
-    return confessions.map((confession) => (
-      <ConfessionCard
-        key={confession._id}
-        confession={confession}
-        style={{
-          top: `${15 + Math.random() * 65}%`,
-          left: `${10 + Math.random() * 70}%`,
-          maxWidth: "320px",
-          animationDelay: `${Math.random() * 2}s`,
-        }}
-      />
-    ));
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {confessions.map((confession) => (
+          <ConfessionCard
+            key={confession._id}
+            confession={confession}
+          />
+        ))}
+      </div>
+    );
   };
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-gray-900">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-gray-800 via-gray-900 to-black opacity-80"></div>
-
-      <div className="relative h-full w-full p-8">{renderContent()}</div>
-
-      <div className="absolute top-8 left-1/2 -translate-x-1/2 text-center pointer-events-none">
-        <h1 className="text-3xl font-bold text-white font-fantasy tracking-wider">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <header className="mb-8 text-center">
+        <h1 className="text-3xl font-bold text-primary font-heading tracking-wider">
           The Confession Wall
         </h1>
-        <p className="text-white/60">
+        <p className="text-text-secondary mt-2">
           Quiet thoughts, released into the ether.
         </p>
-      </div>
+      </header>
+
+      {renderContent()}
 
       <Link
         to="/confessions/new"

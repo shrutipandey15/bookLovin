@@ -34,32 +34,26 @@ const DaydreamDoodles = () => {
     }, []);
 
     const doodles = {
-        star: ( <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 22 12 18.77 5.82 22 7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg> ),
+        star: ( <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg> ),
         moon: ( <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg> ),
         petal: ( <svg viewBox="0 0 100 100" fill="currentColor"><path d="M50,0 C65,20 80,40 85,60 C90,80 75,95 50,100 C25,95 10,80 15,60 C20,40 35,20 50,0 Z" /></svg> ),
-        flower: ( <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12,16c-2.2,0-4-1.8-4-4s1.8-4,4-4s4,1.8,4,4S14.2,16,12,16z M12,10c-1.1,0-2,0.9-2,2s0.9,2,2,2s2-0.9,2-2 S13.1,10,12,10z M19,12c0,0.4-0.1,0.8-0.2,1.1L21,14c0.3-0.5,0.5-1.1,0.5-1.8c0-2-1.3-3.8-3.2-4.5L17.8,9 C18.5,9.9,19,10.9,19,12z M5,12c0-1.1,0.5-2.1,1.2-2.8L5.7,7.5C3.8,8.2,2.5,10,2.5,12c0,0.7,0.2,1.3,0.5,1.8l2.2-1.2 C5.1,12.8,5,12.4,5,12z M12,5c-1.1,0-2.1,0.5-2.8,1.2L7.5,5.7C8.2,3.8,10,2.5,12,2.5c0.7,0,1.3,0.2,1.8,0.5l-1.2,2.2 C12.8,5.1,12.4,5,12,5z M12,19c1.1,0,2.1-0.5,2.8-1.2l1.8,1.8c-0.7,1.9-2.5,3.2-4.5,3.2c-0.7,0-1.3-0.2-1.8-0.5l1.2-2.2 C11.2,18.9,11.6,19,12,19z"></path></svg> ),
-        snowflake: ( <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 2v20M19.07 4.93l-14.14 14.14M4.93 4.93l14.14 14.14"></path></svg> ),
-        'open-book': ( <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2zM22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg> ),
-        'stack-of-books': ( <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20v2.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 19.5zM4 13.5A2.5 2.5 0 0 1 6.5 11H20v2.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 13.5zM4 7.5A2.5 2.5 0 0 1 6.5 5H20v2.5a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 7.5z"></path></svg> )
+        simpleStar: ( <svg viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15 9 22 12 15 15 12 22 9 15 2 12 9 9 12 2"/></svg> )
     };
 
     const doodleConfig = [
-        // Edges
-        { type: 'petal', className: 'w-6 h-6 text-pink-300 opacity-40', style: { top: '15%', right: '10%' }, depth: 0.6, duration: '12s' },
-        { type: 'open-book', className: 'w-8 h-8 text-amber-700 opacity-30', style: { top: '20%', left: '15%' }, depth: 0.8, duration: '8s' },
-        { type: 'moon', className: 'w-8 h-8 text-blue-300 opacity-20', style: { bottom: '15%', left: '18%' }, depth: 0.7, duration: '14s' },
-        { type: 'petal', className: 'w-7 h-7 text-pink-300 opacity-30', style: { bottom: '10%', right: '12%' }, depth: 0.5, duration: '9s' },
-        { type: 'star', className: 'w-4 h-4 text-yellow-200 opacity-40', style: { top: '5%', right: '30%' }, depth: 0.4, duration: '7s' },
-        { type: 'snowflake', className: 'w-8 h-8 text-cyan-300 opacity-40', style: { top: '30%', left: '5%' }, depth: 0.9, duration: '12s' },
-        
-        // Center-ish Area
-        { type: 'flower', className: 'w-7 h-7 text-purple-300 opacity-40', style: { top: '10%', left: '45%' }, depth: 0.2, duration: '11s' },
-        { type: 'snowflake', className: 'w-6 h-6 text-cyan-200 opacity-50', style: { top: '85%', left: '50%' }, depth: 0.3, duration: '13s' },
-        { type: 'stack-of-books', className: 'w-8 h-8 text-amber-800 opacity-40', style: { top: '55%', left: '30%' }, depth: 0.2, duration: '9s' },
-        { type: 'star', className: 'w-5 h-5 text-yellow-300 opacity-50', style: { top: '65%', right: '15%' }, depth: 0.5, duration: '10s' },
-        { type: 'flower', className: 'w-5 h-5 text-purple-300 opacity-30', style: { bottom: '25%', left: '40%' }, depth: 0.1, duration: '16s' },
-        { type: 'moon', className: 'w-6 h-6 text-blue-300 opacity-30', style: { top: '40%', right: '25%' }, depth: 0.4, duration: '15s' },
-        { type: 'open-book', className: 'w-7 h-7 text-amber-700 opacity-20', style: { top: '75%', right: '35%' }, depth: 0.3, duration: '11s' },
+        { type: 'simpleStar', className: 'w-5 h-5 text-blue-200 opacity-80', style: { top: '10%', left: '8%' }, depth: 0.8, duration: '14s' },
+        { type: 'petal', className: 'w-6 h-6 text-pink-300 opacity-70', style: { top: '25%', left: '5%' }, depth: 0.5, duration: '10s' },
+        { type: 'moon', className: 'w-5 h-5 text-blue-200 opacity-70', style: { top: '40%', left: '10%' }, depth: 0.6, duration: '12s' },
+        { type: 'star', className: 'w-6 h-6 text-yellow-300 opacity-90', style: { top: '55%', left: '6%' }, depth: 0.9, duration: '8s' },
+        { type: 'simpleStar', className: 'w-4 h-4 text-blue-200 opacity-80', style: { top: '70%', left: '12%' }, depth: 0.4, duration: '15s' },
+        { type: 'petal', className: 'w-5 h-5 text-pink-300 opacity-70', style: { top: '85%', left: '8%' }, depth: 0.7, duration: '11s' },
+
+        { type: 'petal', className: 'w-6 h-6 text-pink-300 opacity-70', style: { top: '15%', right: '6%' }, depth: 0.5, duration: '13s' },
+        { type: 'simpleStar', className: 'w-5 h-5 text-blue-200 opacity-80', style: { top: '30%', right: '10%' }, depth: 0.8, duration: '9s' },
+        { type: 'moon', className: 'w-5 h-5 text-blue-200 opacity-70', style: { top: '45%', right: '5%' }, depth: 0.6, duration: '14s' },
+        { type: 'star', className: 'w-6 h-6 text-yellow-300 opacity-90', style: { top: '60%', right: '12%' }, depth: 0.9, duration: '7s' },
+        { type: 'petal', className: 'w-5 h-5 text-pink-300 opacity-70', style: { top: '75%', right: '8%' }, depth: 0.4, duration: '11s' },
+        { type: 'simpleStar', className: 'w-4 h-4 text-blue-200 opacity-80', style: { top: '90%', right: '11%' }, depth: 0.7, duration: '16s' },
     ];
 
     return (
@@ -86,6 +80,7 @@ const DaydreamDoodles = () => {
     );
 };
 
+
 const StarlightConstellations = () => {
     const canvasRef = useRef(null);
 
@@ -93,7 +88,6 @@ const StarlightConstellations = () => {
         const canvas = canvasRef.current;
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
-        let animationFrameId;
         let stars = [];
 
         const resizeCanvas = () => {
@@ -169,7 +163,7 @@ const Layout = ({ children }) => {
   const noNavPages = ["/login", "/register"];
   const showNav = !noNavPages.includes(location.pathname);
 
-  const daydreamBg = "bg-gradient-to-br from-purple-100 via-pink-100 to-orange-100";
+  const daydreamBg = "bg-gradient-to-b from-purple-200 via-pink-200 to-purple-200";
   const starlightBg = "bg-gradient-to-b from-[#0D111C] to-[#1F2937]";
 
   return (
