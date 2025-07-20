@@ -17,6 +17,7 @@ import {
   Trash2,
   Edit,
 } from "lucide-react";
+import ConfirmModal from "@components/ConfirmModal";
 
 const Comment = ({ comment, currentUserId, onCommentDelete }) => {
   const isAuthor = comment.authorId === currentUserId;
@@ -48,6 +49,8 @@ const Comment = ({ comment, currentUserId, onCommentDelete }) => {
 const CommentSection = ({ postId, commentsList, currentUserId }) => {
   const dispatch = useDispatch();
   const [newComment, setNewComment] = useState("");
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [commentToDeleteId, setCommentToDeleteId] = useState(null);
 
   const handleCommentSubmit = (e) => {
     e.preventDefault();
@@ -64,10 +67,16 @@ const CommentSection = ({ postId, commentsList, currentUserId }) => {
     setNewComment("");
   };
 
-  const handleCommentDelete = (commentId) => {
-    if (window.confirm("Are you sure you want to delete this comment?")) {
-      dispatch(deleteComment({ postId, commentId }));
-    }
+  const confirmCommentDelete = (commentId) => {
+    setCommentToDeleteId(commentId);
+    setShowConfirmModal(true);
+  };
+
+  const handleCommentDelete = () => {
+    if (!commentToDeleteId) return;
+    dispatch(deleteComment({ postId, commentId: commentToDeleteId }));
+    setShowConfirmModal(false);
+    setCommentToDeleteId(null);
   };
 
   return (
@@ -104,7 +113,7 @@ const CommentSection = ({ postId, commentsList, currentUserId }) => {
               key={comment.uid}
               comment={comment}
               currentUserId={currentUserId}
-              onCommentDelete={handleCommentDelete}
+              onCommentDelete={confirmCommentDelete}
             />
           ))
         ) : (
@@ -113,6 +122,13 @@ const CommentSection = ({ postId, commentsList, currentUserId }) => {
           </p>
         )}
       </div>
+      
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        message="Are you sure you want to delete this comment? This action cannot be undone."
+        onConfirm={handleCommentDelete}
+        onCancel={() => setShowConfirmModal(false)}
+      />
     </div>
   );
 };
@@ -123,6 +139,7 @@ const SinglePostPage = () => {
   const navigate = useNavigate();
 
   const [currentUser, setCurrentUser] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const { currentPost, comments, status, error } = useSelector(
     (state) => state.posts
@@ -148,10 +165,13 @@ const SinglePostPage = () => {
   }, [dispatch, postId]);
 
   const handleDeletePost = async () => {
-    if (window.confirm("Are you sure you want to delete this post?")) {
-      await dispatch(deletePost(postId));
-      navigate("/posts");
-    }
+    await dispatch(deletePost(postId));
+    setShowConfirmModal(false);
+    navigate("/posts");
+  };
+  
+  const confirmPostDelete = () => {
+    setShowConfirmModal(true);
   };
 
   if (status === "loading" && !currentPost) {
@@ -175,7 +195,6 @@ const SinglePostPage = () => {
 
   return (
     <div className="mx-auto max-w-4xl p-4 font-body text-text-primary sm:p-6 lg:p-8">
-      {/* Back and Edit Buttons */}
       <div className="mb-8 flex items-center justify-between">
         <Link
           to="/posts"
@@ -193,7 +212,7 @@ const SinglePostPage = () => {
               <Edit className="h-5 w-5" />
             </Link>
             <button
-              onClick={handleDeletePost}
+              onClick={confirmPostDelete}
               className="rounded-lg border border-secondary p-2 text-secondary transition-colors hover:border-red-500 hover:text-red-500"
             >
               <Trash2 className="h-5 w-5" />
@@ -229,6 +248,13 @@ const SinglePostPage = () => {
           currentUserId={currentUser?.uid}
         />
       </article>
+      
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        message="Are you sure you want to delete this post? This action cannot be undone."
+        onConfirm={handleDeletePost}
+        onCancel={() => setShowConfirmModal(false)}
+      />
     </div>
   );
 };
