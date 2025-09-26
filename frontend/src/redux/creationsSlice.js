@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { mockBookService } from '@api/mockBookService';
 
-// --- ASYNC THUNKS ---
+// --- ASYNC THUNKS (No changes here) ---
 
 export const generateImage = createAsyncThunk('creations/generateImage', async (prompt) => {
   const data = await mockBookService.generateAiImage(prompt);
@@ -23,7 +23,8 @@ const creationsSlice = createSlice({
   initialState: {
     privateCreations: [],
     generatedImageUrl: null,
-    status: 'idle', // 'idle' | 'generating' | 'succeeded' | 'failed'
+    status: 'idle', // This is for the AI image generation
+    fetchStatus: 'idle', // MODIFIED: Added a new status for fetching creations
     error: null,
   },
   reducers: {
@@ -35,7 +36,7 @@ const creationsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Image Generation
+      // Image Generation (No changes here)
       .addCase(generateImage.pending, (state) => {
         state.status = 'generating';
         state.generatedImageUrl = null;
@@ -48,12 +49,22 @@ const creationsSlice = createSlice({
         state.status = 'failed';
         state.error = action.error.message;
       })
-      // Saving and Fetching Private Creations
+      // MODIFIED: Updated saving and fetching logic to use the new fetchStatus
       .addCase(saveCreation.fulfilled, (state, action) => {
         state.privateCreations.unshift(action.payload);
+        // If we add a creation, we can consider the list successfully loaded
+        state.fetchStatus = 'succeeded';
+      })
+      .addCase(fetchPrivateCreations.pending, (state) => {
+        state.fetchStatus = 'loading';
       })
       .addCase(fetchPrivateCreations.fulfilled, (state, action) => {
         state.privateCreations = action.payload;
+        state.fetchStatus = 'succeeded';
+      })
+      .addCase(fetchPrivateCreations.rejected, (state, action) => {
+        state.fetchStatus = 'failed';
+        state.error = action.error.message;
       });
   },
 });

@@ -16,19 +16,25 @@ const AIStudioPage = () => {
         if (!prompt.trim()) return;
         dispatch(generateImage(prompt));
     };
-    
-    const handleSaveCreation = () => {
+
+    // MODIFIED: This function is now `async` to allow for `await`.
+    const handleSaveCreation = async () => {
         if (!generatedImageUrl) return;
         const creationData = {
             imageUrl: generatedImageUrl,
             prompt,
             bookId,
         };
-        dispatch(saveCreation(creationData));
-        dispatch(clearGeneratedImage()); // Clear the studio for the next use
-        navigate('/profile/MockUser'); // Navigate to profile to see the new creation
+
+        // MODIFIED: We now `await` the dispatch. This pauses the function
+        // until the save operation is fully complete.
+        await dispatch(saveCreation(creationData));
+
+        // These lines will now only run AFTER the save is finished.
+        dispatch(clearGeneratedImage());
+        navigate('/profile/MockUser');
     };
-    
+
     return (
         <div className="mx-auto max-w-5xl p-8 font-body">
             <header className="mb-8">

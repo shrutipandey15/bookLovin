@@ -62,14 +62,18 @@ const UserProfilePage = () => {
     const [creationToPost, setCreationToPost] = useState(null);
 
     const { data: profile, status, error } = useSelector((state) => state.profile);
-    const { privateCreations } = useSelector((state) => state.creations);
+    // MODIFIED: Get the new fetchStatus from the creations slice
+    const { privateCreations, fetchStatus } = useSelector((state) => state.creations);
 
     useEffect(() => {
         if (username) {
             dispatch(fetchUserProfile(username));
-            dispatch(fetchPrivateCreations());
+            // MODIFIED: This logic is now more robust. It only fetches if the status is 'idle'.
+            if (fetchStatus === 'idle') {
+                dispatch(fetchPrivateCreations());
+            }
         }
-    }, [dispatch, username]);
+    }, [dispatch, username, fetchStatus]); // MODIFIED: Added fetchStatus to the dependency array
 
     const handleOpenPostModal = (creation) => {
         setCreationToPost(creation);
@@ -85,7 +89,7 @@ const UserProfilePage = () => {
             moodKey: 'empowered',
         };
         dispatch(createPost(newPost));
-        navigate('/feed'); // Navigate to the public feed after posting
+        navigate('/feed');
     };
 
     if (status === 'loading') {

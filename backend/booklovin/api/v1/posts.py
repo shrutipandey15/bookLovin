@@ -8,7 +8,7 @@ from booklovin.models.users import User
 from booklovin.services import database, errors
 from booklovin.utils.user_token import get_from_token
 from fastapi import APIRouter, Depends, Request, HTTPException
-from booklovin.models.reactions import ReactionRequest 
+from booklovin.models.reactions import ReactionRequest
 
 router = APIRouter(tags=["posts"])
 
@@ -60,21 +60,17 @@ async def update_post(request: Request, post_id: str, post: Post, user: User = D
     """Update a specific post."""
     await database.post.update(db=request.app.state.db, post_id=post_id, post_data=post)
 
+
 @router.put("/{post_id}/react", response_model=dict, response_class=APIResponse)
 async def react_to_post(request: Request, post_id: str, payload: ReactionRequest, user: User = Depends(get_from_token)):
     """React to a specific post."""
-    db = request.app.state.db 
-    await database.post.react(
-        db=db, 
-        post_id=post_id, 
-        user_id=user.uid, 
-        reaction_type=payload.reaction
-    )
-    
+    db = request.app.state.db
+    await database.post.react(db=db, post_id=post_id, user_id=user.uid, reaction_type=payload.reaction)
+
     updated_post = await database.post.get_one(db=db, post_id=post_id)
     if not updated_post:
         raise HTTPException(status_code=404, detail="Post not found after reaction.")
-        
+
     return updated_post.reactions
 
 
@@ -87,10 +83,12 @@ async def delete_post(request: Request, post_id: str, user: User = Depends(get_f
     )
 
 
-@crouter.post(
-    "/{post_id}/comments", response_model=Comment, summary="Add a comment to a post", response_class=APIResponse
-)
-async def add_comment_to_post(request: Request, comment: NewComment, user: User = Depends(get_from_token),) -> Comment: 
+@crouter.post("/{post_id}/comments", response_model=Comment, summary="Add a comment to a post", response_class=APIResponse)
+async def add_comment_to_post(
+    request: Request,
+    comment: NewComment,
+    user: User = Depends(get_from_token),
+) -> Comment:
     """Add a comment to a specific post."""
     db = request.app.state.db
     if not await database.post.exists(db=db, post_id=comment.postId):
@@ -103,8 +101,9 @@ async def add_comment_to_post(request: Request, comment: NewComment, user: User 
     author_details = {"penName": user.name}
     comment_response_dict = new_comment.model_dump()
     comment_response_dict["author"] = author_details
-    
+
     return Comment.from_dict(comment_response_dict)
+
 
 @crouter.get(
     "/{post_id}/comments", response_model=list[Comment] | UserError, summary="Get all comments for a post", response_class=APIResponse
@@ -130,7 +129,16 @@ async def delete_a_comments_for_post(
     if not post_to_modify:
         return errors.POST_NOT_FOUND
 
-    if post_to_modify.authorId != user.uid:
+    comments_result = await database.post.get_comments(db=request.app.state.db, post_id=post_id)
+    if isinstance(comments_result, UserError) or not comments_result:
+        return errors.NOT_FOUND
+
+    comment_to_delete = next((c for c in comments_result if c.uid == comment_id), None)
+
+    if not comment_to_delete:
+        return errors.NOT_FOUND
+
+    if comment_to_delete.authorId != user.uid and post_to_modify.authorId != user.uid:
         return errors.FORBIDDEN
 
     result = await database.post.delete_comment(db=request.app.state.db, post_id=post_id, comment_id=comment_id)

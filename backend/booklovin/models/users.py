@@ -4,7 +4,8 @@ from typing import Optional
 from uuid import uuid4
 
 from booklovin.models.base import FlexModel
-from pydantic import Field, field_serializer
+from pydantic import Field, field_serializer, field_validator
+import bleach
 
 
 class UserRole(IntEnum):
@@ -22,6 +23,11 @@ class UserLogin(FlexModel):
 
 class NewUser(UserLogin):
     username: str
+
+    @field_validator("username")
+    @classmethod
+    def sanitize_strings(cls, v: str) -> str:
+        return bleach.clean(v, tags=[], attributes={}, strip=True)
 
 
 class User(FlexModel):

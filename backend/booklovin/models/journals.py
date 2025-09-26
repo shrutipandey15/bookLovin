@@ -2,7 +2,8 @@ from datetime import datetime, timezone
 from enum import IntEnum, auto
 
 from booklovin.models.base import FlexModel, UserObject, optional_fields
-from pydantic import Field, field_serializer
+from pydantic import Field, field_serializer, field_validator
+import bleach
 
 
 class Mood(IntEnum):
@@ -18,6 +19,18 @@ class NewJournalEntry(FlexModel):
     writingTime: int = 0  # time spent to write the journal entry
     tags: list[str] = Field(default_factory=list)
     favorite: bool = False
+
+    @field_validator("content", "title")
+    @classmethod
+    def sanitize_strings(cls, v: str) -> str:
+        return bleach.clean(v, tags=[], attributes={}, strip=True)
+
+    @field_validator("tags", mode="before")
+    @classmethod
+    def sanitize_tags(cls, v: list[str]) -> list[str]:
+        if not isinstance(v, list):
+            return v
+        return [bleach.clean(tag, tags=[], attributes={}, strip=True) for tag in v]
 
 
 @optional_fields

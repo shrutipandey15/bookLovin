@@ -1,0 +1,13 @@
+@baseUrl = http://127.0.0.1:8000/api/v1
+@authToken = <TOKEN>
+
+POST {{baseUrl}}/posts/
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "title": "<h1>A Malicious Title</h1>",
+    "content": "This is innocent text. <script>alert('You have been hacked!')</script> And this is more text.",
+    "imageUrl": "",
+    "links": []
+}
