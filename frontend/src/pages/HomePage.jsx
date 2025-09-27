@@ -1,99 +1,70 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useMood } from '@components/MoodContext';
 import { useDashboardData } from '@hooks/useDashboardData';
-import MoodSelectDropdown from '@pages/JournalPage/MoodSelectDropdown';
-import { BookText, Mail, Feather, Zap, Flame } from 'lucide-react';
-import { motion } from 'framer-motion';
-
-const ActionCard = ({ to, icon, text }) => (
-    <motion.div
-        variants={{
-            hidden: { opacity: 0, scale: 0.8 },
-            visible: { opacity: 1, scale: 1 },
-        }}
-    >
-        <Link
-            to={to}
-            className="flex h-28 w-28 flex-col items-center justify-center rounded-2xl border border-white/20 bg-white/10 p-4 text-center text-text-primary shadow-lg backdrop-blur-md transition-all duration-300 hover:border-white/40 hover:bg-white/20"
-        >
-            <div className="mb-2 text-primary">{icon}</div>
-            <span className="text-sm font-semibold">{text}</span>
-        </Link>
-    </motion.div>
-);
-
-const SnippetCard = ({ icon, title, children }) => (
-    <motion.div
-        className="rounded-xl border border-white/20 bg-white/10 p-4 shadow-lg backdrop-blur-md"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-    >
-        <div className="mb-2 flex items-center gap-2 text-sm text-text-primary/80">
-            {icon}
-            <span className="font-semibold">{title}</span>
-        </div>
-        <div className="text-base text-text-primary">{children}</div>
-    </motion.div>
-);
+import { Plus, BookOpen, Heart, Wand2, Feather } from 'lucide-react';
+import EntryCard from './JournalPage/EntryCard';
 
 const HomePage = () => {
-  const { mood, setMood } = useMood();
-  const { user, stats, lastEntry, nextLetter, isLoading } = useDashboardData();
+  const { user, lastEntry, isLoading } = useDashboardData();
 
   if (isLoading) {
-    return <div className="flex h-screen w-full items-center justify-center bg-background text-text-primary text-lg italic">Loading your realm...</div>;
+    return <div className="text-center p-12">Loading sanctuary...</div>;
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col items-center justify-center p-8 font-body transition-colors duration-500">
-
-      <motion.div
-        className="text-center"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.7 }}
-      >
-        <h1 className="text-4xl font-bold text-primary sm:text-5xl">
-          Hi {user?.name || 'BookLovin'},
-        </h1>
-        <h2 className="mt-2 text-xl text-text-primary/80">
-          how are you feeling today?
-        </h2>
-        <div className="mt-6 flex justify-center">
-            <MoodSelectDropdown selectedMood={mood} onMoodChange={setMood} />
+    <div className="p-8 md:p-12">
+      <header className="flex justify-between items-center mb-10">
+        <div>
+          <h1 className="font-heading text-4xl text-text-primary font-bold">Welcome back, {user?.name || 'Reader'}</h1>
+          <p className="text-text-secondary mt-1">Your literary sanctuary awaits</p>
         </div>
-      </motion.div>
+        <Link to="/journal/new" className="hidden sm:flex items-center gap-2 bg-primary text-text-contrast px-4 py-2 rounded-lg shadow-sm hover:opacity-90 transition-opacity">
+          <Plus size={16} />
+          <span className="font-semibold text-sm">New Entry</span>
+        </Link>
+      </header>
 
-      <motion.div
-        className="my-12 grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6"
-        initial="hidden"
-        animate="visible"
-        variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
-      >
-        <ActionCard to="/journal" icon={<Feather size={28}/>} text="New Entry" />
-        <ActionCard to="/letters" icon={<Mail size={28}/>} text="Letters" />
-        <ActionCard to="/posts" icon={<BookText size={28}/>} text="Reflections" />
-        <ActionCard to="/confessions" icon={<Zap size={28}/>} text="Confess" />
-      </motion.div>
-
-      <div className="w-full max-w-2xl space-y-4">
-        {stats.streak > 0 && (
-            <SnippetCard icon={<Flame className="text-orange-500" />} title="Writing Streak">
-                You're on a <strong>{stats.streak}-day</strong> streak. Keep the flame alive!
-            </SnippetCard>
-        )}
-        {nextLetter && (
-            <SnippetCard icon={<Mail className="text-blue-500" />} title="From Your Past">
-                A letter you wrote to yourself has arrived. <Link to="/letters" className="font-bold underline hover:text-primary">Open it now.</Link>
-            </SnippetCard>
-        )}
-        {lastEntry && (
-             <SnippetCard icon={<BookText className="text-green-500" />} title="Last Reflection">
-                <p className="italic line-clamp-2">"{lastEntry.content}"</p>
-            </SnippetCard>
-        )}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          <Link to="/journal" className="bg-card-background border border-border-color p-6 rounded-xl hover:shadow-lg transition-shadow">
+            <div className="flex items-center gap-4">
+                <div className="bg-primary/10 p-3 rounded-full"><Feather className="text-primary" size={20}/></div>
+                <span className="font-heading font-semibold text-text-primary">Write Entry</span>
+            </div>
+          </Link>
+          <Link to="/books/search" className="bg-card-background border border-border-color p-6 rounded-xl hover:shadow-lg transition-shadow">
+            <div className="flex items-center gap-4">
+                <div className="bg-primary/10 p-3 rounded-full"><BookOpen className="text-primary" size={20}/></div>
+                <span className="font-heading font-semibold text-text-primary">Log Book</span>
+            </div>
+          </Link>
+          <Link to="/confessions" className="bg-card-background border border-border-color p-6 rounded-xl hover:shadow-lg transition-shadow">
+            <div className="flex items-center gap-4">
+                <div className="bg-primary/10 p-3 rounded-full"><Heart className="text-primary" size={20}/></div>
+                <span className="font-heading font-semibold text-text-primary">Browse Confessions</span>
+            </div>
+          </Link>
+          <Link to="/studio/create/some-book-id" className="bg-card-background border border-border-color p-6 rounded-xl hover:shadow-lg transition-shadow">
+            <div className="flex items-center gap-4">
+                <div className="bg-primary/10 p-3 rounded-full"><Wand2 className="text-primary" size={20}/></div>
+                <span className="font-heading font-semibold text-text-primary">Create Art</span>
+            </div>
+          </Link>
+      </div>
+      
+      <div>
+        <div className="flex justify-between items-center mb-4">
+            <h2 className="font-heading text-3xl text-text-primary font-bold">Recent Reflections</h2>
+            <Link to="/journal" className="font-semibold text-sm text-primary hover:underline">View all entries</Link>
+        </div>
+        <div className="space-y-4">
+            {lastEntry ? (
+                <EntryCard entry={lastEntry} onEdit={() => {}} onDelete={() => {}} onToggleFavorite={() => {}} />
+            ) : (
+                <div className="text-center bg-card-background/50 border border-dashed border-border-color p-12 rounded-xl">
+                    <p className="text-text-secondary">No recent reflections to show.</p>
+                </div>
+            )}
+        </div>
       </div>
     </div>
   );
