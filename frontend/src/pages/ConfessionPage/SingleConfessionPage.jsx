@@ -1,53 +1,63 @@
 import React, { useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchSingleConfession } from '@redux/confessionSlice';
-import { ArrowLeft } from 'lucide-react';
+import { X, Loader2 } from 'lucide-react';
 import { MOOD_CONFIG } from '@config/moods';
 
-const SingleConfessionPage = () => {
-  const { id } = useParams();
+const SingleConfessionPage = ({ confessionId, onClose }) => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   const { currentConfession, status, error } = useSelector((state) => state.confessions);
 
   useEffect(() => {
-    if (id) {
-      dispatch(fetchSingleConfession(id));
+    if (confessionId) {
+      dispatch(fetchSingleConfession(confessionId));
     }
-  }, [dispatch, id]);
+  }, [dispatch, confessionId]);
 
-  if (status === 'loading') {
-    return <div className="flex h-screen items-center justify-center bg-background text-text-primary">Loading confession...</div>;
-  }
+  // Handle clicks outside the modal to close it
+  const handleBackdropClick = (e) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
+  const renderModalContent = () => {
+    if (status === 'loading') {
+      return <Loader2 className="h-12 w-12 animate-spin text-primary" />;
+    }
+    
+    if (error || !currentConfession) {
+      return (
+        <div className="text-red-500">
+          <p>Could not load confession. It might not exist.</p>
+        </div>
+      );
+    }
   
-  if (error || !currentConfession) {
+    const moodColor = MOOD_CONFIG[currentConfession.moodKey]?.accents?.daydream?.primary || '#9ca3af';
+
     return (
-      <div className="flex h-screen items-center justify-center bg-background text-red-500">
-        Could not load confession. It might not exist.
-        <button onClick={() => navigate('/confessions')} className="ml-4 underline">Go Back</button>
+      <div className="relative w-full max-w-2xl rounded-2xl bg-background p-8 shadow-2xl border" style={{ borderColor: moodColor }}>
+        <button onClick={onClose} className="absolute top-4 right-4 text-secondary transition-colors hover:text-primary">
+            <X size={24} />
+        </button>
+        <article>
+            <p className="whitespace-pre-wrap text-lg leading-relaxed text-text-primary">{currentConfession.content}</p>
+            <footer className="mt-8 border-t border-border-color pt-4 text-right">
+            <span className="text-base italic text-secondary">~ {currentConfession.soulName}</span>
+            </footer>
+        </article>
       </div>
     );
-  }
-
-  const moodColor = MOOD_CONFIG[currentConfession.moodKey]?.themes?.starlight?.['--primary'] || '#9ca3af';
+  };
 
   return (
-    <div className="mx-auto max-w-3xl p-8 font-body text-text-primary">
-      <header className="mb-8">
-        <button onClick={() => navigate('/confessions')} className="flex items-center space-x-2 text-secondary transition-colors hover:text-primary">
-          <ArrowLeft className="h-5 w-5" />
-          <span>Back to the Confession Wall</span>
-        </button>
-      </header>
-      
-      <article className="rounded-2xl border bg-background p-8 shadow-lg" style={{ borderColor: moodColor }}>
-        <p className="whitespace-pre-wrap text-lg leading-relaxed">{currentConfession.content}</p>
-        <footer className="mt-8 border-t pt-4 text-right">
-          <span className="text-base italic text-secondary">~ {currentConfession.soulName}</span>
-        </footer>
-      </article>
+    <div 
+      onClick={handleBackdropClick}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+    >
+      {renderModalContent()}
     </div>
   );
 };
