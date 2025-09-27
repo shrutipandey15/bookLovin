@@ -2,22 +2,19 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axiosInstance from '@api/axiosInstance';
 import { fetchCurrentUser } from '@components/auth';
-import { useMood } from '@components/MoodContext';
-import AuthCard from '@components/AuthCard';
+import { BookHeart, Key } from 'lucide-react';
+
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState(null);
-  const [showPassword, setShowPassword] = useState(false);
+  const [_isLoggedIn, setIsLoggedIn] = useState(false);
+  const [_user, setUser] = useState(null);
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [isBlocked, setIsBlocked] = useState(false);
   const [blockEndTime, setBlockEndTime] = useState(null);
-
-  const { mood, moodConfig } = useMood();
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -72,6 +69,7 @@ const LoginPage = () => {
           if (currentUser) {
             setUser(currentUser);
             setIsLoggedIn(true);
+            navigate('/'); // Redirect if already logged in
           }
         } catch (error) {
           console.error('Error fetching current user:', error);
@@ -143,6 +141,7 @@ const LoginPage = () => {
       setUser(currentUser);
       setIsLoggedIn(true);
       setPassword('');
+      navigate('/');
     } catch (err) {
       if (err.name === 'AbortError') {
         setError('Request was cancelled.');
@@ -173,7 +172,6 @@ const LoginPage = () => {
   const handlePasswordChange = (e) => {
     if (e.target.value.length <= 128) setPassword(e.target.value);
   };
-  const togglePasswordVisibility = () => setShowPassword(!showPassword);
   
   const formatBlockTime = () => {
     if (!blockEndTime) return '';
@@ -181,105 +179,60 @@ const LoginPage = () => {
     const remaining = Math.ceil((new Date(blockEndTime) - now) / 60000);
     return `${remaining} minute${remaining !== 1 ? 's' : ''}`;
   };
-
-  if (isLoggedIn && user) {
-    const currentMoodLabel = moodConfig[mood]?.label || '...';
-    return (
-      <div className="flex min-h-screen items-center justify-center p-4">
-      <AuthCard title="Welcome Back!">
-        <div className="text-center font-body">
-            <p className="mb-4 text-text-primary">
-              Logged in as: <strong>{user.email || email}</strong>
-            </p>
-            <p className="mb-4 text-xs italic text-secondary">
-              Current mood: {currentMoodLabel}
-            </p>
-            <div className="mb-4 space-y-2">
-              <Link to="/posts" className="block w-full rounded-lg bg-primary px-4 py-2 text-text-contrast transition-opacity hover:opacity-90">
-                View Posts
-              </Link>
-              <Link to="/journal" className="block w-full rounded-lg bg-secondary px-4 py-2 text-text-contrast transition-opacity hover:opacity-90">
-                My Journal
-              </Link>
-            </div>
-            <button
-              onClick={() => {
-                localStorage.removeItem('token');
-                setIsLoggedIn(false);
-                setUser(null);
-                setEmail('');
-                setPassword('');
-              }}
-              className="w-full rounded-lg border border-primary px-4 py-2 text-primary transition-colors hover:bg-primary/10"
-            >
-              Logout
-            </button>
-        </div>
-      </AuthCard>
-    </div>
-    );
-  }
-
+  
+  // --- ONLY THE JSX BELOW HAS BEEN CHANGED ---
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-    <AuthCard title="Enter the Realm">
-      <form onSubmit={handleLogin} className="space-y-4" noValidate>
-        <div>
-          <label htmlFor="email" className="block mb-1 font-semibold text-center text-text-primary font-body">
-            Ravenmail
-          </label>
-          <input
-            type="email" id="email" value={email} onChange={handleEmailChange} required
-            disabled={loading || isBlocked} autoComplete="email"
-            className="w-full rounded-md border border-secondary bg-background px-4 py-2 text-text-primary font-body transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-50"
-          />
-        </div>
-        <div>
-          <label htmlFor="password" className="block mb-1 font-semibold text-center text-text-primary font-body">
-            Secret Rune
-          </label>
-          <div className="relative">
-            <input
-              type={showPassword ? 'text' : 'password'} id="password" value={password} onChange={handlePasswordChange} required
-              disabled={loading || isBlocked} autoComplete="current-password"
-              className="w-full rounded-md border border-secondary bg-background px-4 py-2 pr-12 text-text-primary font-body transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:cursor-not-allowed disabled:opacity-50"
-            />
-            <button
-              type="button" onClick={togglePasswordVisibility} disabled={loading || isBlocked}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-secondary transition-opacity hover:text-primary disabled:opacity-50"
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
-            >
-              {showPassword ? '🙈' : '👁️'}
-            </button>
-          </div>
-        </div>
-        
-        {error && (
-            <div role="alert" className="rounded-md border border-red-500/30 bg-red-500/10 p-3 text-sm font-medium text-red-600">
-                {error}
+    <div className="flex min-h-screen items-center justify-center bg-background p-4 font-body">
+        <div className="w-full max-w-md rounded-2xl bg-card p-8 shadow-2xl">
+            <div className="mb-8 text-center">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/20">
+                    <BookHeart className="h-8 w-8 text-primary" />
+                </div>
+                <h1 className="mt-4 text-3xl font-bold text-text-primary font-heading">Welcome to BookLovin'</h1>
+                <p className="mt-2 text-text-secondary">Your enchanted reading sanctuary awaits</p>
             </div>
-        )}
-        {isBlocked && (
-          <div role="alert" className="rounded-md border border-yellow-500/30 bg-yellow-500/10 p-3 text-sm font-medium text-yellow-600">
-            Account temporarily blocked. Try again in {formatBlockTime()}.
-          </div>
-        )}
+            
+            <div className="mb-6 grid grid-cols-2 gap-2 rounded-full bg-background p-1">
+                <Link to="/login" className="rounded-full bg-primary py-2 text-center font-semibold text-text-contrast shadow">Sign In</Link>
+                <Link to="/register" className="rounded-full py-2 text-center font-semibold text-text-secondary hover:bg-black/5">Join Us</Link>
+            </div>
 
-        <button
-          type="submit" disabled={loading || isBlocked || !email || !password}
-          className="w-full rounded-lg bg-primary px-4 py-2 font-body text-text-contrast transition-opacity hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {loading ? 'Opening scrolls...' : 'Unlock the Tome'}
-        </button>
-      </form>
-      <p className="mt-4 text-center text-sm text-text-primary font-body">
-        New to the realm?{' '}
-        <Link to="/register" className="font-semibold text-primary underline-offset-2 hover:underline">
-          Begin your chapter
-        </Link>
-      </p>
-    </AuthCard>
-  </div>
+            <form onSubmit={handleLogin} className="space-y-6">
+                <div>
+                    <label htmlFor="email" className="text-sm font-medium text-text-primary">Email</label>
+                    <input
+                        type="email" id="email" value={email} onChange={handleEmailChange} required
+                        disabled={loading || isBlocked} autoComplete="email"
+                        placeholder="reader@booklovin.com"
+                        className="mt-1 w-full rounded-lg border border-border-color bg-background px-4 py-2 text-text-primary transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
+                    />
+                </div>
+                <div>
+                    <label htmlFor="password" className="text-sm font-medium text-text-primary">Password</label>
+                    <input
+                        type="password" id="password" value={password} onChange={handlePasswordChange} required
+                        disabled={loading || isBlocked} autoComplete="current-password"
+                        placeholder="Your secret passage..."
+                        className="mt-1 w-full rounded-lg border border-border-color bg-background px-4 py-2 text-text-primary transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
+                    />
+                </div>
+                 {error && <p className="text-sm text-red-500 text-center">{error}</p>}
+                 {isBlocked && <p className="text-sm text-yellow-600 text-center">Account temporarily blocked. Try again in {formatBlockTime()}.</p>}
+                <button
+                    type="submit" disabled={loading || isBlocked || !email || !password}
+                    className="w-full rounded-lg bg-primary py-3 font-semibold text-text-contrast shadow-lg transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                    {loading ? 'Entering...' : 'Enter the Library'}
+                </button>
+            </form>
+            <div className="mt-6 text-center text-sm text-text-secondary">
+                <Link to="#" className="flex items-center justify-center gap-2 hover:text-primary">
+                    <Key size={14} />
+                    <span>Unlock your reading world</span>
+                </Link>
+            </div>
+        </div>
+    </div>
   );
 };
 

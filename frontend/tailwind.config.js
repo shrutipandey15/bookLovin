@@ -9,19 +9,17 @@ export default {
     theme: {
       extend: {
         colors: {
-          'primary': 'var(--primary)',
-          'secondary': 'var(--secondary)',
-          'background': 'var(--background)',
-          'background-end': 'var(--background-end)', // For gradients
-          'text-primary': 'var(--text-primary)',
-          'text-secondary': 'var(--text-secondary)',
-          'text-contrast': 'var(--text-contrast)',
-          'card-background': 'var(--card-background)',
-          'border-color': 'var(--border-color)',
+          'background': '#F5F5DC',      // Parchment Beige
+          'text-primary': '#3C3633',   // Charcoal Brown
+          'primary': '#A0522D',         // Muted Sienna Brown (for buttons/accents)
+          'secondary': '#D2B48C',       // Tan
+          'card': 'rgba(255, 255, 255, 0.6)', // White for cards with some transparency
+          'border-color': 'rgba(160, 82, 45, 0.3)', // Sienna with transparency
+          'text-contrast': '#FFFFFF',
         },
         fontFamily: {
-          heading: ['Playfair Display', 'serif'],
-          body: ['Source Serif Pro', 'serif'],
+          heading: ['Lora', 'serif'],
+          body: ['Lato', 'sans-serif'],
         },
         keyframes: {
           float: {

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, createContext, useContext, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import Navbar from "./Navbar";
+import Navbar from "./Sidebar";
 import { Sun, Moon, CheckCircle } from 'lucide-react';
 
 // --- Notification System ---

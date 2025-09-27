@@ -1,50 +1,22 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Source+Serif+Pro:wght@400;600&display=swap');
+/* Import the new Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Lora:wght@400;700&display=swap');
 
+/* Set up Tailwind base styles */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --primary: #D68C8C;
-  --secondary: #EABDA0;
-  --background: #FEF7F4;
-  --background-end: #FCEEE6;
-  --text-primary: #4C3333;
-  --text-secondary: #B98A8A;
-  --text-contrast: #FFFFFF;
-  --card-background: rgba(255, 255, 255, 0.6);
-  --border-color: rgba(214, 140, 140, 0.3);
-}
-
-html[data-theme='starlight'] {
-  --primary: #A7C5EB;
-  --secondary: #7F8FAA;
-  --background: #0D111C;
-  --background-end: #1F2937;
-  --text-primary: #E5E7EB;
-  --text-secondary: #9CA3AF;
-  --text-contrast: #0D111C;
-  --card-background: rgba(29, 40, 56, 0.5);
-  --border-color: rgba(167, 197, 235, 0.3);
-}
-
-html[data-mood='healing'][data-theme='daydream'] { --primary: #7FB069; --secondary: #A3C585; }
-html[data-mood='healing'][data-theme='starlight'] { --primary: #A3F7B5; --secondary: #8FBC95; }
-
-html[data-mood='heartbroken'][data-theme='daydream'] { --primary: #8B5A7C; --secondary: #A67E94; }
-html[data-mood='heartbroken'][data-theme='starlight'] { --primary: #D8B4FE; --secondary: #B983FF; }
-
-html[data-mood='empowered'][data-theme='daydream'] { --primary: #F9A826; --secondary: #FBC02D; }
-html[data-mood='empowered'][data-theme='starlight'] { --primary: #FFD60A; --secondary: #FFEA00; }
-
-html[data-mood='joyful'][data-theme='daydream'] { --primary: #FF8C42; --secondary: #FFB347; }
-html[data-mood='joyful'][data-theme='starlight'] { --primary: #FFD180; --secondary: #FFAB40; }
-
+/* Apply our new theme defaults */
 body {
-  background-color: var(--background);
-  transition: background-color 0.5s ease;
+  @apply bg-background text-text-primary font-body;
+  transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
 }
 
+h1, h2, h3, h4, h5, h6 {
+  @apply font-heading;
+}
+
+/* Keep necessary keyframes */
 @keyframes float {
   0% {
     transform: translateY(0px);
@@ -72,10 +44,11 @@ body {
   animation: fade-in-up 0.5s ease-out forwards;
 }
 
+/* Keep and UPDATE component-specific styles */
 .react-datepicker {
-  font-family: 'Source Serif Pro', serif;
-  border: 1px solid var(--border-color) !important;
-  background-color: var(--card-background) !important;
+  font-family: theme('fontFamily.body'); /* Use body font */
+  border: 1px solid theme('colors.border-color') !important;
+  background-color: theme('colors.card') !important;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-radius: 0.75rem !important;
@@ -83,7 +56,7 @@ body {
 }
 .react-datepicker__header {
   background-color: transparent !important;
-  border-bottom: 1px solid var(--border-color) !important;
+  border-bottom: 1px solid theme('colors.border-color') !important;
   padding: 0.75rem 0 !important;
 }
 .react-datepicker__current-month {
@@ -98,10 +71,10 @@ body {
 }
 .react-datepicker__month-select,
 .react-datepicker__year-select {
-  font-family: 'Playfair Display', serif;
-  font-size: 1.125rem; 
+  font-family: theme('fontFamily.heading'); /* Use heading font */
+  font-size: 1.125rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: theme('colors.text-primary');
   background-color: transparent;
   border: none;
   padding: 0.25rem;
@@ -113,7 +86,7 @@ body {
 .react-datepicker__month-select:focus,
 .react-datepicker__year-select:focus {
   outline: none;
-  color: var(--primary);
+  color: theme('colors.primary');
 }
 .react-datepicker__navigation {
   top: 0.75rem !important;
@@ -125,19 +98,19 @@ body {
   right: 0.5rem !important;
 }
 .react-datepicker__navigation-icon::before {
-  border-color: var(--text-secondary) !important;
+  border-color: theme('colors.secondary') !important;
   border-width: 2px 2px 0 0 !important;
 }
 .react-datepicker__navigation:hover .react-datepicker__navigation-icon::before {
-  border-color: var(--primary) !important;
+  border-color: theme('colors.primary') !important;
 }
 .react-datepicker__day-name {
-  color: var(--text-secondary) !important;
+  color: theme('colors.secondary') !important;
   font-weight: 600 !important;
   margin: 0.25rem !important;
 }
 .react-datepicker__day {
-  color: var(--text-primary) !important;
+  color: theme('colors.text-primary') !important;
   border-radius: 9999px !important;
   width: 2rem;
   height: 2rem;
@@ -146,26 +119,26 @@ body {
   transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
 }
 .react-datepicker__day:hover {
-  background-color: var(--primary) !important;
-  color: var(--text-contrast) !important;
+  background-color: theme('colors.primary') !important;
+  color: theme('colors.text-contrast') !important;
   opacity: 0.7;
 }
 .react-datepicker__day--selected {
-  background-color: var(--primary) !important;
-  color: var(--text-contrast) !important;
+  background-color: theme('colors.primary') !important;
+  color: theme('colors.text-contrast') !important;
   font-weight: bold !important;
 }
 .react-datepicker__day--selected:hover {
   opacity: 1;
 }
 .react-datepicker__day--disabled {
-  color: var(--text-secondary) !important;
+  color: theme('colors.secondary') !important;
   opacity: 0.4;
   cursor: default;
 }
 .react-datepicker__day--disabled:hover {
   background-color: transparent !important;
-  color: var(--text-secondary) !important;
+  color: theme('colors.secondary') !important;
   opacity: 0.4;
 }
 .react-datepicker__day--today {
