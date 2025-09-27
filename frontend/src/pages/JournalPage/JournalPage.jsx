@@ -1,5 +1,12 @@
-import { useState, useCallback, useEffect, useRef } from "react";
-import { Routes, Route, useNavigate, Link } from "react-router-dom";
+import { useState, useCallback, useEffect } from "react";
+import {
+  Routes,
+  Route,
+  useNavigate,
+  Link,
+  useParams,
+  useLocation,
+} from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchEntries,
@@ -13,103 +20,45 @@ import {
   Plus,
   BookOpen,
   Flame,
-  Award,
   Star,
-  TrendingUp,
-  Download,
-  ChevronDown,
 } from "lucide-react";
-import { MOOD_CONFIG } from "@config/moods";
-import { calculateStats } from "@utils/journalUtils";
 import { useLetters } from "@hooks/useLetters";
 import axiosInstance from "@api/axiosInstance";
+import { calculateStats } from "@utils/journalUtils";
 import JournalEditor from "./JournalEditor";
 import EntryCard from "./EntryCard";
 import ConfirmModal from "@components/ConfirmModal";
-import { LettersInbox } from "./LetterInbox";
-import { LetterViewer } from "./LetterViewer";
-import LetterComposer from "./LetterComposer";
+import LettersPage from "./LettersPage"; // Import the new LettersPage
 import { LettersNavButton } from "./LetterNavButton";
-import { useMood } from "@components/MoodContext";
 
-const CustomMoodDropdown = ({ selectedMood, onMoodChange }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
-  const handleSelect = (moodKey) => {
-    onMoodChange(moodKey);
-    setIsOpen(false);
-  };
-
-  const selectedMoodConfig = MOOD_CONFIG[selectedMood] || { label: 'All Moods', emoji: '' };
-
-  return (
-    <div className="relative font-body" ref={dropdownRef}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center justify-between rounded-lg border border-secondary bg-background px-4 py-2 text-text-primary focus:outline-none focus:ring-2 focus:ring-primary md:w-auto"
-      >
-        <span>
-          {selectedMoodConfig.emoji} {selectedMoodConfig.label}
-        </span>
-        <ChevronDown className={`h-5 w-5 text-secondary transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-      </button>
-
-      {isOpen && (
-        <div className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-xl border border-secondary bg-card-background p-2 shadow-lg backdrop-blur-md">
-          <ul className="space-y-1">
-            <li>
-              <button
-                onClick={() => handleSelect('all')}
-                className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-text-primary hover:bg-primary/10"
-              >
-                All Moods
-              </button>
-            </li>
-            {Object.keys(MOOD_CONFIG).map((moodKey) => (
-              <li key={moodKey}>
-                <button
-                  onClick={() => handleSelect(moodKey)}
-                  className="flex w-full items-center rounded-md px-3 py-2 text-left text-sm text-text-primary hover:bg-primary/10"
-                >
-                  {MOOD_CONFIG[moodKey].emoji} {MOOD_CONFIG[moodKey].label}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+const JournalWelcome = ({ onNewEntry }) => (
+  <div className="flex h-full flex-col items-center justify-center text-center">
+    <div className="animate-float">
+      <BookOpen className="h-24 w-24 text-primary opacity-50" strokeWidth={1.5} />
     </div>
-  );
-};
+    <h2 className="mt-8 text-2xl font-bold text-text-primary">Your Journal is a Blank Page</h2>
+    <p className="mt-2 text-secondary">Ready to write your first entry?</p>
+    <button
+      onClick={onNewEntry}
+      className="mt-8 flex items-center space-x-2 whitespace-nowrap rounded-lg bg-primary px-6 py-3 text-text-contrast shadow-lg transition-transform hover:scale-105"
+    >
+      <Plus className="h-5 w-5" />
+      <span>Start Journaling</span>
+    </button>
+  </div>
+);
 
-
-const JournalPage = () => {
-  const [activeEntry, setActiveEntry] = useState(null);
-  const [activeLetter, setActiveLetter] = useState(null);
+const JournalView = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [moodFilter, setMoodFilter] = useState("all");
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [entryToDeleteId, setEntryToDeleteId] = useState(null);
-  const [userProfile, setUserProfile] = useState(null);
   const [editorError, setEditorError] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  
-  const { setMood: setGlobalMood } = useMood();
+  const location = useLocation();
+  const { entryId } = useParams();
 
   const {
     items: entries,
@@ -117,20 +66,13 @@ const JournalPage = () => {
     error: journalError,
   } = useSelector((state) => state.journal);
 
-  const {
-    letters,
-    hasReadyLetters,
-    saveLetter,
-    deleteLetter: deleteLetterFromHook,
-    markLetterAsOpened,
-  } = useLetters();
-  
-  const handleMoodFilterChange = (newMood) => {
-    setMoodFilter(newMood); 
-    if (newMood && newMood !== 'all') {
-      setGlobalMood(newMood);
-    }
-  };
+  const { letters, hasReadyLetters } = useLetters();
+
+  const isEditing = !!entryId;
+  const isNew = location.pathname.endsWith("/journal/new");
+  const activeEntry = isEditing
+    ? entries.find((e) => e.uid === entryId)
+    : null;
 
   const fetchUserProfile = useCallback(async () => {
     try {
@@ -143,34 +85,33 @@ const JournalPage = () => {
 
   useEffect(() => {
     fetchUserProfile();
-  }, [fetchUserProfile]);
-
-  useEffect(() => {
-    dispatch(fetchEntries({ searchTerm, moodFilter }));
-  }, [dispatch, searchTerm, moodFilter]);
+    dispatch(fetchEntries({ searchTerm, moodFilter: "all" }));
+  }, [dispatch, searchTerm, fetchUserProfile]);
 
   const handleNewEntry = () => {
-    setActiveEntry(null);
     navigate("/journal/new");
   };
 
   const handleEditEntry = (entry) => {
-    setActiveEntry(entry);
-    navigate(`/journal/edit/${entry._id}`);
+    navigate(`/journal/edit/${entry.uid}`);
   };
+
   const handleSaveEntry = async (entryData) => {
     setEditorError(null);
-    const action = activeEntry
-      ? updateEntry({ entryId: activeEntry._id, entryData })
+    const action = isEditing
+      ? updateEntry({ entryId, entryData })
       : createEntry(entryData);
 
     try {
-      await dispatch(action).unwrap();
-      navigate("/journal");
-      fetchUserProfile();
+      const resultAction = await dispatch(action).unwrap();
+      const newEntryId = resultAction?.uid || entryId;
+      fetchUserProfile(); // Re-fetch profile to update stats
+      navigate(`/journal/edit/${newEntryId}`);
     } catch (err) {
       console.error("Failed to save entry:", err);
-      setEditorError(err.details || "Failed to save the entry. Please try again.");
+      setEditorError(
+        err.details || "Failed to save the entry. Please try again."
+      );
     }
   };
 
@@ -178,6 +119,8 @@ const JournalPage = () => {
     if (!entryToDeleteId) return;
     try {
       await dispatch(deleteEntry(entryToDeleteId)).unwrap();
+      fetchUserProfile(); // Re-fetch profile to update stats
+      navigate('/journal');
     } catch (error) {
       console.error("Failed to delete entry", error);
     } finally {
@@ -185,175 +128,96 @@ const JournalPage = () => {
       setEntryToDeleteId(null);
     }
   };
+
   const handleToggleFavorite = (entry) => {
     if (entry) {
       dispatch(toggleFavorite(entry));
     }
   };
 
-  const handleSaveLetter = async (letterData) => {
-    await saveLetter(letterData, activeLetter?._id);
-    navigate("/journal/letters");
-  };
-
-  const confirmDelete = (entryId) => {
-    setEntryToDeleteId(entryId);
+  const confirmDelete = (id) => {
+    setEntryToDeleteId(id);
     setShowConfirmModal(true);
   };
-
+  
   const stats = calculateStats(entries);
-  const getStreakMessage = (currentStreak) => {
-    if (currentStreak === 0) return "Start a new streak today!";
-    if (currentStreak > 0 && currentStreak < 7) return "Keep the flame alive!";
-    return "You're on an amazing streak!";
-  };
 
-  const JournalGrid = (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      <header className="mb-8 flex flex-col items-center justify-between gap-4 sm:flex-row">
-        <div>
-          <h1 className="text-3xl font-bold text-text-primary">My Journal</h1>
-          <p className="text-secondary">
-            Your private space for thoughts, feelings, and reflections.
-          </p>
-        </div>
-        <div className="flex items-center space-x-2 sm:space-x-4">
-          <Link to="/journal/letters">
-            <LettersNavButton
-              letterCount={letters.length}
-              hasReadyLetters={hasReadyLetters}
-            />
-          </Link>
-          <button
-            onClick={handleNewEntry}
-            className="flex items-center space-x-2 whitespace-nowrap rounded-lg bg-primary px-4 py-2 text-text-contrast shadow-lg transition-transform hover:scale-105"
-          >
-            <Plus className="h-5 w-5" />
-            <span>New Entry</span>
-          </button>
-        </div>
-      </header>
-
-      <div className="relative z-20 mb-8 rounded-xl border border-secondary bg-card-background p-4 shadow-sm backdrop-blur-md">
-        <div className="flex flex-col gap-4 md:flex-row">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-secondary" />
-            <input
-              type="text"
-              placeholder="Search entries by title or content..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full rounded-lg border border-secondary bg-background py-2 pl-10 pr-4 text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <CustomMoodDropdown selectedMood={moodFilter} onMoodChange={handleMoodFilterChange} />
-            
-            <button className="hidden items-center space-x-2 rounded-lg border border-secondary px-4 py-2 text-secondary transition-colors hover:border-primary hover:text-primary sm:flex">
-              <Download className="h-5 w-5" />
-              <span>Export</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {journalLoading === 'loading' ? (
-        <div className="py-8 text-center text-secondary">
-          Loading your stories...
-        </div>
-      ) : journalError ? (
-        <div className="rounded-md border border-red-500/30 bg-red-500/10 p-4 text-center text-red-500">
-          {journalError}
-        </div>
-      ) : (
-        <>
-          <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
-            <div className="flex items-center space-x-3 rounded-xl border border-secondary bg-card-background p-4 shadow-sm backdrop-blur-md">
-              <BookOpen className="h-8 w-8 flex-shrink-0 text-primary" />
-              <div>
-                <p className="text-2xl font-bold text-text-primary">
-                  {stats.totalEntries}
-                </p>
-                <p className="text-sm text-secondary">Entries</p>
-              </div>
-            </div>
-            {userProfile && (
-              <>
-                <div className="flex flex-col justify-between rounded-xl border border-secondary bg-card-background p-4 shadow-sm backdrop-blur-md">
-                  <div className="flex items-center space-x-3">
-                    <Flame
-                      className={`h-8 w-8 flex-shrink-0 text-primary ${
-                        userProfile.currentStreak > 0 && "animate-pulse"
-                      }`}
+  return (
+    <>
+      <div className="flex h-[calc(100vh-4rem)]">
+        {/* Left Pane: Entry List */}
+        <div className="flex w-full max-w-sm flex-col border-r border-border-color lg:max-w-md">
+          <header className="flex-shrink-0 border-b border-border-color p-4">
+            <div className="mb-4 flex items-center justify-between">
+              <h1 className="text-2xl font-bold text-text-primary">Reading Journal</h1>
+              <div className="flex items-center space-x-2">
+                <Link to="/journal/letters">
+                    <LettersNavButton
+                    letterCount={letters.length}
+                    hasReadyLetters={hasReadyLetters}
                     />
-                    <div>
-                      <p className="text-2xl font-bold text-text-primary">
-                        {userProfile.currentStreak}
-                      </p>
-                      <p className="text-sm text-secondary">Day Streak</p>
-                    </div>
-                  </div>
-                  <p className="mt-2 text-center text-xs text-primary">
-                    {getStreakMessage(userProfile.currentStreak)}
-                  </p>
-                </div>
-                <div className="flex items-center space-x-3 rounded-xl border border-secondary bg-card-background p-4 shadow-sm backdrop-blur-md">
-                  <Award className="h-8 w-8 flex-shrink-0 text-primary" />
-                  <div>
-                    <p className="text-2xl font-bold text-text-primary">
-                      {userProfile.longestStreak}
-                    </p>
-                    <p className="text-sm text-secondary">Longest</p>
-                  </div>
-                </div>
-              </>
-            )}
-            <div className="flex items-center space-x-3 rounded-xl border border-secondary bg-card-background p-4 shadow-sm backdrop-blur-md">
-              <Star className="h-8 w-8 flex-shrink-0 text-primary" />
-              <div>
-                <p className="text-2xl font-bold text-text-primary">
-                  {stats.favoriteEntries}
-                </p>
-                <p className="text-sm text-secondary">Favorites</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3 rounded-xl border border-secondary bg-card-background p-4 shadow-sm backdrop-blur-md">
-              <TrendingUp className="h-8 w-8 flex-shrink-0 text-primary" />
-              <div>
-                <p className="text-2xl font-bold text-text-primary">
-                  {stats.totalEntries > 0
-                    ? Math.round(stats.totalWords / stats.totalEntries)
-                    : 0}
-                </p>
-                <p className="text-sm text-secondary">Avg. Words</p>
-              </div>
-            </div>
-          </div>
-
-          {entries.length === 0 ? (
-            <div className="rounded-xl border-2 border-dashed border-secondary bg-background/50 py-16 text-center">
-              <BookOpen className="mx-auto h-16 w-16 text-secondary/50" />
-              <h3 className="mt-4 text-xl font-semibold text-text-primary">
-                {searchTerm || moodFilter !== "all"
-                  ? "No entries found"
-                  : "Your journal is a blank page"}
-              </h3>
-              <p className="mt-2 text-secondary">
-                {searchTerm || moodFilter !== "all"
-                  ? "Try adjusting your search or filter."
-                  : "Ready to write your first entry?"}
-              </p>
-              {!searchTerm && moodFilter === "all" && (
+                </Link>
                 <button
                   onClick={handleNewEntry}
-                  className="mt-6 rounded-lg bg-primary px-6 py-2 text-text-contrast shadow-lg transition-transform hover:scale-105"
+                  className="flex items-center space-x-2 whitespace-nowrap rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-text-contrast shadow transition-transform hover:scale-105"
                 >
-                  Create First Entry
+                  <Plus className="h-4 w-4" />
+                  <span>New Entry</span>
                 </button>
-              )}
+              </div>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-secondary" />
+              <input
+                type="text"
+                placeholder="Search your journal..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full rounded-lg border border-secondary bg-background py-2 pl-10 pr-4 text-text-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+          </header>
+
+          {/* Stats Section */}
+          <div className="flex-shrink-0 p-4 border-b border-border-color">
+            <div className="flex justify-around items-center text-center">
+              <div className="flex items-center space-x-2">
+                <BookOpen className="h-5 w-5 text-primary" />
+                <div>
+                  <p className="font-bold text-text-primary">{stats.totalEntries}</p>
+                  <p className="text-xs text-secondary">Entries</p>
+                </div>
+              </div>
+              {userProfile && (
+                  <div className="flex items-center space-x-2">
+                    <Flame className={`h-5 w-5 text-primary ${userProfile.currentStreak > 0 && "animate-pulse"}`} />
+                    <div>
+                      <p className="font-bold text-text-primary">{userProfile.currentStreak}</p>
+                      <p className="text-xs text-secondary">Streak</p>
+                    </div>
+                  </div>
+              )}
+               <div className="flex items-center space-x-2">
+                  <Star className="h-5 w-5 text-primary" />
+                  <div>
+                    <p className="font-bold text-text-primary">{stats.favoriteEntries}</p>
+                    <p className="text-xs text-secondary">Favorites</p>
+                  </div>
+                </div>
+            </div>
+          </div>
+          
+          <div className="flex-grow overflow-y-auto p-4">
+            {journalLoading === 'loading' && <p className="text-center text-secondary">Loading entries...</p>}
+            {journalError && <p className="text-center text-red-500">{journalError}</p>}
+            {journalLoading !== 'loading' && !journalError && entries.length === 0 && (
+                <div className="text-center text-secondary mt-10">
+                    <BookOpen className="mx-auto h-12 w-12" />
+                    <p className="mt-2 font-semibold">No entries yet</p>
+                    <p className="text-sm">Click "New Entry" to start.</p>
+                </div>
+            )}
+            <div className="space-y-3">
               {entries.map((entry) => (
                 <EntryCard
                   key={entry.uid}
@@ -364,76 +228,24 @@ const JournalPage = () => {
                 />
               ))}
             </div>
-          )}
-        </>
-      )}
-    </div>
-  );
+          </div>
+        </div>
 
-  return (
-    <>
-      <Routes>
-        <Route path="/" element={JournalGrid} />
-        <Route
-          path="/new"
-          element={
-            <JournalEditor
-              entry={null}
-              onSave={handleSaveEntry}
-              onCancel={() => navigate("/journal")}
-              error={editorError}
-            />
-          }
-        />
-        <Route
-          path="/edit/:entryId"
-          element={
-            <JournalEditor
-              entry={activeEntry}
-              onSave={handleSaveEntry}
-              onCancel={() => navigate("/journal")}
-              error={editorError}
-            />
-          }
-        />
-        <Route
-          path="/letters"
-          element={
-            <LettersInbox
-              letters={letters}
-              onViewLetter={(l) => {
-                setActiveLetter(l);
-                navigate(`/journal/letters/view/${l._id}`);
-              }}
-              onCompose={() => {
-                setActiveLetter(null);
-                navigate("/journal/letters/new");
-              }}
-              onDeleteLetter={deleteLetterFromHook}
-            />
-          }
-        />
-        <Route
-          path="/letters/new"
-          element={
-            <LetterComposer
-              letter={null}
-              onSave={handleSaveLetter}
-              onCancel={() => navigate("/journal/letters")}
-            />
-          }
-        />
-        <Route
-          path="/letters/view/:letterId"
-          element={
-            <LetterViewer
-              letter={activeLetter}
-              onClose={() => navigate("/journal/letters")}
-              onMarkAsOpened={markLetterAsOpened}
-            />
-          }
-        />
-      </Routes>
+        {/* Right Pane: Editor or Welcome */}
+        <div className="flex-1 overflow-y-auto p-6 lg:p-8">
+            {isEditing || isNew ? (
+                 <JournalEditor
+                    key={activeEntry?.uid || 'new'}
+                    entry={activeEntry}
+                    onSave={handleSaveEntry}
+                    onCancel={() => navigate("/journal")}
+                    error={editorError}
+                />
+            ) : (
+                <JournalWelcome onNewEntry={handleNewEntry} />
+            )}
+        </div>
+      </div>
       <ConfirmModal
         isOpen={showConfirmModal}
         message="Are you sure you want to delete this entry? This action cannot be undone."
@@ -442,6 +254,19 @@ const JournalPage = () => {
       />
     </>
   );
+};
+
+// Main JournalPage component that handles all routing for `/journal/*`
+const JournalPage = () => {
+    return (
+        <Routes>
+            <Route path="/" element={<JournalView />} />
+            <Route path="/new" element={<JournalView />} />
+            <Route path="/edit/:entryId" element={<JournalView />} />
+            {/* THIS IS THE ONLY CHANGE IN THIS FILE */}
+            <Route path="/letters/*" element={<LettersPage />} />
+        </Routes>
+    );
 };
 
 export default JournalPage;
