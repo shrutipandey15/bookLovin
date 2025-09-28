@@ -4,8 +4,9 @@ import importlib
 
 from booklovin.core import config
 from booklovin.services.interfaces import PostService, ServiceSetup, UserService, JournalService
+from booklovin.services.interfaces import ConfessionService
 
-sub_services = ["post", "users", "journal", "letters"]
+sub_services = ["post", "users", "journal", "letters", "confessions"]
 if config.DEBUG:
     sub_services.append("test_setup")
 
@@ -13,8 +14,7 @@ if config.DEBUG:
 post: PostService
 users: UserService
 journal: JournalService
-
-
+confessions: ConfessionService
 def init(backend: str) -> ServiceSetup:
     namespace = "booklovin.services.database"
     core = importlib.import_module(f".{backend}.core", namespace)

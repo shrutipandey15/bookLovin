@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchSingleConfession } from '@redux/confessionSlice';
+import { fetchConfessionById } from '@redux/confessionSlice';
 import { X, Loader2 } from 'lucide-react';
 import { MOOD_CONFIG } from '@config/moods';
 
@@ -11,7 +11,7 @@ const SingleConfessionPage = ({ confessionId, onClose }) => {
 
   useEffect(() => {
     if (confessionId) {
-      dispatch(fetchSingleConfession(confessionId));
+      dispatch(fetchConfessionById(confessionId));
     }
   }, [dispatch, confessionId]);
 

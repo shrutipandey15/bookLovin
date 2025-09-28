@@ -5,6 +5,7 @@ from booklovin.models.post import Post
 from booklovin.models.comments import Comment
 from booklovin.models.users import User
 from booklovin.models.journals import JournalEntry, JournalEntryUpdate, Mood
+from booklovin.models.confessions import Confession, NewConfession
 from fastapi import FastAPI
 from pydantic import BaseModel
 
@@ -43,6 +44,12 @@ class PostService(Protocol):
 class UserService(Protocol):
     async def get(self, db: Any, uid: str | None = None, email: str | None = None) -> User | None: ...
     async def create(self, db: Any, user: User) -> None | UserError: ...
+
+@runtime_checkable
+class ConfessionService(Protocol):
+    async def create_confession(self, db: Any, user: User, new_confession: NewConfession) -> Confession: ...
+    async def get_all_confessions(self, db: Any) -> list[Confession]: ...
+    async def get_confession(self, db: Any, confession_id: str) -> Confession: ...
 
 
 class ServiceSetup(BaseModel):

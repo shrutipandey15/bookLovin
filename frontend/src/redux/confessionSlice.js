@@ -1,58 +1,64 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { mockConfessionApi } from '@api/confession';
+import { getConfessionsApi, createConfessionApi, getConfessionByIdApi } from '../api/confession';
 
-export const fetchConfessions = createAsyncThunk('confessions/fetchAll', async () => {
-  const response = await mockConfessionApi.fetchConfessions();
-  return response;
+export const fetchConfessions = createAsyncThunk('confessions/fetchConfessions', async () => {
+  const response = await getConfessionsApi();
+  return response.data;
 });
 
-export const createConfession = createAsyncThunk('confessions/create', async (confessionData) => {
-  const response = await mockConfessionApi.createConfession(confessionData);
-  return response;
+export const addNewConfession = createAsyncThunk('confessions/addNewConfession', async (newConfession) => {
+  const response = await createConfessionApi(newConfession);
+  return response.data;
 });
 
-export const fetchSingleConfession = createAsyncThunk('confessions/fetchOne', async (confessionId) => {
-  const response = await mockConfessionApi.fetchSingleConfession(confessionId);
-  return response;
+export const fetchConfessionById = createAsyncThunk('confessions/fetchConfessionById', async (id) => {
+  const response = await getConfessionByIdApi(id);
+  return response.data;
 });
 
 
-const confessionsSlice = createSlice({
+const initialState = {
+  confessions: [],
+  currentConfession: null,
+  status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
+  error: null,
+};
+
+const confessionSlice = createSlice({
   name: 'confessions',
-  initialState: {
-    items: [],
-    currentConfession: null, 
-    status: 'idle', 
-    error: null,
-  },
+  initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(fetchConfessions.pending, (state) => { state.status = 'loading'; })
+      .addCase(fetchConfessions.pending, (state) => {
+        state.status = 'loading';
+      })
       .addCase(fetchConfessions.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.items = action.payload;
+        state.confessions = Array.isArray(action.payload) ? action.payload : [];
       })
       .addCase(fetchConfessions.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.error.message;
       })
-      .addCase(createConfession.fulfilled, (state, action) => {
-        state.items.unshift(action.payload);
+      .addCase(addNewConfession.fulfilled, (state, action) => {
+        if (action.payload) {
+            state.confessions.push(action.payload);
+        }
       })
-      .addCase(fetchSingleConfession.pending, (state) => {
+      .addCase(fetchConfessionById.pending, (state) => {
         state.status = 'loading';
         state.currentConfession = null;
       })
-      .addCase(fetchSingleConfession.fulfilled, (state, action) => {
+      .addCase(fetchConfessionById.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.currentConfession = action.payload;
       })
-      .addCase(fetchSingleConfession.rejected, (state, action) => {
+      .addCase(fetchConfessionById.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.error.message;
       });
   },
 });
 
-export default confessionsSlice.reducer;
+export default confessionSlice.reducer;

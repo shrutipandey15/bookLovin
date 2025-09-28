@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchConfessions, createConfession } from "@redux/confessionSlice";
+import { fetchConfessions, addNewConfession } from "@redux/confessionSlice";
 import ConfessionCard from "@pages/ConfessionPage/ConfessionCard";
 import ConfessionEditor from "@pages/ConfessionPage/ConfessionEditor";
 import SingleConfessionPage from "@pages/ConfessionPage/SingleConfessionPage";
@@ -8,7 +8,7 @@ import { Plus, Tag, Drama } from "lucide-react";
 
 const ConfessionWallPage = () => {
   const dispatch = useDispatch();
-  const { items: confessions, status } = useSelector(
+  const { items: confessions = [], status } = useSelector(
     (state) => state.confessions
   );
 
@@ -23,7 +23,7 @@ const ConfessionWallPage = () => {
   }, [dispatch, status]);
 
   const handleSaveConfession = (confessionData) => {
-    dispatch(createConfession(confessionData));
+    dispatch(addNewConfession(confessionData));
     setIsEditorOpen(false);
   };
 
@@ -61,10 +61,10 @@ const ConfessionWallPage = () => {
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
         {filteredConfessions.map((confession) => (
           <ConfessionCard
-            key={confession._id}
+            key={confession.uid}
             confession={confession}
             onTagClick={setActiveTag}
-            onCardClick={() => handleCardClick(confession._id)}
+            onCardClick={() => handleCardClick(confession.uid)}
           />
         ))}
       </div>
