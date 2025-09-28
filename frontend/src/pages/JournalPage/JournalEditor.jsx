@@ -14,8 +14,8 @@ const JournalEditor = ({ entry, onSave, onCancel }) => {
 
   const textareaRef = useRef(null);
 
-  const shimmerColorDark = MOOD_CONFIG[globalMood]?.accents?.daydream.primary || '#A0522D'; // Fallback color
-  const shimmerColorLight = MOOD_CONFIG[globalMood]?.accents?.daydream.secondary || '#D2B48C'; // Fallback color
+  const shimmerColorDark = MOOD_CONFIG[globalMood]?.accents?.daydream.primary || '#A0522D';
+  const shimmerColorLight = MOOD_CONFIG[globalMood]?.accents?.daydream.secondary || '#D2B48C';
 
   const magicalInkStyle = {
     '--shimmer-color-dark': shimmerColorDark,

@@ -30,7 +30,7 @@ import EntryCard from "./EntryCard";
 import ConfirmModal from "@components/ConfirmModal";
 import LettersPage from "./LettersPage";
 import { LettersNavButton } from "./LetterNavButton";
-import '../../styles/animations.css'; // Import the new animations
+import '../../styles/animations.css';
 
 const JournalWelcome = ({ onNewEntry }) => (
   <div className="flex h-full flex-col items-center justify-center text-center">

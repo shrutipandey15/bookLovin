@@ -160,3 +160,9 @@ h1, h2, h3, h4, h5, h6 {
 .react-datepicker__triangle::after {
   display: none !important;
 }
+
+.prose-stickers img {
+  max-width: 100px;
+  display: inline-block;
+  margin: 0.5rem;
+}
