@@ -29,15 +29,16 @@ async def delete_journal_entry(request: Request, entry_id: str, user: User = Dep
     return None
 
 
-@router.put("/{entry_id}", response_model=None | UserError, response_class=APIResponse)
+@router.put("/{entry_id}", response_model=JournalEntry | UserError, response_class=APIResponse)
 async def update_journal_entry(
     request: Request, entry_id: str, entry: JournalEntryUpdate, user: User = Depends(get_from_token)
-) -> None | UserError:
+) -> JournalEntry | UserError:
     """Update an existing journal entry."""
-    result = await database.journal.update(db=request.app.state.db, user=user, entry_id=entry_id, journal_entry=entry)
+    result = await database.journal.update(db=request.app.state.db, user=user, entry_id=entry_id, journal_entry=entry)    
+
     if isinstance(result, UserError):
         return result
-    return None
+    return result
 
 
 @router.get("/", response_model=list[JournalEntry] | UserError, response_class=APIResponse)

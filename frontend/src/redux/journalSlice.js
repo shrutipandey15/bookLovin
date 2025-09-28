@@ -19,7 +19,8 @@ export const createEntry = createAsyncThunk('journal/createEntry', async (entryD
 
 export const updateEntry = createAsyncThunk('journal/updateEntry', async ({ entryId, entryData }, { rejectWithValue }) => {
   try {
-    return await journalService.updateEntry(entryId, entryData);
+    const response = await journalService.updateEntry(entryId, entryData);
+    return response;
   } catch (error) {
     return rejectWithValue(error.response.data);
   }
@@ -78,6 +79,22 @@ const journalSlice = createSlice({
       .addCase(deleteEntry.fulfilled, (state, action) => {
         const deletedEntryId = action.payload;
         state.items = state.items.filter((entry) => entry.uid !== deletedEntryId);
+      })
+
+      .addCase(updateEntry.fulfilled, (state, action) => {
+        const updatedEntry = action.payload;
+
+        if (updatedEntry && updatedEntry.uid) {
+
+          const index = state.items.findIndex(entry => entry.uid === updatedEntry.uid);
+          if (index !== -1) {
+            state.items[index] = updatedEntry;
+                      } else {
+            console.error('ERROR: Could not find the entry to update in the current state.');
+          }
+        } else {
+          console.error('ERROR: Payload from updateEntry is invalid or missing a uid.', updatedEntry);
+        }
       })
 
       .addMatcher(

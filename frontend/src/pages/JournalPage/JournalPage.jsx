@@ -28,8 +28,9 @@ import { calculateStats } from "@utils/journalUtils";
 import JournalEditor from "./JournalEditor";
 import EntryCard from "./EntryCard";
 import ConfirmModal from "@components/ConfirmModal";
-import LettersPage from "./LettersPage"; // Import the new LettersPage
+import LettersPage from "./LettersPage";
 import { LettersNavButton } from "./LetterNavButton";
+import '../../styles/animations.css'; // Import the new animations
 
 const JournalWelcome = ({ onNewEntry }) => (
   <div className="flex h-full flex-col items-center justify-center text-center">
@@ -105,7 +106,7 @@ const JournalView = () => {
     try {
       const resultAction = await dispatch(action).unwrap();
       const newEntryId = resultAction?.uid || entryId;
-      fetchUserProfile(); // Re-fetch profile to update stats
+      fetchUserProfile();
       navigate(`/journal/edit/${newEntryId}`);
     } catch (err) {
       console.error("Failed to save entry:", err);
@@ -119,7 +120,7 @@ const JournalView = () => {
     if (!entryToDeleteId) return;
     try {
       await dispatch(deleteEntry(entryToDeleteId)).unwrap();
-      fetchUserProfile(); // Re-fetch profile to update stats
+      fetchUserProfile();
       navigate('/journal');
     } catch (error) {
       console.error("Failed to delete entry", error);
@@ -141,6 +142,9 @@ const JournalView = () => {
   };
   
   const stats = calculateStats(entries);
+
+  // Sort entries once to maintain a stable order for animations
+  const sortedEntries = entries ? [...entries].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)) : [];
 
   return (
     <>
@@ -210,7 +214,7 @@ const JournalView = () => {
           <div className="flex-grow overflow-y-auto p-4">
             {journalLoading === 'loading' && <p className="text-center text-secondary">Loading entries...</p>}
             {journalError && <p className="text-center text-red-500">{journalError}</p>}
-            {journalLoading !== 'loading' && !journalError && entries.length === 0 && (
+            {journalLoading !== 'loading' && !journalError && sortedEntries.length === 0 && (
                 <div className="text-center text-secondary mt-10">
                     <BookOpen className="mx-auto h-12 w-12" />
                     <p className="mt-2 font-semibold">No entries yet</p>
@@ -218,14 +222,19 @@ const JournalView = () => {
                 </div>
             )}
             <div className="space-y-3">
-              {entries.map((entry) => (
-                <EntryCard
-                  key={entry.uid}
-                  entry={entry}
-                  onEdit={() => handleEditEntry(entry)}
-                  onDelete={() => confirmDelete(entry.uid)}
-                  onToggleFavorite={() => handleToggleFavorite(entry)}
-                />
+              {sortedEntries.map((entry, index) => (
+                <div
+                    key={entry.uid}
+                    className="flutter-in"
+                    style={{ animationDelay: `${index * 100}ms` }}
+                >
+                    <EntryCard
+                        entry={entry}
+                        onEdit={() => handleEditEntry(entry)}
+                        onDelete={() => confirmDelete(entry.uid)}
+                        onToggleFavorite={() => handleToggleFavorite(entry)}
+                    />
+                </div>
               ))}
             </div>
           </div>
@@ -256,14 +265,12 @@ const JournalView = () => {
   );
 };
 
-// Main JournalPage component that handles all routing for `/journal/*`
 const JournalPage = () => {
     return (
         <Routes>
             <Route path="/" element={<JournalView />} />
             <Route path="/new" element={<JournalView />} />
             <Route path="/edit/:entryId" element={<JournalView />} />
-            {/* THIS IS THE ONLY CHANGE IN THIS FILE */}
             <Route path="/letters/*" element={<LettersPage />} />
         </Routes>
     );

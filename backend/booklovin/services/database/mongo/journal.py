@@ -42,8 +42,7 @@ async def delete(db: Database, entry_id: str) -> None | UserError:
         return errors.NOT_FOUND
     return None
 
-
-async def update(db: Database, user: User, entry_id: str, journal_entry: JournalEntryUpdate) -> None | UserError:
+async def update(db: Database, user: User, entry_id: str, journal_entry: JournalEntryUpdate) -> JournalEntry | UserError:
     """Update an existing journal entry."""
     update_data = journal_entry.model_dump(exclude_unset=True)
     update_data["updatedAt"] = datetime.now(timezone.utc)
@@ -55,8 +54,9 @@ async def update(db: Database, user: User, entry_id: str, journal_entry: Journal
     if existing_entry_doc:
         existing_entry = JournalEntry.from_dict(existing_entry_doc)
         await trigger_new_journal_actions(db, user, existing_entry.creationTime)
-    return None
-
+        return existing_entry
+    
+    return errors.NOT_FOUND
 
 async def query(
     db: Database, user_id: str, mood: Mood | None = None, search: str | None = None, favorite: bool | None = None

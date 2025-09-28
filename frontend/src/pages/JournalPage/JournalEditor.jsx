@@ -3,7 +3,7 @@ import { Save } from "lucide-react";
 import { useAutoSave } from "@hooks/useAutoSave";
 import MoodSelectDropdown from "./MoodSelectDropdown";
 import { useMood } from "@components/MoodContext";
-import { MOOD_ENUM_TO_KEY, MOOD_KEY_TO_ENUM } from "@config/moods";
+import { MOOD_ENUM_TO_KEY, MOOD_KEY_TO_ENUM, MOOD_CONFIG } from "@config/moods";
 
 const JournalEditor = ({ entry, onSave, onCancel }) => {
   const { mood: globalMood, setMood: setGlobalMood } = useMood();
@@ -13,6 +13,14 @@ const JournalEditor = ({ entry, onSave, onCancel }) => {
   const [writingStartTime] = useState(Date.now());
 
   const textareaRef = useRef(null);
+
+  const shimmerColorDark = MOOD_CONFIG[globalMood]?.accents?.daydream.primary || '#A0522D'; // Fallback color
+  const shimmerColorLight = MOOD_CONFIG[globalMood]?.accents?.daydream.secondary || '#D2B48C'; // Fallback color
+
+  const magicalInkStyle = {
+    '--shimmer-color-dark': shimmerColorDark,
+    '--shimmer-color-light': shimmerColorLight,
+  };
 
   useEffect(() => {
     if (entry?.mood) {
@@ -117,7 +125,8 @@ const JournalEditor = ({ entry, onSave, onCancel }) => {
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Share your thoughts, feelings, favorite quotes..."
-                className="w-full flex-grow resize-none border-0 bg-transparent text-base leading-relaxed text-text-primary placeholder:text-secondary/70 focus:outline-none"
+                className="w-full flex-grow resize-none border-0 bg-transparent text-base leading-relaxed placeholder:text-secondary/70 focus:outline-none magical-ink"
+                style={magicalInkStyle}
               />
             </div>
           </div>
