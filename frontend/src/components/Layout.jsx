@@ -38,7 +38,9 @@ const Notification = ({ message }) => (
 const Layout = ({ children }) => {
   const location = useLocation();
   const noNavPages = ["/login", "/register"];
-  const showNav = !noNavPages.includes(location.pathname);
+  const token = localStorage.getItem('token');
+  const isAuthenticated = !!token;
+  const showNav = !noNavPages.includes(location.pathname) && isAuthenticated;
   const isHomePage = location.pathname === "/";
   const cozyBeigeBg = "bg-background";
 
