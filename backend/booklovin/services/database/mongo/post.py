@@ -1,6 +1,5 @@
 """Database helpers for mongo: posts"""
 
-from contextlib import suppress
 from datetime import datetime, timedelta, timezone
 from typing import Mapping, Sequence, cast
 
@@ -11,6 +10,20 @@ from booklovin.models.errors import UserError
 from booklovin.models.post import Post
 from booklovin.models.users import User
 from pymongo.asynchronous.database import AsyncDatabase as Database
+
+
+async def like(db: Database, post_id: str, user_id: str) -> None | UserError:
+    """(toggle) like a post"""
+    count = await db.likes.count_documents({"post_id": post_id, "user_id": user_id}, limit=1)
+    if count > 0:
+        await db.likes.delete_one({"post_id": post_id, "user_id": user_id})
+    else:
+        try:
+            await db.likes.insert_one({"post_id": post_id, "user_id": user_id, "liked_at": datetime.now(timezone.utc)})
+        except pymongo.errors.DuplicateKeyError:
+            # User has already liked the post
+            pass
+    return None
 
 
 async def _add_likes(db: Database, post: dict) -> dict:
@@ -104,15 +117,13 @@ async def get_popular(db: Database) -> list[Post] | UserError:
 
     return [Post.from_dict(doc) for doc in popular_post_docs]
 
+
 async def react(db: Database, post_id: str, user_id: str, reaction_type: str) -> None:
     """
     Adds, removes, or changes a user's reaction to a post.
     A user can only have one reaction per post.
     """
-    existing_reaction = await db.reactions.find_one_and_delete({
-        "post_id": post_id,
-        "user_id": user_id
-    })
+    existing_reaction = await db.reactions.find_one_and_delete({"post_id": post_id, "user_id": user_id})
 
     update_query = {}
 
@@ -129,13 +140,14 @@ async def react(db: Database, post_id: str, user_id: str, reaction_type: str) ->
         "post_id": post_id,
         "user_id": user_id,
         "reaction_type": reaction_type,
-        "reacted_at": datetime.now(timezone.utc)
+        "reacted_at": datetime.now(timezone.utc),
     }
     await db.reactions.insert_one(new_reaction_document)
-    
+
     update_query[f"reactions.{reaction_type}"] = 1
-    
+
     await db.posts.update_one({"uid": post_id}, {"$inc": update_query})
+
 
 async def add_comment(db: Database, comment: Comment) -> None | UserError:
     """Add a comment to a post.

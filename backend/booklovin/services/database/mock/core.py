@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from booklovin.core.utils import dumps, loads, red, convert_datetime_fields
 from booklovin.models.comments import Comment
 from booklovin.models.journals import JournalEntry
+from booklovin.models.letters import Letter
 from booklovin.models.post import Post
 from booklovin.models.users import User
 from booklovin.services.interfaces import ServiceSetup
@@ -38,6 +39,7 @@ class State:
     likes: dict[str, set[str]] = field(default_factory=lambda: defaultdict(set))
     journal_entries: dict[str, list[JournalEntry]] = field(default_factory=lambda: defaultdict(list))
     comments: dict[str, list] = field(default_factory=lambda: defaultdict(list))
+    letters: list[Letter] = field(default_factory=list)
 
     def debug(self):
         def _show_list(title, item):
