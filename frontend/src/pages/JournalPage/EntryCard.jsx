@@ -25,7 +25,7 @@ const EntryCard = ({ entry, onEdit, onDelete, onToggleFavorite }) => {
               <Star className={`h-5 w-5 ${entry.favorite ? 'fill-current' : ''}`} />
             </button>
             <button
-              onClick={(e) => { e.stopPropagation(); onDelete(entry._id); }}
+              onClick={(e) => { e.stopPropagation(); onDelete(entry.uid); }}
               className="rounded-md p-1 text-secondary transition-colors hover:bg-secondary/10"
             >
               <Trash2 className="h-5 w-5" />
