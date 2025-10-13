@@ -31,6 +31,7 @@ import ConfirmModal from "@components/ConfirmModal";
 import LettersPage from "./LettersPage";
 import { LettersNavButton } from "./LetterNavButton";
 import '../../styles/animations.css';
+import EntryList from './EntryList';
 
 const JournalWelcome = ({ onNewEntry }) => (
   <div className="flex h-full flex-col items-center justify-center text-center">
@@ -140,7 +141,7 @@ const JournalView = () => {
     setEntryToDeleteId(id);
     setShowConfirmModal(true);
   };
-  
+
   const stats = calculateStats(entries);
 
   // Sort entries once to maintain a stable order for animations
@@ -210,7 +211,7 @@ const JournalView = () => {
                 </div>
             </div>
           </div>
-          
+
           <div className="flex-grow overflow-y-auto p-4">
             {journalLoading === 'loading' && <p className="text-center text-secondary">Loading entries...</p>}
             {journalError && <p className="text-center text-red-500">{journalError}</p>}
@@ -221,22 +222,12 @@ const JournalView = () => {
                     <p className="text-sm">Click "New Entry" to start.</p>
                 </div>
             )}
-            <div className="space-y-3">
-              {sortedEntries.map((entry, index) => (
-                <div
-                    key={entry.uid}
-                    className="flutter-in"
-                    style={{ animationDelay: `${index * 100}ms` }}
-                >
-                    <EntryCard
-                        entry={entry}
-                        onEdit={() => handleEditEntry(entry)}
-                        onDelete={() => confirmDelete(entry.uid)}
-                        onToggleFavorite={() => handleToggleFavorite(entry)}
-                    />
-                </div>
-              ))}
-            </div>
+<EntryList
+    entries={sortedEntries}
+    onEdit={handleEditEntry}
+    onDelete={confirmDelete}
+    onToggleFavorite={handleToggleFavorite}
+/>
           </div>
         </div>
 
