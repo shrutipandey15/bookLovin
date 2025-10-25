@@ -3,17 +3,18 @@ import { getConfessionsApi, createConfessionApi, getConfessionByIdApi } from '..
 
 export const fetchConfessions = createAsyncThunk('confessions/fetchConfessions', async () => {
   const response = await getConfessionsApi();
-  return response.data;
+  console.log('DEBUG 3: Thunk Payload (returned by fetchConfessions)', response);
+  return response; 
 });
 
 export const addNewConfession = createAsyncThunk('confessions/addNewConfession', async (newConfession) => {
   const response = await createConfessionApi(newConfession);
-  return response.data;
+  return response;
 });
 
 export const fetchConfessionById = createAsyncThunk('confessions/fetchConfessionById', async (id) => {
   const response = await getConfessionByIdApi(id);
-  return response.data;
+  return response;
 });
 
 

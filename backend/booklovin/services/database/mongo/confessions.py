@@ -20,7 +20,7 @@ async def get_all(db: Any) -> list[Confession]:
 
 async def get(db: Any, confession_id: str) -> Confession | UserError:
     collection = db["confessions"]
-    doc = await collection.find_one({"id": confession_id})
+    doc = await collection.find_one({"uid": confession_id})
     if doc is None:
         return NOT_FOUND
     return Confession(**doc)

@@ -8,7 +8,7 @@ import { Plus, Tag, Drama } from "lucide-react";
 
 const ConfessionWallPage = () => {
   const dispatch = useDispatch();
-  const { items: confessions = [], status } = useSelector(
+  const { confessions: confessions = [], status } = useSelector(
     (state) => state.confessions
   );
 
