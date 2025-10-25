@@ -1,16 +1,15 @@
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { useAuth } from "@hooks/useAuth";
-import { BookHeart, Feather, MessageSquare, Book, User, LogOut, Info } from "lucide-react";
+import { useAuth } from "@context/AuthContext";
+import { BookHeart, Feather, MessageSquare, Book, User, LogOut, Info, Wand2 } from "lucide-react"; // Import Wand2
 
 const CurrentlyReading = () => {
   const book = {
     title: "The Atlas Six",
     author: "by Olivia Blake",
     progress: 67,
-    coverUrl: "https://covers.openlibrary.org/b/id/12649399-L.jpg" // Example cover
+    coverUrl: "https://covers.openlibrary.org/b/id/12649399-L.jpg"
   };
-
   return (
     <div className="bg-card-background/50 p-4 rounded-xl border border-border-color shadow-sm">
       <h3 className="font-heading text-lg font-semibold text-text-primary mb-3">Currently Reading</h3>
@@ -29,6 +28,7 @@ const CurrentlyReading = () => {
   );
 };
 
+// (ConfessionOfTheDay component remains the same)
 const ConfessionOfTheDay = () => {
     const confession = "Sometimes I judge books by their covers and I'm not sorry about it. A beautiful cover is art, and art deserves appreciation.";
     return (
@@ -40,17 +40,21 @@ const ConfessionOfTheDay = () => {
     );
 };
 
-const navLinks = [
-  { name: 'Home', path: '/', icon: BookHeart },
-  { name: 'Journal', path: '/journal', icon: Feather },
-  { name: 'Confessions', path: '/confessions', icon: MessageSquare },
-  { name: 'Books', path: '/books/search', icon: Book },
-  { name: 'Art Studio', path: '/studio/create/some-book-id', icon: User }, // Placeholder link
-];
 
 const Sidebar = () => {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, user } = useAuth();
   const navigate = useNavigate();
+
+  const navLinks = [
+    { name: 'Home', path: '/', icon: BookHeart },
+    { name: 'Journal', path: '/journal', icon: Feather },
+    { name: 'Confessions', path: '/confessions', icon: MessageSquare },
+    { name: 'Books', path: '/books/search', icon: Book },
+    { name: 'Art Studio', path: '/studio/create/some-book-id', icon: Wand2 },
+    ...(user && user.name ?
+        [{ name: 'User Profile', path: `/profile/${user.name}`, icon: User }]
+        : [])
+  ];
 
   const handleLogout = () => {
     logout();
@@ -67,8 +71,9 @@ const Sidebar = () => {
           <BookHeart className="h-8 w-8" />
           <span>BookLovin'</span>
         </NavLink>
-        
-        {isAuthenticated && (
+
+        {/* Render links only when authenticated AND user object exists */}
+        {isAuthenticated && user && (
           <nav className="flex-grow">
             <ul>
               {navLinks.map((link) => (
@@ -82,14 +87,14 @@ const Sidebar = () => {
             </ul>
           </nav>
         )}
-        
+
         <div className="mt-8">
             <CurrentlyReading />
             <ConfessionOfTheDay />
         </div>
       </div>
 
-      {isAuthenticated && (
+      {isAuthenticated && user && (
         <div className="mt-auto">
           <button onClick={handleLogout} className={`flex items-center space-x-3 p-3 rounded-lg w-full text-left transition-colors duration-200 ${inactiveLinkClass}`}>
             <LogOut size={20} />

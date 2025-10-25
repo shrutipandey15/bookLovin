@@ -1,5 +1,6 @@
 from typing import Any, Protocol, runtime_checkable
 
+from booklovin.models.profile import UserProfile
 from booklovin.models.errors import UserError
 from booklovin.models.post import Post
 from booklovin.models.comments import Comment
@@ -58,6 +59,9 @@ class ShelfService(Protocol):
     async def add_book_to_shelf(self, db: Any, user_id: str, item: ShelfItem) -> ShelfItem | UserError: ...
     async def remove_book_from_shelf(self, db: Any, user_id: str, ol_key: str) -> None | UserError: ...
 
+@runtime_checkable
+class ProfileService(Protocol):
+    async def get_profile_by_username(self, db: Any, username: str) -> UserProfile | UserError: ...
 
 class ServiceSetup(BaseModel):
     async def setup(self, app: FastAPI):

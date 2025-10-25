@@ -1,33 +1,42 @@
-// src/api/auth.js (Consider renaming from components/auth.js to api/auth.js)
+import axiosInstance from '@api/axiosInstance';
 
-import axiosInstance from "@api/axiosInstance";
+export const login = async (email, password) => {
+  const response = await axiosInstance.post('/auth/login', {
+    username: email,
+    password: password,
+  }, {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+  });
+  
+  const { access_token, user } = response.data;
+  if (access_token) {
+    localStorage.setItem('token', access_token);
+    axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+  }
+  return user;
+};
+
+export const register = async (username, email, password) => {
+  const response = await axiosInstance.post('/auth/register', {
+    username,
+    email,
+    password,
+  });
+
+  const { access_token, user } = response.data;
+  if (access_token) {
+    localStorage.setItem('token', access_token);
+    axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+  }
+  return user;
+};
 
 export const fetchCurrentUser = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-        // No need to make a request if there's no token
-        throw new Error('No token found');
-    }
+  const response = await axiosInstance.get('/auth/me');
+  return response.data;
+};
 
-    try {
-        const response = await axiosInstance.get('/auth/me', {
-            // The Authorization header is likely handled by your axiosInstance interceptor,
-            // but explicitly adding it here is fine too.
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-        return response.data;
-    } catch (error) {
-        console.error('Error fetching current user:', error);
-        
-        // Provide more specific error info if possible
-        if (error.response?.status === 401) {
-            // This is useful for handling expired tokens
-            localStorage.removeItem('token');
-            throw new Error('Unauthorized or expired token');
-        }
-        
-        throw new Error('Failed to fetch current user');
-    }
-}
+export const logout = () => {
+  localStorage.removeItem('token');
+  delete axiosInstance.defaults.headers.common['Authorization'];
+};

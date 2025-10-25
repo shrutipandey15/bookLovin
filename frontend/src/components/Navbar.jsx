@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { useAuth } from '@hooks/useAuth';
+import { useAuth } from '@context/AuthContext';
 import { BookHeart, Feather, MessageSquare, Book, User, LogOut, Sun } from 'lucide-react';
 
 const navLinks = [

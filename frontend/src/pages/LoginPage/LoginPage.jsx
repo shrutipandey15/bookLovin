@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import axiosInstance from '@api/axiosInstance';
 import { fetchCurrentUser } from '@components/auth';
 import { BookHeart, Key } from 'lucide-react';
+import { useAuth } from '@context/AuthContext';
 
 
 const LoginPage = () => {
@@ -16,6 +16,7 @@ const LoginPage = () => {
   const [isBlocked, setIsBlocked] = useState(false);
   const [blockEndTime, setBlockEndTime] = useState(null);
 
+  const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const abortControllerRef = useRef(null);
@@ -116,48 +117,27 @@ const LoginPage = () => {
       return;
     }
     setLoading(true);
-    if (abortControllerRef.current) abortControllerRef.current.abort();
-    
-    abortControllerRef.current = new AbortController();
-    try {
-      const params = new URLSearchParams();
-      params.append('username', email.trim().toLowerCase());
-      params.append('password', password);
-      const response = await axiosInstance.post('/auth/login', params, {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        signal: abortControllerRef.current.signal,
-        timeout: REQUEST_TIMEOUT,
-      });
 
-      if (!response.data?.access_token) throw new Error('Invalid response from server');
+    try {
+      await login(email, password);
       
-      localStorage.setItem('token', response.data.access_token);
       localStorage.removeItem('loginAttempts');
       localStorage.removeItem('loginBlockEnd');
       setLoginAttempts(0);
       setIsBlocked(false);
 
-      const currentUser = await fetchCurrentUser();
-      setUser(currentUser);
-      setIsLoggedIn(true);
       setPassword('');
       navigate('/');
+
     } catch (err) {
-      if (err.name === 'AbortError') {
-        setError('Request was cancelled.');
-      } else if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
-        setError('Request timed out. Please check your connection and try again.');
-      } else if (err.response?.status === 401) {
+      if (err.response?.status === 401) {
         setError('Invalid email or password.');
         handleRateLimitExceeded();
       } else if (err.response?.status === 429) {
         setError('Too many requests. Please wait before trying again.');
         handleRateLimitExceeded();
-      } else if (err.response?.status >= 500) {
-        setError('Server error. Please try again later.');
       } else {
-        const message = err.response?.data?.detail || err.response?.data?.message || 'Login failed. Please try again.';
-        setError(typeof message === 'string' ? message : 'Login failed. Please try again.');
+        setError(err.response?.data?.detail || 'Login failed. Please try again.');
       }
       clearErrorAfterDelay();
       setPassword('');
@@ -180,7 +160,6 @@ const LoginPage = () => {
     return `${remaining} minute${remaining !== 1 ? 's' : ''}`;
   };
   
-  // --- ONLY THE JSX BELOW HAS BEEN CHANGED ---
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4 font-body">
         <div className="w-full max-w-md rounded-2xl bg-card p-8 shadow-2xl">

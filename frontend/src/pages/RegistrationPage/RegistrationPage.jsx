@@ -1,24 +1,22 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axiosInstance from "@api/axiosInstance";
 import { BookHeart, Key } from "lucide-react";
+import { useAuth } from "@context/AuthContext";
 
 const RegistrationPage = () => {
-  // --- ALL OF YOUR EXISTING LOGIC IS 100% PRESERVED ---
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, _setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [_success, setSuccess] = useState(false);
-  // const [_showPassword, setShowPassword] = useState(false);
-  // const [_showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [_success, _setSuccess] = useState(false);
   const [validationErrors, setValidationErrors] = useState({});
   const [registrationAttempts, setRegistrationAttempts] = useState(0);
   const [isBlocked, setIsBlocked] = useState(false);
   const [blockEndTime, setBlockEndTime] = useState(null);
 
+  const { register } = useAuth();
   const navigate = useNavigate();
   const abortControllerRef = useRef(null);
   const timeoutRef = useRef(null);
@@ -134,6 +132,7 @@ const RegistrationPage = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    setError('');
     if (isBlocked) {
       setError("Registration is temporarily blocked.");
       return;
@@ -144,31 +143,21 @@ const RegistrationPage = () => {
       return;
     }
     setLoading(true);
-    abortControllerRef.current = new AbortController();
+
     try {
-      const requestData = {
-        username: username.trim(),
-        email: email.trim().toLowerCase(),
-        password: password,
-      };
-      await axiosInstance.post("/auth/register", requestData, {
-        signal: abortControllerRef.current.signal,
-        timeout: REQUEST_TIMEOUT,
-      });
-      setSuccess(true);
+      await register(username, email, password);
+      
       localStorage.removeItem("registrationAttempts");
       localStorage.removeItem("registrationBlockEnd");
-      redirectTimeoutRef.current = setTimeout(() => {
-        navigate("/login", {
-          state: { message: "Registration successful! Please log in." },
-        });
-      }, 3000);
+
+      navigate('/');
+
     } catch (err) {
       handleRateLimitExceeded();
       if (err.response?.status === 409) {
         setError("A tale with that Pen Name or Ravenmail already exists.");
       } else {
-        setError("The stars are misaligned. Please try again later.");
+        setError(err.response?.data?.detail || "The stars are misaligned. Please try again later.");
       }
       clearErrorAfterDelay();
     } finally {
@@ -181,14 +170,6 @@ const RegistrationPage = () => {
       setter(e.target.value);
     }
   };
-
-  // const togglePasswordVisibility = (field) => {
-  //   if (field === 'password') {
-  //     setShowPassword(current => !current);
-  //   } else {
-  //     setShowConfirmPassword(current => !current);
-  //   }
-  // };
 
   const getPasswordStrength = (p) => {
     if (!p) return { strength: 0, label: "", color: "" };

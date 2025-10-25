@@ -30,10 +30,9 @@ function App() {
               <Route path="/posts/:id" element={<SinglePostPage />} />
               <Route path="/posts/:id/edit" element={<PostEditor />} />
               <Route path="/confessions" element={<ConfessionsPage />} />
-              {/* The '/confessions/new' route is now removed */}
               <Route path="/confessions/:id" element={<SingleConfessionPage />} />
               <Route path="/books/search" element={<BookSearchPage />} />
-              <Route path="/profile/:username" element={<UserProfilePage />} />
+              <Route path="/profile/:name" element={<UserProfilePage />} />
               <Route path="/studio/create/:bookId" element={<AIStudioPage />} />
               <Route path="/journal/letters/*" element={<LettersPage />} />
             </Route>

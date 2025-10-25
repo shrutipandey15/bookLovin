@@ -1,25 +1,11 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-
-const mockProfileService = {
-  getUserProfile: async (username) => {
-    console.log(`MOCK PROFILE: Fetching profile for ${username}`);
-    await new Promise(resolve => setTimeout(resolve, 500));
-    return {
-      user: { username: 'Mock User', email: 'user@example.com', /* other profile fields */ },
-      posts: [
-          { uid: 'post1', title: 'On the nature of solitude', content: '...', author: { penName: 'Mock User' } },
-          { uid: 'post2', title: 'Feeling empowered!', content: '...', author: { penName: 'Mock User' } }
-      ],
-    };
-  }
-};
-
+import * as profileApi from '../api/profile';
 
 export const fetchUserProfile = createAsyncThunk(
   'profile/fetchUser',
   async (username, { rejectWithValue }) => {
     try {
-      const profileData = await mockProfileService.getUserProfile(username);
+      const profileData = await profileApi.getUserProfile(username);
       return profileData;
     } catch (error) {
        return rejectWithValue(error.response?.data?.detail || 'Could not fetch profile');
@@ -39,7 +25,7 @@ const profileSlice = createSlice({
     builder
       .addCase(fetchUserProfile.pending, (state) => {
         state.status = 'loading';
-        state.data = null;
+        state.data = null; 
         state.error = null;
       })
       .addCase(fetchUserProfile.fulfilled, (state, action) => {
@@ -48,7 +34,7 @@ const profileSlice = createSlice({
       })
       .addCase(fetchUserProfile.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.payload;
+        state.error = action.payload; 
       });
   },
 });
