@@ -6,6 +6,7 @@ from booklovin.models.comments import Comment
 from booklovin.models.users import User
 from booklovin.models.journals import JournalEntry, JournalEntryUpdate, Mood
 from booklovin.models.confessions import Confession, NewConfession
+from booklovin.models.books import ShelfItem
 from fastapi import FastAPI
 from pydantic import BaseModel
 
@@ -51,6 +52,11 @@ class ConfessionService(Protocol):
     async def create(self, db: Any, user: User, confession: NewConfession) -> Confession: ...
     async def get_all(self, db: Any) -> list[Confession]: ...
     async def get_one(self, db: Any, confession_id: str) -> Confession: ...
+@runtime_checkable
+class ShelfService(Protocol):
+    async def get_user_shelf(self, db: Any, user_id: str) -> list[ShelfItem]: ...
+    async def add_book_to_shelf(self, db: Any, user_id: str, item: ShelfItem) -> ShelfItem | UserError: ...
+    async def remove_book_from_shelf(self, db: Any, user_id: str, ol_key: str) -> None | UserError: ...
 
 
 class ServiceSetup(BaseModel):

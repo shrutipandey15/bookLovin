@@ -1,61 +1,115 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { mockBookService } from '@api/mockBookService'; // Import our new mock service
+import * as bookApi from '../api/books';
 
-// --- ASYNC THUNKS ---
+export const searchOpenLibrary = createAsyncThunk(
+  'books/search',
+  async ({ query, limit }, { rejectWithValue }) => {
+    try {
+      const data = await bookApi.searchBooks(query, limit);
+      return data.docs;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.detail || 'Search failed');
+    }
+  }
+);
 
-export const searchBooks = createAsyncThunk('books/search', async (query) => {
-  const results = await mockBookService.search(query);
-  return results;
-});
+export const fetchShelf = createAsyncThunk(
+  'books/fetchShelf',
+  async (_, { rejectWithValue }) => {
+    try {
+      const data = await bookApi.getShelf();
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.detail || 'Could not fetch shelf');
+    }
+  }
+);
 
-export const fetchShelves = createAsyncThunk('books/fetchShelves', async () => {
-    const shelves = await mockBookService.getShelves();
-    return shelves;
-});
+export const addBookToShelf = createAsyncThunk(
+  'books/addBookToShelf',
+  async (bookData, { rejectWithValue }) => {
+    console.log('Thunk received:', bookData);
+    try {
+      const data = await bookApi.addToShelf(bookData);
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.detail || 'Could not add book');
+    }
+  }
+);
 
-export const addBookToShelf = createAsyncThunk('books/addToShelf', async ({ book, status }) => {
-    const updatedShelves = await mockBookService.addToShelf(book, status);
-    return updatedShelves;
-});
+export const removeBookFromShelf = createAsyncThunk(
+  'books/removeBookFromShelf',
+  async (olKey, { rejectWithValue }) => {
+    try {
+      await bookApi.removeFromShelf(olKey);
+      return olKey;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.detail || 'Could not remove book');
+    }
+  }
+);
 
-// --- SLICE DEFINITION ---
 
 const booksSlice = createSlice({
   name: 'books',
   initialState: {
-    searchResults: [],
-    userShelves: [],
-    searchStatus: 'idle',
-    shelfStatus: 'idle',
+    items: [],
+    status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
     error: null,
+    searchResults: [],
+    searchStatus: 'idle',
   },
   reducers: {
     clearSearchResults: (state) => {
-        state.searchResults = [];
-    }
+      state.searchResults = [];
+      state.searchStatus = 'idle';
+    },
   },
   extraReducers: (builder) => {
     builder
-      // Search Books
-      .addCase(searchBooks.pending, (state) => {
+      .addCase(fetchShelf.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchShelf.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.items = action.payload;
+      })
+      .addCase(fetchShelf.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
+      
+      .addCase(addBookToShelf.fulfilled, (state, action) => {
+        const newItem = action.payload;
+        const existingIndex = state.items.findIndex(
+          (item) => item.ol_key === newItem.ol_key
+        );
+
+        if (existingIndex !== -1) {
+          state.items[existingIndex] = newItem;
+        } else {
+          state.items.push(newItem);
+        }
+      })
+      
+      .addCase(removeBookFromShelf.fulfilled, (state, action) => {
+        state.items = state.items.filter(
+          (item) => item.ol_key !== action.payload
+        );
+      })
+      
+      .addCase(searchOpenLibrary.pending, (state) => {
         state.searchStatus = 'loading';
       })
-      .addCase(searchBooks.fulfilled, (state, action) => {
+      .addCase(searchOpenLibrary.fulfilled, (state, action) => {
         state.searchStatus = 'succeeded';
         state.searchResults = action.payload;
       })
-      .addCase(searchBooks.rejected, (state, action) => {
+      .addCase(searchOpenLibrary.rejected, (state, action) => {
         state.searchStatus = 'failed';
-        state.error = action.error.message;
-      })
-      // Fetch and Add to Shelves
-      .addMatcher(
-        (action) => action.type === fetchShelves.fulfilled.type || action.type === addBookToShelf.fulfilled.type,
-        (state, action) => {
-            state.shelfStatus = 'succeeded';
-            state.userShelves = action.payload;
-        }
-      )
+        state.error = action.payload;
+      });
   },
 });
 

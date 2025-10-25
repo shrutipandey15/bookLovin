@@ -1,30 +1,26 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { mockBookService } from '@api/mockBookService';
-
-// --- ASYNC THUNKS (No changes here) ---
+import { mockCreationsService } from '@api/aiCreationmock';
 
 export const generateImage = createAsyncThunk('creations/generateImage', async (prompt) => {
-  const data = await mockBookService.generateAiImage(prompt);
+  const data = await mockCreationsService.generateAiImage(prompt);
   return data.imageUrl;
 });
 
 export const saveCreation = createAsyncThunk('creations/saveCreation', async (creationData) => {
-    return await mockBookService.saveCreationToPrivateCollection(creationData);
+    return await mockCreationsService.saveCreationToPrivateCollection(creationData);
 });
 
 export const fetchPrivateCreations = createAsyncThunk('creations/fetchPrivate', async () => {
-    return await mockBookService.getPrivateCreations();
+    return await mockCreationsService.getPrivateCreations();
 });
-
-// --- SLICE DEFINITION ---
 
 const creationsSlice = createSlice({
   name: 'creations',
   initialState: {
     privateCreations: [],
     generatedImageUrl: null,
-    status: 'idle', // This is for the AI image generation
-    fetchStatus: 'idle', // MODIFIED: Added a new status for fetching creations
+    status: 'idle', 
+    fetchStatus: 'idle', 
     error: null,
   },
   reducers: {
@@ -36,7 +32,6 @@ const creationsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Image Generation (No changes here)
       .addCase(generateImage.pending, (state) => {
         state.status = 'generating';
         state.generatedImageUrl = null;
@@ -49,10 +44,8 @@ const creationsSlice = createSlice({
         state.status = 'failed';
         state.error = action.error.message;
       })
-      // MODIFIED: Updated saving and fetching logic to use the new fetchStatus
       .addCase(saveCreation.fulfilled, (state, action) => {
         state.privateCreations.unshift(action.payload);
-        // If we add a creation, we can consider the list successfully loaded
         state.fetchStatus = 'succeeded';
       })
       .addCase(fetchPrivateCreations.pending, (state) => {
