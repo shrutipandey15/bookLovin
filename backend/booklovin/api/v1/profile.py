@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Depends, Request, HTTPException
+from fastapi import APIRouter, Depends, Request, HTTPException, status
 from booklovin.core.config import APIResponse
-from booklovin.models.profile import UserProfile
+from booklovin.models.profile import UserProfile, UpdateQuoteRequest
 from booklovin.models.errors import UserError
 from booklovin.models.users import User
 from booklovin.services import database
@@ -22,4 +22,19 @@ async def get_user_profile(
     if isinstance(result, UserError):
         raise HTTPException(status_code=404, detail=result.message)
     
+    return result
+
+@router.put("/me/quote", response_model=User, response_class=APIResponse)
+async def set_favorite_quote(
+    request: Request,
+    quote_data: UpdateQuoteRequest,
+    user: User = Depends(get_from_token)
+) -> User | UserError:
+    """Update the favorite quote for the authenticated user."""
+    db = request.app.state.db
+    result = await database.profile.update_user_quote(db, user.uid, quote_data.quote)
+
+    if isinstance(result, UserError):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=result.message)
+
     return result

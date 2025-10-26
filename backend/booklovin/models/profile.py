@@ -8,9 +8,13 @@ class UserPublic(BaseModel):
     uid: str
     username: str
     email: str
-    bio: Optional[str] = None 
+    bio: Optional[str] = None
+    favorite_quote: Optional[str] = None
 
 class UserProfile(FlexModel):
     """The complete data for a user's profile page."""
     user: UserPublic
     posts: List[Post]
+
+class UpdateQuoteRequest(BaseModel):
+    quote: str

@@ -2,22 +2,27 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchShelf, removeBookFromShelf } from "@redux/booksSlice";
-import { fetchUserProfile } from "@redux/profileSlice";
+import { fetchUserProfile, updateProfileQuote } from "@redux/profileSlice";
+import { updateUserQuote } from "@api/profile";
 import { fetchPrivateCreations } from "@redux/creationsSlice";
 import { createPost } from "@redux/postsSlice";
 import {
-  User,
-  BookOpenCheck,
-  MessageSquare,
-  Loader,
-  Image,
-  Wand2,
-  X,
-  Trash2,
-  BookUser,
+    User,
+    BookOpenCheck,
+    MessageSquare,
+    Loader,
+    Image,
+    Wand2,
+    X,
+    Trash2,
+    BookUser,
+    Quote,
+    Edit3,
+    Save
 } from "lucide-react";
 import PostCard from "@components/PostCard";
 import { useNotification } from "@components/Layout";
+import { useAuth } from '@context/AuthContext';
 
 const PostCreationModal = ({ creation, onClose, onShare }) => {
   const [caption, setCaption] = useState("");
@@ -113,7 +118,6 @@ const ShelfBookCard = ({ shelfItem }) => {
         alt={shelfItem.title}
         className="w-full h-48 object-cover rounded-md shadow-lg mb-2"
       />
-      {/* Overlay for actions on hover */}
       <div className="absolute inset-2 bg-black/70 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-md gap-2">
         <Link
           to={studioLink}
@@ -132,7 +136,6 @@ const ShelfBookCard = ({ shelfItem }) => {
           <span className="font-semibold text-xs">Remove</span>
         </button>
       </div>
-      {/* Book Info (visible normally) */}
       <div className="group-hover:opacity-0 transition-opacity">
         <h3
           className="mt-1 font-semibold text-sm text-text-primary truncate"
@@ -152,9 +155,17 @@ const UserProfilePage = () => {
   const { name } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { showNotification } = useNotification();
+
+  const { user: currentUser } = useAuth();
+
   const [activeTab, setActiveTab] = useState("shelves");
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [creationToPost, setCreationToPost] = useState(null);
+
+  const [isEditingQuote, setIsEditingQuote] = useState(false);
+  const [quoteInput, setQuoteInput] = useState('');
+  const [isSavingQuote, setIsSavingQuote] = useState(false);
 
   const {
     data: profile,
@@ -169,22 +180,53 @@ const UserProfilePage = () => {
     error: shelfError,
   } = useSelector((state) => state.books);
 
-  // Creations state (still mock)
   const { privateCreations, fetchStatus: creationsFetchStatus } = useSelector(
     (state) => state.creations
   );
 
   useEffect(() => {
-    if (name && profileStatus === "idle") {
-      dispatch(fetchUserProfile(name));
+    if (name && (profileStatus === 'idle' || profile?.user?.username !== name)) {
+        dispatch(fetchUserProfile(name));
     }
-    if (shelfStatus === "idle") {
-      dispatch(fetchShelf());
+    if (shelfStatus === 'idle') {
+        dispatch(fetchShelf());
     }
-    if (creationsFetchStatus === "idle") {
-      dispatch(fetchPrivateCreations());
+    if (creationsFetchStatus === 'idle') {
+        dispatch(fetchPrivateCreations());
     }
-  }, [dispatch, name, profileStatus, shelfStatus, creationsFetchStatus]);
+  }, [dispatch, name, profileStatus, shelfStatus, creationsFetchStatus, profile]);
+
+
+   useEffect(() => {
+      if (user?.favorite_quote) {
+          setQuoteInput(user.favorite_quote);
+      } else {
+           setQuoteInput('');
+      }
+  }, [user?.favorite_quote]);
+
+
+  const handleSaveQuote = async () => {
+      if (isSavingQuote) return;
+      setIsSavingQuote(true);
+      try {
+          const updatedUserData = await updateUserQuote(quoteInput);
+          dispatch(updateProfileQuote(updatedUserData.favorite_quote));
+          showNotification("Favorite quote updated!");
+          setIsEditingQuote(false);
+
+          if (profile && profile.user) {
+            profile.user.favorite_quote = updatedUserData.favorite_quote;
+          }
+      } catch (error) {
+          console.error("Failed to save quote:", error);
+          showNotification("Failed to save quote.", "error");
+      } finally {
+          setIsSavingQuote(false);
+      }
+  };
+
+  const isOwner = currentUser?.name === name;
 
   const handleOpenPostModal = (creation) => {
     setCreationToPost(creation);
@@ -210,7 +252,7 @@ const UserProfilePage = () => {
     );
   }
 
-  if (profileStatus === "failed" || !profile) {
+  if (profileStatus === "failed" || !profile || !user) {
     return (
       <div className="text-center text-red-500 py-10">
         Could not load profile. {profileError}
@@ -222,6 +264,7 @@ const UserProfilePage = () => {
   const readShelf = shelfItems.filter((s) => s.status === "read");
   const wantToReadShelf = shelfItems.filter((s) => s.status === "want_to_read");
 
+
   return (
     <>
       {isPostModalOpen && (
@@ -232,37 +275,84 @@ const UserProfilePage = () => {
         />
       )}
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 font-body">
-        {/* --- 3. HEADER USES REAL DATA --- */}
-        <header className="mb-10 flex flex-col items-center text-center">
+        <header className="mb-10 flex flex-col items-center text-center relative">
           <div className="w-28 h-28 rounded-full bg-primary/20 flex items-center justify-center mb-4">
             <User className="w-16 h-16 text-primary" />
           </div>
-          {/* Use real user.username */}
           <h1 className="text-5xl font-bold text-primary">
             {user.username || "Book Lover"}
           </h1>
-          {/* Use real user.bio */}
           <p className="mt-2 text-secondary max-w-xl">
             {user.bio || "Avid reader exploring worlds between pages."}
           </p>
+
+          <div className="mt-6 w-full max-w-2xl px-4 py-3 bg-card-background/50 border border-border-color rounded-lg shadow-sm relative group">
+              {isEditingQuote ? (
+                  <>
+                      <textarea
+                          value={quoteInput}
+                          onChange={(e) => setQuoteInput(e.target.value)}
+                          placeholder="Enter your favorite quote..."
+                          className="w-full h-20 bg-background border border-secondary rounded-md p-2 text-text-primary focus:outline-none focus:ring-1 focus:ring-primary text-sm italic mb-2"
+                          maxLength={250}
+                      />
+                      <div className="flex justify-end gap-2">
+                          <button
+                              onClick={() => { setIsEditingQuote(false); setQuoteInput(user.favorite_quote || ''); }} // Reset on cancel
+                              className="text-xs px-3 py-1 rounded text-secondary hover:bg-secondary/20"
+                              disabled={isSavingQuote}
+                          >
+                              Cancel
+                          </button>
+                          <button
+                              onClick={handleSaveQuote}
+                              className="text-xs px-3 py-1 rounded bg-primary text-text-contrast hover:opacity-90 flex items-center gap-1 disabled:opacity-50"
+                              disabled={isSavingQuote}
+                          >
+                              {isSavingQuote ? <Loader size={14} className="animate-spin"/> : <Save size={14}/>}
+                              Save
+                          </button>
+                      </div>
+                  </>
+              ) : (
+                  <>
+                      {user.favorite_quote ? (
+                          <p className="text-text-primary/90 italic text-center">
+                             <Quote size={16} className="inline mr-1 text-secondary opacity-50 transform -scale-x-100"/>
+                             {user.favorite_quote}
+                             <Quote size={16} className="inline ml-1 text-secondary opacity-50"/>
+                          </p>
+                      ) : (
+                          <p className="text-secondary italic text-center text-sm">
+                              {isOwner ? "Add your favorite quote..." : "No favorite quote set."}
+                          </p>
+                      )}
+                      {isOwner && (
+                          <button
+                              onClick={() => setIsEditingQuote(true)}
+                              className="absolute top-2 right-2 p-1 text-secondary opacity-0 group-hover:opacity-100 hover:text-primary transition-opacity duration-200"
+                              title="Edit Quote"
+                          >
+                              <Edit3 size={16}/>
+                          </button>
+                      )}
+                  </>
+              )}
+          </div>
         </header>
 
         <div className="mb-8 flex justify-center border-b border-secondary">
-          <button onClick={() => setActiveTab("shelves")} className={`...`}>
-            <BookOpenCheck size={18} /> Bookshelves ({shelfItems.length}){" "}
-            {/* (Real) */}
+          <button onClick={() => setActiveTab("shelves")} className={`px-6 py-3 text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "shelves" ? "border-b-2 border-primary text-primary" : "text-secondary hover:text-primary"}`}>
+              <BookOpenCheck size={18} /> Bookshelves ({shelfItems.length})
           </button>
-          <button onClick={() => setActiveTab("posts")} className={`...`}>
-            <MessageSquare size={18} /> Showcase ({posts.length}){" "}
-            {/* Use real posts.length */}
+          <button onClick={() => setActiveTab("posts")} className={`px-6 py-3 text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "posts" ? "border-b-2 border-primary text-primary" : "text-secondary hover:text-primary"}`}>
+              <MessageSquare size={18} /> Showcase ({posts.length})
           </button>
-          <button onClick={() => setActiveTab("creations")} className={`...`}>
-            <Wand2 size={18} /> My Creations ({privateCreations.length}){" "}
-            {/* (Mock) */}
+          <button onClick={() => setActiveTab("creations")} className={`px-6 py-3 text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "creations" ? "border-b-2 border-primary text-primary" : "text-secondary hover:text-primary"}`}>
+              <Wand2 size={18} /> My Creations ({privateCreations.length})
           </button>
         </div>
 
-        {/* Tab Content */}
         <div>
           {activeTab === "shelves" && (
             <div className="space-y-10">
@@ -288,14 +378,12 @@ const UserProfilePage = () => {
                   </Link>
                 </div>
               )}
-
               {/* Currently Reading Shelf */}
               {shelfStatus === "succeeded" && readingShelf.length > 0 && (
                 <div>
                   <h3 className="text-2xl font-bold text-primary mb-4">
                     Currently Reading ({readingShelf.length})
                   </h3>
-                  {/* Horizontal scrolling container */}
                   <div className="flex space-x-4 overflow-x-auto pb-4">
                     {readingShelf.map((item) => (
                       <ShelfBookCard key={item.uid} shelfItem={item} />
@@ -303,14 +391,12 @@ const UserProfilePage = () => {
                   </div>
                 </div>
               )}
-
               {/* Want to Read Shelf */}
               {shelfStatus === "succeeded" && wantToReadShelf.length > 0 && (
                 <div>
                   <h3 className="text-2xl font-bold text-primary mb-4">
                     Want to Read ({wantToReadShelf.length})
                   </h3>
-                  {/* Horizontal scrolling container */}
                   <div className="flex space-x-4 overflow-x-auto pb-4">
                     {wantToReadShelf.map((item) => (
                       <ShelfBookCard key={item.uid} shelfItem={item} />
@@ -318,14 +404,12 @@ const UserProfilePage = () => {
                   </div>
                 </div>
               )}
-
               {/* Read Shelf */}
               {shelfStatus === "succeeded" && readShelf.length > 0 && (
                 <div>
                   <h3 className="text-2xl font-bold text-primary mb-4">
                     Read ({readShelf.length})
                   </h3>
-                  {/* Horizontal scrolling container */}
                   <div className="flex space-x-4 overflow-x-auto pb-4">
                     {readShelf.map((item) => (
                       <ShelfBookCard key={item.uid} shelfItem={item} />
@@ -336,11 +420,9 @@ const UserProfilePage = () => {
             </div>
           )}
 
-          {/* Posts Tab (no change) */}
           {activeTab === "posts" && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {posts.length > 0 ? (
-                // Use real 'posts' array
                 posts.map((p) => <PostCard key={p.uid} post={p} />)
               ) : (
                 <p className="col-span-full text-center text-secondary py-10">
@@ -350,7 +432,6 @@ const UserProfilePage = () => {
             </div>
           )}
 
-          {/* Creations Tab (no change) */}
           {activeTab === "creations" && (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {creationsFetchStatus === "loading" && (
@@ -367,10 +448,10 @@ const UserProfilePage = () => {
                     />
                   ))
                 : creationsFetchStatus !== "loading" && (
-                    <p className="col-span-full text-center text-secondary py-10">
+                   <p className="col-span-full text-center text-secondary py-10">
                       Your generated art will be saved here.
-                    </p>
-                  )}
+                   </p>
+                 )}
             </div>
           )}
         </div>

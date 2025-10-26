@@ -20,8 +20,14 @@ const profileSlice = createSlice({
     status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
     error: null,
   },
-  reducers: {},
-  extraReducers: (builder) => {
+reducers: {
+    updateProfileQuote: (state, action) => {
+      if (state.data && state.data.user) {
+        state.data.user.favorite_quote = action.payload;
+      }
+    },
+  },
+    extraReducers: (builder) => {
     builder
       .addCase(fetchUserProfile.pending, (state) => {
         state.status = 'loading';
@@ -38,5 +44,7 @@ const profileSlice = createSlice({
       });
   },
 });
+
+export const { updateProfileQuote } = profileSlice.actions;
 
 export default profileSlice.reducer;

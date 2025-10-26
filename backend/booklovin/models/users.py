@@ -47,6 +47,7 @@ class User(FlexModel):
     currentStreak: int = 0
     longestStreak: int = 0
     currentStreakStart: Optional[datetime] = None
+    favorite_quote: Optional[str] = None
 
     @field_serializer("creationTime")
     def to_json_creationTime(self, v: datetime, _) -> float:

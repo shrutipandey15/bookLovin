@@ -1,7 +1,7 @@
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@context/AuthContext";
-import { BookHeart, Feather, MessageSquare, Book, User, LogOut, Info, Wand2 } from "lucide-react"; // Import Wand2
+import { BookHeart, Feather, MessageSquare, Book, User, LogOut, Info, Wand2 } from "lucide-react";
 
 const CurrentlyReading = () => {
   const book = {
@@ -28,7 +28,6 @@ const CurrentlyReading = () => {
   );
 };
 
-// (ConfessionOfTheDay component remains the same)
 const ConfessionOfTheDay = () => {
     const confession = "Sometimes I judge books by their covers and I'm not sorry about it. A beautiful cover is art, and art deserves appreciation.";
     return (

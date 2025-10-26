@@ -62,6 +62,7 @@ class ShelfService(Protocol):
 @runtime_checkable
 class ProfileService(Protocol):
     async def get_profile_by_username(self, db: Any, username: str) -> UserProfile | UserError: ...
+    async def update_user_quote(self, db: Any, user_id: str, quote: str) -> User | UserError: ...
 
 class ServiceSetup(BaseModel):
     async def setup(self, app: FastAPI):
