@@ -1,4 +1,4 @@
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable, List
 
 from booklovin.models.profile import UserProfile
 from booklovin.models.errors import UserError
@@ -63,6 +63,8 @@ class ShelfService(Protocol):
 class ProfileService(Protocol):
     async def get_profile_by_username(self, db: Any, username: str) -> UserProfile | UserError: ...
     async def update_user_quote(self, db: Any, user_id: str, quote: str) -> User | UserError: ...
+    async def update_user_genres(self, db: Any, user_id: str, genres: List[str]) -> User | UserError: ...
+    async def update_user_goal(self, db: Any, user_id: str, year: int, count: int) -> User | UserError: ...
 
 class ServiceSetup(BaseModel):
     async def setup(self, app: FastAPI):

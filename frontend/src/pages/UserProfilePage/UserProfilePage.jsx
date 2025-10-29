@@ -3,25 +3,16 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchShelf, removeBookFromShelf } from "@redux/booksSlice";
 import { fetchUserProfile, updateProfileQuote } from "@redux/profileSlice";
-import { updateUserQuote } from "@api/profile";
+import { updateUserQuote, updateUserGenres, updateUserGoal } from "@api/profile";
 import { fetchPrivateCreations } from "@redux/creationsSlice";
 import { createPost } from "@redux/postsSlice";
 import {
-    User,
-    BookOpenCheck,
-    MessageSquare,
-    Loader,
-    Image,
-    Wand2,
-    X,
-    Trash2,
-    BookUser,
-    Quote,
-    Edit3,
-    Save
+    User, BookOpenCheck, MessageSquare, Loader, Image, Wand2, X, Trash2, BookUser,
+    Quote, Edit3, Save, BookMarked, StickyNote, PenSquare, Users,
+    Tag, Target, Award, Sparkles
 } from "lucide-react";
 import PostCard from "@components/PostCard";
-import { useNotification } from "@components/Layout";
+import { useNotification } from '@components/Layout';
 import { useAuth } from '@context/AuthContext';
 
 const PostCreationModal = ({ creation, onClose, onShare }) => {
@@ -156,7 +147,6 @@ const UserProfilePage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { showNotification } = useNotification();
-
   const { user: currentUser } = useAuth();
 
   const [activeTab, setActiveTab] = useState("shelves");
@@ -167,62 +157,101 @@ const UserProfilePage = () => {
   const [quoteInput, setQuoteInput] = useState('');
   const [isSavingQuote, setIsSavingQuote] = useState(false);
 
-  const {
-    data: profile,
-    status: profileStatus,
-    error: profileError,
-  } = useSelector((state) => state.profile);
+  const [isEditingGenres, setIsEditingGenres] = useState(false);
+  const [genresInput, setGenresInput] = useState('');
+  const [isSavingGenres, setIsSavingGenres] = useState(false);
+  const [isEditingGoal, setIsEditingGoal] = useState(false);
+  const [goalYearInput, setGoalYearInput] = useState(new Date().getFullYear());
+  const [goalCountInput, setGoalCountInput] = useState('');
+  const [isSavingGoal, setIsSavingGoal] = useState(false);
+
+  const { data: profile, status: profileStatus, error: profileError } = useSelector((state) => state.profile);
   const { user, posts } = profile || { user: {}, posts: [] };
-
-  const {
-    items: shelfItems,
-    status: shelfStatus,
-    error: shelfError,
-  } = useSelector((state) => state.books);
-
-  const { privateCreations, fetchStatus: creationsFetchStatus } = useSelector(
-    (state) => state.creations
-  );
+  const { items: shelfItems, status: shelfStatus, error: shelfError } = useSelector((state) => state.books);
+  const { privateCreations, fetchStatus: creationsFetchStatus } = useSelector((state) => state.creations);
 
   useEffect(() => {
     if (name && (profileStatus === 'idle' || profile?.user?.username !== name)) {
         dispatch(fetchUserProfile(name));
     }
-    if (shelfStatus === 'idle') {
-        dispatch(fetchShelf());
-    }
-    if (creationsFetchStatus === 'idle') {
-        dispatch(fetchPrivateCreations());
-    }
+    if (shelfStatus === 'idle') { dispatch(fetchShelf()); }
+    if (creationsFetchStatus === 'idle') { dispatch(fetchPrivateCreations()); }
   }, [dispatch, name, profileStatus, shelfStatus, creationsFetchStatus, profile]);
 
-
-   useEffect(() => {
-      if (user?.favorite_quote) {
-          setQuoteInput(user.favorite_quote);
-      } else {
-           setQuoteInput('');
-      }
+  useEffect(() => {
+    setQuoteInput(user?.favorite_quote || '');
   }, [user?.favorite_quote]);
 
+  useEffect(() => {
+      setGenresInput(user?.reading_personality?.favorite_genres?.join(', ') || '');
+      setGoalYearInput(user?.reading_personality?.reading_goal_year || new Date().getFullYear());
+      setGoalCountInput(user?.reading_personality?.reading_goal_count?.toString() || '');
+  }, [user?.reading_personality]);
 
   const handleSaveQuote = async () => {
-      if (isSavingQuote) return;
-      setIsSavingQuote(true);
-      try {
-          const updatedUserData = await updateUserQuote(quoteInput);
-          dispatch(updateProfileQuote(updatedUserData.favorite_quote));
-          showNotification("Favorite quote updated!");
-          setIsEditingQuote(false);
+    if (isSavingQuote) return;
+    setIsSavingQuote(true);
+    try {
+        const updatedUserData = await updateUserQuote(quoteInput);
+        dispatch(updateProfileQuote(updatedUserData.favorite_quote));
+        showNotification("Favorite quote updated!");
+        setIsEditingQuote(false);
+    } catch (error) {
+        console.error("Failed to save quote:", error);
+        showNotification(`Failed to save quote: ${error.message || 'Unknown error'}`, "error");
+    } finally {
+        setIsSavingQuote(false);
+    }
+  };
 
-          if (profile && profile.user) {
-            profile.user.favorite_quote = updatedUserData.favorite_quote;
+  const handleSaveGenres = async () => {
+      if (isSavingGenres) return;
+      setIsSavingGenres(true);
+      try {
+          const genresArray = genresInput.split(',').map(g => g.trim()).filter(g => g !== '');
+          const updatedUserData = await updateUserGenres(genresArray);
+          if (profile && profile.user && profile.user.reading_personality) {
+              const newReadingPersonality = { ...profile.user.reading_personality, favorite_genres: updatedUserData.favorite_genres || [] };
+              const newUser = { ...profile.user, reading_personality: newReadingPersonality };
+              dispatch(fetchUserProfile.fulfilled({ ...profile, user: newUser }, 'updateGenres', name)); // Pass args if needed
           }
+          showNotification("Favorite genres updated!");
+          setIsEditingGenres(false);
       } catch (error) {
-          console.error("Failed to save quote:", error);
-          showNotification("Failed to save quote.", "error");
+          console.error("Failed to save genres:", error);
+          showNotification("Failed to save genres.", "error");
       } finally {
-          setIsSavingQuote(false);
+          setIsSavingGenres(false);
+      }
+  };
+
+  const handleSaveGoal = async () => {
+      if (isSavingGoal) return;
+      const year = parseInt(goalYearInput);
+      const count = parseInt(goalCountInput);
+      if (isNaN(year) || isNaN(count) || count <= 0) {
+          showNotification("Please enter a valid year and a positive number for the goal count.", "error");
+          return;
+      }
+      setIsSavingGoal(true);
+      try {
+          const updatedUserData = await updateUserGoal(year, count);
+          if (profile && profile.user && profile.user.reading_personality) {
+              const newReadingPersonality = {
+                  ...profile.user.reading_personality,
+                  reading_goal_year: updatedUserData.reading_goal_year,
+                  reading_goal_count: updatedUserData.reading_goal_count
+              };
+              const newUser = { ...profile.user, reading_personality: newReadingPersonality };
+              dispatch(fetchUserProfile.fulfilled({ ...profile, user: newUser }, 'updateGoal', name)); // Pass args if needed
+          }
+          showNotification("Reading goal updated!");
+          setIsEditingGoal(false);
+      } catch (error) {
+          console.error("Failed to save goal:", error);
+          showNotification("Failed to save reading goal.", "error");
+      } finally {
+          setIsSavingGoal(false);
       }
   };
 
@@ -238,7 +267,7 @@ const UserProfilePage = () => {
       caption_text: captionText,
       mediaUrl: creationToPost.imageUrl,
       bookId: creationToPost.bookId || "unknown",
-      moodKey: "empowered",
+      moodKey: "empowered", // Still hardcoded, might remove later
     };
     dispatch(createPost(newPost));
     navigate("/posts");
@@ -263,6 +292,11 @@ const UserProfilePage = () => {
   const readingShelf = shelfItems.filter((s) => s.status === "reading");
   const readShelf = shelfItems.filter((s) => s.status === "read");
   const wantToReadShelf = shelfItems.filter((s) => s.status === "want_to_read");
+  const stats = user.stats || { books_read_count: 0, journal_entries_count: 0, posts_count: 0, followers_count: 0 };
+  const personality = user.reading_personality || { favorite_genres: [], reading_goal_year: null, reading_goal_count: null, literary_archetype: null };
+  const goalProgress = (personality.reading_goal_count && stats.books_read_count)
+                       ? Math.min(100, Math.round((stats.books_read_count / personality.reading_goal_count) * 100))
+                       : 0;
 
 
   return (
@@ -275,7 +309,9 @@ const UserProfilePage = () => {
         />
       )}
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 font-body">
-        <header className="mb-10 flex flex-col items-center text-center relative">
+        
+        {/* --- HEADER --- */}
+        <header className="mb-6 flex flex-col items-center text-center relative">
           <div className="w-28 h-28 rounded-full bg-primary/20 flex items-center justify-center mb-4">
             <User className="w-16 h-16 text-primary" />
           </div>
@@ -341,6 +377,102 @@ const UserProfilePage = () => {
           </div>
         </header>
 
+        {/* --- STATS ROW --- */}
+        <div className="mb-10 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center border-y border-border-color py-4">
+            <div className="flex flex-col items-center">
+                <BookMarked className="h-6 w-6 text-primary mb-1"/>
+                <span className="text-xl font-bold text-text-primary">{stats.books_read_count}</span>
+                <span className="text-xs text-secondary uppercase tracking-wider">Books Read</span>
+            </div>
+            <div className="flex flex-col items-center">
+                <StickyNote className="h-6 w-6 text-primary mb-1"/>
+                <span className="text-xl font-bold text-text-primary">{stats.journal_entries_count}</span>
+                <span className="text-xs text-secondary uppercase tracking-wider">Journal Entries</span>
+            </div>
+            <div className="flex flex-col items-center">
+                <PenSquare className="h-6 w-6 text-primary mb-1"/>
+                <span className="text-xl font-bold text-text-primary">{stats.posts_count}</span>
+                <span className="text-xs text-secondary uppercase tracking-wider">Posts</span>
+            </div>
+             <div className="flex flex-col items-center">
+                <Users className="h-6 w-6 text-primary mb-1"/>
+                <span className="text-xl font-bold text-text-primary">{stats.followers_count}</span>
+                <span className="text-xs text-secondary uppercase tracking-wider">Followers</span>
+            </div>
+        </div>
+
+        {/* --- READING PERSONALITY SECTION --- */}
+        <section className="mb-10 p-6 bg-card-background/30 border border-border-color rounded-lg shadow-sm">
+            <h2 className="text-2xl font-bold text-primary mb-6 text-center">Reading Personality</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+
+                {/* Left Column: Genres & Goal */}
+                <div className="space-y-6">
+                    {/* Favorite Genres */}
+                     <div className="relative group">
+                        <h3 className="text-lg font-semibold text-text-primary mb-2 flex items-center gap-2"><Tag size={18}/> Favorite Genres</h3>
+                        {isEditingGenres ? (
+                            <div className="space-y-2">
+                                <input type="text" value={genresInput} onChange={(e) => setGenresInput(e.target.value)} placeholder="e.g., Fantasy, Sci-Fi, Mystery" className="w-full bg-background border border-secondary rounded-md p-2 text-text-primary focus:outline-none focus:ring-1 focus:ring-primary text-sm"/>
+                                <p className="text-xs text-secondary">Separate genres with commas.</p>
+                                <div className="flex justify-end gap-2">
+                                    <button onClick={() => { setIsEditingGenres(false); setGenresInput(personality.favorite_genres?.join(', ') || ''); }} className="text-xs px-3 py-1 rounded text-secondary hover:bg-secondary/20" disabled={isSavingGenres}>Cancel</button>
+                                    <button onClick={handleSaveGenres} className="text-xs px-3 py-1 rounded bg-primary text-text-contrast hover:opacity-90 flex items-center gap-1 disabled:opacity-50" disabled={isSavingGenres}> {isSavingGenres ? <Loader size={14} className="animate-spin"/> : <Save size={14}/>} Save Genres </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="flex flex-wrap gap-2">
+                                {personality.favorite_genres && personality.favorite_genres.length > 0 ? (
+                                    personality.favorite_genres.map((genre, index) => (<span key={index} className="px-3 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full">{genre}</span>))
+                                ) : (<p className="text-secondary text-sm italic">{isOwner ? "Add your favorite genres..." : "No genres specified."}</p>)}
+                            </div>
+                        )}
+                        {isOwner && !isEditingGenres && (<button onClick={() => setIsEditingGenres(true)} className="absolute top-0 right-0 p-1 text-secondary opacity-0 group-hover:opacity-100 hover:text-primary transition-opacity" title="Edit Genres"><Edit3 size={16}/></button>)}
+                    </div>
+
+                    {/* Reading Goal */}
+                     <div className="relative group">
+                        <h3 className="text-lg font-semibold text-text-primary mb-2 flex items-center gap-2"><Target size={18}/> Reading Goal ({personality.reading_goal_year || 'Set Year'})</h3>
+                        {isEditingGoal ? (
+                            <div className="space-y-2">
+                                <div className="flex gap-2">
+                                     <input type="number" value={goalYearInput} onChange={(e) => setGoalYearInput(e.target.value)} placeholder="Year" className="w-1/2 bg-background border border-secondary rounded-md p-2 text-text-primary focus:outline-none focus:ring-1 focus:ring-primary text-sm"/>
+                                     <input type="number" value={goalCountInput} onChange={(e) => setGoalCountInput(e.target.value)} placeholder="No. of books" className="w-1/2 bg-background border border-secondary rounded-md p-2 text-text-primary focus:outline-none focus:ring-1 focus:ring-primary text-sm" min="1"/>
+                                </div>
+                                <div className="flex justify-end gap-2">
+                                    <button onClick={() => { setIsEditingGoal(false); setGoalYearInput(personality.reading_goal_year || new Date().getFullYear()); setGoalCountInput(personality.reading_goal_count?.toString() || ''); }} className="text-xs px-3 py-1 rounded text-secondary hover:bg-secondary/20" disabled={isSavingGoal}>Cancel</button>
+                                    <button onClick={handleSaveGoal} className="text-xs px-3 py-1 rounded bg-primary text-text-contrast hover:opacity-90 flex items-center gap-1 disabled:opacity-50" disabled={isSavingGoal}> {isSavingGoal ? <Loader size={14} className="animate-spin"/> : <Save size={14}/>} Save Goal </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <div>
+                                {personality.reading_goal_count && personality.reading_goal_year ? (
+                                    <>
+                                        <p className="text-sm text-text-primary mb-1">Read <span className="font-bold">{stats.books_read_count}</span> of <span className="font-bold">{personality.reading_goal_count}</span> books for {personality.reading_goal_year}.</p>
+                                        <div className="w-full bg-secondary/30 rounded-full h-2.5 dark:bg-gray-700"> <div className="bg-primary h-2.5 rounded-full" style={{ width: `${goalProgress}%` }}></div> </div>
+                                        <p className="text-xs text-secondary text-right mt-1">{goalProgress}% complete</p>
+                                    </>
+                                ) : (<p className="text-secondary text-sm italic">{isOwner ? "Set your yearly reading goal..." : "No reading goal set."}</p>)}
+                             </div>
+                        )}
+                        {isOwner && !isEditingGoal && (<button onClick={() => setIsEditingGoal(true)} className="absolute top-0 right-0 p-1 text-secondary opacity-0 group-hover:opacity-100 hover:text-primary transition-opacity" title="Edit Goal"><Edit3 size={16}/></button>)}
+                    </div>
+                </div>
+
+                 {/* Right Column: Mood & Archetype */}
+                <div className="space-y-6">
+                    {/* Literary Archetype */}
+                    <div>
+                        <h3 className="text-lg font-semibold text-text-primary mb-2 flex items-center gap-2"><Award size={18}/> Literary Archetype</h3>
+                        {personality.literary_archetype ? (
+                            <span className="px-3 py-1 bg-secondary/10 text-secondary text-sm font-medium rounded-full border border-secondary/30">{personality.literary_archetype}</span>
+                        ):( <p className="text-secondary text-sm italic">{isOwner ? "Define your reading style..." : "Archetype not set."}</p> )}
+                        {/* Add edit button here later if desired */}
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <div className="mb-8 flex justify-center border-b border-secondary">
           <button onClick={() => setActiveTab("shelves")} className={`px-6 py-3 text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "shelves" ? "border-b-2 border-primary text-primary" : "text-secondary hover:text-primary"}`}>
               <BookOpenCheck size={18} /> Bookshelves ({shelfItems.length})
@@ -353,6 +485,7 @@ const UserProfilePage = () => {
           </button>
         </div>
 
+        {/* --- TAB CONTENT --- */}
         <div>
           {activeTab === "shelves" && (
             <div className="space-y-10">

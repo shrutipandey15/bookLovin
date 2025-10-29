@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from enum import IntEnum, auto
-from typing import Optional
+from typing import Optional, List
 from uuid import uuid4
 
 from booklovin.models.base import FlexModel
@@ -48,6 +48,10 @@ class User(FlexModel):
     longestStreak: int = 0
     currentStreakStart: Optional[datetime] = None
     favorite_quote: Optional[str] = None
+    favorite_genres: Optional[List[str]] = None
+    reading_goal_year: Optional[int] = None
+    reading_goal_count: Optional[int] = None
+    literary_archetype: Optional[str] = None
 
     @field_serializer("creationTime")
     def to_json_creationTime(self, v: datetime, _) -> float:
