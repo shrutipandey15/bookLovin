@@ -31,6 +31,17 @@ reducers: {
         state.data.user.reading_personality.literary_archetype = action.payload;
       }
     },
+    updateProfileGenres: (state, action) => {
+      if (state.data && state.data.user && state.data.user.reading_personality) {
+        state.data.user.reading_personality.favorite_genres = action.payload;
+      }
+    },
+    updateProfileGoal: (state, action) => {
+      if (state.data && state.data.user && state.data.user.reading_personality) {
+        state.data.user.reading_personality.reading_goal_year = action.payload.year;
+        state.data.user.reading_personality.reading_goal_count = action.payload.count;
+      }
+    },
   },
     extraReducers: (builder) => {
     builder
@@ -50,6 +61,6 @@ reducers: {
   },
 });
 
-export const { updateProfileQuote, updateProfileArchetype } = profileSlice.actions;
+export const { updateProfileQuote, updateProfileArchetype, updateProfileGenres, updateProfileGoal } = profileSlice.actions;
 
 export default profileSlice.reducer;

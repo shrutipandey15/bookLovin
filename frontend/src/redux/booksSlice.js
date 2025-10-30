@@ -156,7 +156,6 @@ const booksSlice = createSlice({
       .addCase(updateShelfOrder.fulfilled, (state, action) => {
         state.items = action.payload;
       })
-      
       .addCase(searchOpenLibrary.pending, (state) => {
         state.searchStatus = 'loading';
       })

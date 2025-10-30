@@ -3,14 +3,20 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchShelf,
-  removeBookFromShelf,
+  addBookToShelf, 
   updateBookFavorite,
-  updateBookProgress
+  updateBookProgress,
+  updateShelfOrder, 
+  removeBookFromShelf,
 } from "@redux/booksSlice";
+import { DragDropContext, Droppable } from "react-beautiful-dnd"; 
+import BookSpine from "@components/BookSpine"; 
 import {
   fetchUserProfile,
   updateProfileQuote,
   updateProfileArchetype,
+  updateProfileGenres, 
+  updateProfileGoal, 
 } from "@redux/profileSlice";
 import {
   updateUserQuote,
@@ -42,7 +48,7 @@ import {
   Award,
   Sparkles,
   Star,
-  BookText
+  BookText,
 } from "lucide-react";
 import PostCard from "@components/PostCard";
 import { useNotification } from "@components/Layout";
@@ -116,7 +122,7 @@ const PrivateCreationCard = ({ creation, onPost }) => {
   );
 };
 
-const ShelfBookCard = ({ shelfItem, isReading }) => {
+const ShelfBookCard = ({ shelfItem, onCloseModal }) => {
   const dispatch = useDispatch();
   const { showNotification } = useNotification();
 
@@ -130,6 +136,7 @@ const ShelfBookCard = ({ shelfItem, isReading }) => {
     if (window.confirm(`Remove "${shelfItem.title}" from your shelf?`)) {
       dispatch(removeBookFromShelf(shelfItem.ol_key));
       showNotification(`"${shelfItem.title}" removed.`);
+      onCloseModal(); // Close modal after action
     }
   };
 
@@ -142,19 +149,19 @@ const ShelfBookCard = ({ shelfItem, isReading }) => {
         is_favorite: !shelfItem.is_favorite,
       })
     );
+    // Note: We don't close modal here, user might want to do other actions
   };
 
   const handleSetProgress = (e) => {
     e.preventDefault();
     e.stopPropagation();
 
-    // Use a simple prompt to ask for progress
     const progressInput = window.prompt(
       `Set progress for "${shelfItem.title}" (0-100):`,
       shelfItem.progress_percent || 0
     );
 
-    if (progressInput === null) return; // User cancelled
+    if (progressInput === null) return; 
 
     const progress = parseInt(progressInput, 10);
 
@@ -173,7 +180,7 @@ const ShelfBookCard = ({ shelfItem, isReading }) => {
   const studioLink = `/studio/create/${encodeURIComponent(shelfItem.ol_key)}`;
 
   return (
-    <div className="flex-shrink-0 w-36 text-center group relative border border-secondary/20 rounded-lg p-2 bg-card-background/50 shadow-sm hover:shadow-md transition-shadow duration-200">
+    <div className="flex-shrink-0 w-full text-center group relative p-2">
       <button
         onClick={handleFavorite}
         title={
@@ -189,55 +196,123 @@ const ShelfBookCard = ({ shelfItem, isReading }) => {
       <img
         src={coverUrl}
         alt={shelfItem.title}
-        className="w-full h-48 object-cover rounded-md shadow-lg mb-2"
+        className="w-36 h-48 object-cover rounded-md shadow-lg mb-2 mx-auto" // Centered image
       />
-      {isReading && (
-        <div className="w-full bg-secondary/30 rounded-full h-1.5 mt-2">
+      {shelfItem.status === "reading" && (
+        <div className="w-36 mx-auto bg-secondary/30 rounded-full h-1.5 mt-2">
           <div 
             className="bg-primary h-1.5 rounded-full" 
             style={{ width: `${shelfItem.progress_percent || 0}%` }}
           ></div>
         </div>
       )}
-      <div className="absolute inset-2 bg-black/70 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-md gap-2">
+        <h3
+          className="mt-2 font-semibold text-lg text-text-primary truncate"
+          title={shelfItem.title}
+        >
+          {shelfItem.title}
+        </h3>
+        <p className="text-sm text-secondary truncate mb-4">
+          {shelfItem.author_names?.join(", ") || "Unknown Author"}
+        </p>
+      
+      {/* --- ACTION BUTTONS --- */}
+      <div className="flex flex-col items-center justify-center gap-2">
         <Link
           to={studioLink}
           title="Create Vision"
-          className="flex flex-col items-center text-white hover:text-primary transition-colors"
+          className="flex items-center justify-center gap-2 text-text-primary hover:text-primary transition-colors w-full p-2 bg-secondary/10 rounded-lg"
         >
-          <Wand2 className="h-6 w-6 mb-1" />
-          <span className="font-semibold text-xs">Create Art</span>
+          <Wand2 className="h-5 w-5" />
+          <span className="font-semibold text-sm">Create AI Art</span>
         </Link>
-        {isReading && (
+        {shelfItem.status === "reading" && (
           <button
             onClick={handleSetProgress}
             title="Set Reading Progress"
-            className="flex flex-col items-center text-white hover:text-primary transition-colors"
+            className="flex items-center justify-center gap-2 text-text-primary hover:text-primary transition-colors w-full p-2 bg-secondary/10 rounded-lg"
           >
-            <BookText className="h-6 w-6 mb-1" />
-            <span className="font-semibold text-xs">Set Progress</span>
+            <BookText className="h-5 w-5" />
+            <span className="font-semibold text-sm">Set Progress</span>
           </button>
         )}
         <button
           onClick={handleRemove}
           title="Remove from Shelf"
-          className="flex flex-col items-center text-white hover:text-red-500 transition-colors"
+          className="flex items-center justify-center gap-2 text-red-500 hover:text-red-400 transition-colors w-full p-2 bg-secondary/10 rounded-lg"
         >
-          <Trash2 className="h-6 w-6 mb-1" />
-          <span className="font-semibold text-xs">Remove</span>
+          <Trash2 className="h-5 w-5" />
+          <span className="font-semibold text-sm">Remove</span>
         </button>
       </div>
-      <div className="group-hover:opacity-0 transition-opacity">
-        <h3
-          className="mt-1 font-semibold text-sm text-text-primary truncate"
-          title={shelfItem.title}
+    </div>
+  );
+};
+
+const BookDetailModal = ({ book, onClose }) => {
+  if (!book) return null;
+
+  return (
+     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50" onClick={onClose}>
+      <div 
+        className="bg-background rounded-2xl shadow-xl max-w-xs w-full p-6 relative"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-secondary hover:text-primary"
         >
-          {shelfItem.title}
-        </h3>
-        <p className="text-xs text-secondary truncate">
-          {shelfItem.author_names?.join(", ") || "Unknown Author"}
-        </p>
+          <X />
+        </button>
+        <ShelfBookCard shelfItem={book} onCloseModal={onClose} />
       </div>
+    </div>
+  )
+};
+
+
+const DraggableShelf = ({ title, icon, books, droppableId, onBookClick }) => {
+  if (droppableId !== 'favorites-shelf' && (!books || books.length === 0)) {
+    return (
+      <div>
+        <h3 className="text-2xl font-bold text-primary mb-4 flex items-center gap-2">
+          {icon} {title} (0)
+        </h3>
+        <div className="flex items-center justify-center gap-1 p-4 h-56 bg-secondary/10 rounded-lg overflow-x-auto text-secondary italic text-sm">
+          No books on this shelf yet.
+        </div>
+      </div>
+    );
+  }
+  
+  if (droppableId === 'favorites-shelf' && (!books || books.length === 0)) {
+      return null;
+  }
+
+  return (
+    <div>
+      <h3 className="text-2xl font-bold text-primary mb-4 flex items-center gap-2">
+        {icon} {title} ({books.length})
+      </h3>
+      <Droppable droppableId={droppableId} direction="horizontal">
+        {(provided) => (
+          <div
+            ref={provided.innerRef}
+            {...provided.droppableProps}
+            className="flex items-end gap-1 p-4 h-56 bg-secondary/10 rounded-lg overflow-x-auto"
+          >
+            {books.map((book, index) => (
+              <BookSpine 
+                key={book.ol_key} 
+                book={book} 
+                index={index} 
+                onBookClick={onBookClick} // <-- Pass the click handler
+              />
+            ))}
+            {provided.placeholder}
+          </div>
+        )}
+      </Droppable>
     </div>
   );
 };
@@ -252,6 +327,8 @@ const UserProfilePage = () => {
   const [activeTab, setActiveTab] = useState("shelves");
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
   const [creationToPost, setCreationToPost] = useState(null);
+
+  const [selectedBook, setSelectedBook] = useState(null);
 
   const [isEditingQuote, setIsEditingQuote] = useState(false);
   const [quoteInput, setQuoteInput] = useState("");
@@ -284,11 +361,6 @@ const UserProfilePage = () => {
     (state) => state.creations
   );
 
-  console.log("--- PROFILE DEBUG START ---");
-  console.log("Full profile object from Redux (profile):", profile);
-  console.log("Destructured user object (user):", user);
-  console.log("--- PROFILE DEBUG END ---");
-
   useEffect(() => {
     if (
       name &&
@@ -316,20 +388,17 @@ const UserProfilePage = () => {
   }, [user?.favorite_quote]);
 
   useEffect(() => {
-    setGenresInput(
-      user?.reading_personality?.favorite_genres?.join(", ") || ""
-    );
-    setGoalYearInput(
-      user?.reading_personality?.reading_goal_year || new Date().getFullYear()
-    );
-    setGoalCountInput(
-      user?.reading_personality?.reading_goal_count?.toString() || ""
-    );
-  }, [user?.reading_personality]);
-
-  useEffect(() => {
-    setArchetypeInput(user?.reading_personality?.literary_archetype || "");
-  }, [user?.reading_personality]);
+    if (user) {
+      setGenresInput(user.reading_personality?.favorite_genres?.join(", ") || "");
+      setGoalYearInput(
+        user.reading_personality?.reading_goal_year || new Date().getFullYear()
+      );
+      setGoalCountInput(
+        user.reading_personality?.reading_goal_count?.toString() || ""
+      );
+      setArchetypeInput(user.reading_personality?.literary_archetype || "");
+    }
+  }, [user]); 
 
   const handleSaveQuote = async () => {
     if (isSavingQuote) return;
@@ -359,23 +428,7 @@ const UserProfilePage = () => {
         .map((g) => g.trim())
         .filter((g) => g !== "");
       const updatedUserData = await updateUserGenres(genresArray);
-      if (profile && profile.user && profile.user.reading_personality) {
-        const newReadingPersonality = {
-          ...profile.user.reading_personality,
-          favorite_genres: updatedUserData.favorite_genres || [],
-        };
-        const newUser = {
-          ...profile.user,
-          reading_personality: newReadingPersonality,
-        };
-        dispatch(
-          fetchUserProfile.fulfilled(
-            { ...profile, user: newUser },
-            "updateGenres",
-            name
-          )
-        ); // Pass args if needed
-      }
+      dispatch(updateProfileGenres(updatedUserData.reading_personality.favorite_genres || []));
       showNotification("Favorite genres updated!");
       setIsEditingGenres(false);
     } catch (error) {
@@ -400,24 +453,12 @@ const UserProfilePage = () => {
     setIsSavingGoal(true);
     try {
       const updatedUserData = await updateUserGoal(year, count);
-      if (profile && profile.user && profile.user.reading_personality) {
-        const newReadingPersonality = {
-          ...profile.user.reading_personality,
-          reading_goal_year: updatedUserData.reading_goal_year,
-          reading_goal_count: updatedUserData.reading_goal_count,
-        };
-        const newUser = {
-          ...profile.user,
-          reading_personality: newReadingPersonality,
-        };
-        dispatch(
-          fetchUserProfile.fulfilled(
-            { ...profile, user: newUser },
-            "updateGoal",
-            name
-          )
-        ); // Pass args if needed
-      }
+      dispatch(
+        updateProfileGoal({
+          year: updatedUserData.reading_personality.reading_goal_year,
+          count: updatedUserData.reading_personality.reading_goal_count,
+        })
+      );
       showNotification("Reading goal updated!");
       setIsEditingGoal(false);
     } catch (error) {
@@ -433,7 +474,9 @@ const UserProfilePage = () => {
     setIsSavingArchetype(true);
     try {
       const updatedUserData = await updateUserArchetype(archetypeInput);
-      dispatch(updateProfileArchetype(updatedUserData.literary_archetype));
+      dispatch(
+        updateProfileArchetype(updatedUserData.reading_personality.literary_archetype)
+      );
       showNotification("Literary archetype updated!");
       setIsEditingArchetype(false);
     } catch (error) {
@@ -450,17 +493,95 @@ const UserProfilePage = () => {
     setCreationToPost(creation);
     setIsPostModalOpen(true);
   };
+  
   const handleSharePost = (captionText) => {
     if (!creationToPost) return;
     const newPost = {
       caption_text: captionText,
       mediaUrl: creationToPost.imageUrl,
       bookId: creationToPost.bookId || "unknown",
-      moodKey: "empowered", // Still hardcoded, might remove later
+      moodKey: "empowered", 
     };
     dispatch(createPost(newPost));
     navigate("/posts");
   };
+
+  const onDragEnd = (result) => {
+    const { source, destination, draggableId } = result;
+
+    if (!destination) return;
+
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    ) {
+      return;
+    }
+
+    const book = shelfItems.find((b) => b.ol_key === draggableId);
+    if (!book) return;
+
+    if (source.droppableId !== destination.droppableId) {
+      let newStatus = null;
+      if (destination.droppableId === "reading-shelf") newStatus = "reading";
+      else if (destination.droppableId === "want-to-read-shelf") newStatus = "want_to_read";
+      else if (destination.droppableId === "read-shelf") newStatus = "read";
+      else if (destination.droppableId === "dnf-shelf") newStatus = "did_not_finish";
+      
+      if (newStatus && book.status !== newStatus) {
+        dispatch(
+          addBookToShelf({
+            ...book, 
+            status: newStatus, 
+          })
+        );
+        showNotification(`Moved "${book.title}"`);
+      }
+    }
+    else {
+       const reorderedItems = Array.from(shelfItems);
+       const globalSourceIndex = shelfItems.findIndex(b => b.ol_key === draggableId);
+       
+       let subList = [];
+       if (destination.droppableId === 'favorites-shelf') subList = favoritesShelf;
+       else if (destination.droppableId === 'reading-shelf') subList = readingShelf;
+       else if (destination.droppableId === 'want-to-read-shelf') subList = wantToReadShelf;
+       else if (destination.droppableId === 'read-shelf') subList = readShelf;
+       else if (destination.droppableId === 'dnf-shelf') subList = dnfShelf;
+
+       const destinationItem = subList[destination.index];
+       let globalDestinationIndex = -1;
+
+       if (!destinationItem) {
+         const lastItemInSublist = subList[subList.length - 1];
+         if (!lastItemInSublist) {
+           console.error("Drag-and-drop error: sublist is empty.");
+           return;
+         }
+         globalDestinationIndex = shelfItems.findIndex(b => b.ol_key === lastItemInSublist.ol_key);
+       } else {
+         globalDestinationIndex = shelfItems.findIndex(b => b.ol_key === destinationItem.ol_key);
+       }
+         
+       if (globalSourceIndex === -1 || globalDestinationIndex === -1) {
+         console.error("Could not find global index for drag-and-drop");
+         return;
+       }
+       
+       const [movedItem] = reorderedItems.splice(globalSourceIndex, 1);
+       const newGlobalDestIndex = reorderedItems.findIndex(b => b.ol_key === (destinationItem?.ol_key || null));
+       
+       if (newGlobalDestIndex !== -1) {
+            reorderedItems.splice(newGlobalDestIndex, 0, movedItem);
+       } else {
+           reorderedItems.push(movedItem);
+       }
+
+       const ordered_keys = reorderedItems.map((item) => item.ol_key);
+       dispatch(updateShelfOrder(ordered_keys));
+    }
+  };
+
 
   if (profileStatus === "loading") {
     return (
@@ -478,35 +599,39 @@ const UserProfilePage = () => {
     );
   }
 
-  const readingShelf = shelfItems.filter((s) => s.status === "reading");
-  const readShelf = shelfItems.filter((s) => s.status === "read");
-  const wantToReadShelf = shelfItems.filter((s) => s.status === "want_to_read");
-  const dnfShelf = shelfItems.filter((s) => s.status === "did_not_finish");
-  const favoritesShelf = shelfItems.filter((s) => s.is_favorite);
   const stats = user.stats || {
     books_read_count: 0,
     journal_entries_count: 0,
     posts_count: 0,
     followers_count: 0,
   };
-  const personality = user.reading_personality || {
-    favorite_genres: [],
-    reading_goal_year: null,
-    reading_goal_count: null,
-    literary_archetype: null,
-  };
   const goalProgress =
-    personality.reading_goal_count && stats.books_read_count
+    user.reading_personality?.reading_goal_count && stats.books_read_count
       ? Math.min(
           100,
           Math.round(
-            (stats.books_read_count / personality.reading_goal_count) * 100
+            (stats.books_read_count /
+              user.reading_personality.reading_goal_count) *
+              100
           )
         )
       : 0;
+  
+  const favoritesShelf = shelfItems.filter((s) => s.is_favorite);
+  const readingShelf = shelfItems.filter((s) => s.status === "reading");
+  const wantToReadShelf = shelfItems.filter((s) => s.status === "want_to_read");
+  const readShelf = shelfItems.filter((s) => s.status === "read");
+  const dnfShelf = shelfItems.filter((s) => s.status === "did_not_finish");
 
   return (
     <>
+      {selectedBook && (
+        <BookDetailModal 
+          book={selectedBook} 
+          onClose={() => setSelectedBook(null)} 
+        />
+      )}
+
       {isPostModalOpen && (
         <PostCreationModal
           creation={creationToPost}
@@ -542,7 +667,7 @@ const UserProfilePage = () => {
                     onClick={() => {
                       setIsEditingQuote(false);
                       setQuoteInput(user.favorite_quote || "");
-                    }} // Reset on cancel
+                    }} 
                     className="text-xs px-3 py-1 rounded text-secondary hover:bg-secondary/20"
                     disabled={isSavingQuote}
                   >
@@ -667,7 +792,7 @@ const UserProfilePage = () => {
                         onClick={() => {
                           setIsEditingGenres(false);
                           setGenresInput(
-                            personality.favorite_genres?.join(", ") || ""
+                            user.reading_personality?.favorite_genres?.join(", ") || ""
                           );
                         }}
                         className="text-xs px-3 py-1 rounded text-secondary hover:bg-secondary/20"
@@ -680,21 +805,20 @@ const UserProfilePage = () => {
                         className="text-xs px-3 py-1 rounded bg-primary text-text-contrast hover:opacity-90 flex items-center gap-1 disabled:opacity-50"
                         disabled={isSavingGenres}
                       >
-                        {" "}
                         {isSavingGenres ? (
                           <Loader size={14} className="animate-spin" />
                         ) : (
                           <Save size={14} />
-                        )}{" "}
-                        Save Genres{" "}
+                        )}
+                        Save Genres
                       </button>
                     </div>
                   </div>
                 ) : (
                   <div className="flex flex-wrap gap-2">
-                    {personality.favorite_genres &&
-                    personality.favorite_genres.length > 0 ? (
-                      personality.favorite_genres.map((genre, index) => (
+                    {user.reading_personality?.favorite_genres &&
+                    user.reading_personality.favorite_genres.length > 0 ? (
+                      user.reading_personality.favorite_genres.map((genre, index) => (
                         <span
                           key={index}
                           className="px-3 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full"
@@ -726,7 +850,7 @@ const UserProfilePage = () => {
               <div className="relative group">
                 <h3 className="text-lg font-semibold text-text-primary mb-2 flex items-center gap-2">
                   <Target size={18} /> Reading Goal (
-                  {personality.reading_goal_year || "Set Year"})
+                  {user.reading_personality?.reading_goal_year || "Set Year"})
                 </h3>
                 {isEditingGoal ? (
                   <div className="space-y-2">
@@ -752,11 +876,11 @@ const UserProfilePage = () => {
                         onClick={() => {
                           setIsEditingGoal(false);
                           setGoalYearInput(
-                            personality.reading_goal_year ||
+                            user.reading_personality?.reading_goal_year ||
                               new Date().getFullYear()
                           );
                           setGoalCountInput(
-                            personality.reading_goal_count?.toString() || ""
+                            user.reading_personality?.reading_goal_count?.toString() || ""
                           );
                         }}
                         className="text-xs px-3 py-1 rounded text-secondary hover:bg-secondary/20"
@@ -769,20 +893,19 @@ const UserProfilePage = () => {
                         className="text-xs px-3 py-1 rounded bg-primary text-text-contrast hover:opacity-90 flex items-center gap-1 disabled:opacity-50"
                         disabled={isSavingGoal}
                       >
-                        {" "}
                         {isSavingGoal ? (
                           <Loader size={14} className="animate-spin" />
                         ) : (
                           <Save size={14} />
-                        )}{" "}
-                        Save Goal{" "}
+                        )}
+                        Save Goal
                       </button>
                     </div>
                   </div>
                 ) : (
                   <div>
-                    {personality.reading_goal_count &&
-                    personality.reading_goal_year ? (
+                    {user.reading_personality?.reading_goal_count &&
+                    user.reading_personality?.reading_goal_year ? (
                       <>
                         <p className="text-sm text-text-primary mb-1">
                           Read{" "}
@@ -791,16 +914,15 @@ const UserProfilePage = () => {
                           </span>{" "}
                           of{" "}
                           <span className="font-bold">
-                            {personality.reading_goal_count}
+                            {user.reading_personality.reading_goal_count}
                           </span>{" "}
-                          books for {personality.reading_goal_year}.
+                          books for {user.reading_personality.reading_goal_year}.
                         </p>
                         <div className="w-full bg-secondary/30 rounded-full h-2.5 dark:bg-gray-700">
-                          {" "}
                           <div
                             className="bg-primary h-2.5 rounded-full"
                             style={{ width: `${goalProgress}%` }}
-                          ></div>{" "}
+                          ></div>
                         </div>
                         <p className="text-xs text-secondary text-right mt-1">
                           {goalProgress}% complete
@@ -848,7 +970,7 @@ const UserProfilePage = () => {
                         onClick={() => {
                           setIsEditingArchetype(false);
                           setArchetypeInput(
-                            personality.literary_archetype || ""
+                            user.reading_personality?.literary_archetype || ""
                           );
                         }}
                         className="text-xs px-3 py-1 rounded text-secondary hover:bg-secondary/20"
@@ -872,9 +994,9 @@ const UserProfilePage = () => {
                   </div>
                 ) : (
                   <div>
-                    {personality.literary_archetype ? (
+                    {user.reading_personality?.literary_archetype ? (
                       <span className="px-3 py-1 bg-secondary/10 text-secondary text-sm font-medium rounded-full border border-secondary/30">
-                        {personality.literary_archetype}
+                        {user.reading_personality.literary_archetype}
                       </span>
                     ) : (
                       <p className="text-secondary text-sm italic">
@@ -936,94 +1058,73 @@ const UserProfilePage = () => {
         {/* --- TAB CONTENT --- */}
         <div>
           {activeTab === "shelves" && (
-            <div className="space-y-10">
-              {shelfStatus === "loading" && (
-                <div className="text-center py-10">
-                  <Loader className="animate-spin h-8 w-8 text-primary mx-auto" />
-                </div>
-              )}
-              {shelfStatus === "failed" && (
-                <p className="text-center text-red-500 py-10">
-                  {shelfError || "Could not load bookshelves."}
-                </p>
-              )}
-              {shelfStatus === "succeeded" && shelfItems.length === 0 && (
-                <div className="text-center text-secondary py-16 flex flex-col items-center gap-4">
-                  <BookUser size={48} />
-                  <p className="text-lg">This bookshelf is empty.</p>
-                  <Link
-                    to="/books/search"
-                    className="rounded-lg bg-primary px-5 py-2 font-medium text-text-contrast transition-transform hover:scale-105"
-                  >
-                    Find Books to Add
-                  </Link>
-                </div>
-              )}
-              {shelfStatus === "succeeded" && favoritesShelf.length > 0 && (
-                <div>
-                  <h3 className="text-2xl font-bold text-primary mb-4 flex items-center gap-2">
-                    <Star size={24} /> Favorites ({favoritesShelf.length})
-                  </h3>
-                  <div className="flex space-x-4 overflow-x-auto pb-4">
-                    {favoritesShelf.map((item) => (
-                      <ShelfBookCard key={item.uid} shelfItem={item} />
-                    ))}
+            <DragDropContext onDragEnd={onDragEnd}>
+              <div className="space-y-10">
+                {shelfStatus === "loading" && (
+                  <div className="text-center py-10">
+                    <Loader className="animate-spin h-8 w-8 text-primary mx-auto" />
                   </div>
-                </div>
-              )}
-              {/* Currently Reading Shelf */}
-              {shelfStatus === "succeeded" && readingShelf.length > 0 && (
-                <div>
-                  <h3 className="text-2xl font-bold text-primary mb-4">
-                    Currently Reading ({readingShelf.length})
-                  </h3>
-                  <div className="flex space-x-4 overflow-x-auto pb-4">
-                    {readingShelf.map((item) => (
-                      <ShelfBookCard key={item.uid} shelfItem={item} isReading={true} />
-                    ))}
+                )}
+                {shelfStatus === "failed" && (
+                  <p className="text-center text-red-500 py-10">
+                    {shelfError || "Could not load bookshelves."}
+                  </p>
+                )}
+                {shelfStatus === "succeeded" && shelfItems.length === 0 && (
+                  <div className="text-center text-secondary py-16 flex flex-col items-center gap-4">
+                    <BookUser size={48} />
+                    <p className="text-lg">This bookshelf is empty.</p>
+                    <Link
+                      to="/books/search"
+                      className="rounded-lg bg-primary px-5 py-2 font-medium text-text-contrast transition-transform hover:scale-105"
+                    >
+                      Find Books to Add
+                    </Link>
                   </div>
-                </div>
-              )}
-              {/* Want to Read Shelf */}
-              {shelfStatus === "succeeded" && wantToReadShelf.length > 0 && (
-                <div>
-                  <h3 className="text-2xl font-bold text-primary mb-4">
-                    Want to Read ({wantToReadShelf.length})
-                  </h3>
-                  <div className="flex space-x-4 overflow-x-auto pb-4">
-                    {wantToReadShelf.map((item) => (
-                      <ShelfBookCard key={item.uid} shelfItem={item} />
-                    ))}
-                  </div>
-                </div>
-              )}
-              {/* Read Shelf */}
-              {shelfStatus === "succeeded" && readShelf.length > 0 && (
-                <div>
-                  <h3 className="text-2xl font-bold text-primary mb-4">
-                    Read ({readShelf.length})
-                  </h3>
-                  <div className="flex space-x-4 overflow-x-auto pb-4">
-                    {readShelf.map((item) => (
-                      <ShelfBookCard key={item.uid} shelfItem={item} />
-                    ))}
-                  </div>
-                </div>
-              )}
-              {/* Did Not Finish Shelf */}
-              {shelfStatus === "succeeded" && dnfShelf.length > 0 && (
-                <div>
-                  <h3 className="text-2xl font-bold text-primary mb-4">
-                    Did Not Finish ({dnfShelf.length})
-                  </h3>
-                  <div className="flex space-x-4 overflow-x-auto pb-4">
-                    {dnfShelf.map((item) => (
-                      <ShelfBookCard key={item.uid} shelfItem={item} />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+                )}
+
+                {/* --- NEW: Replaced carousels with DraggableShelf components --- */}
+                {shelfStatus === "succeeded" && (
+                  <>
+                    <DraggableShelf 
+                      title="Favorites" 
+                      icon={<Star size={24} />} 
+                      books={favoritesShelf} 
+                      droppableId="favorites-shelf"
+                      onBookClick={setSelectedBook}
+                    />
+                    <DraggableShelf 
+                      title="Currently Reading" 
+                      icon={<BookText size={24} />} 
+                      books={readingShelf} 
+                      droppableId="reading-shelf"
+                      onBookClick={setSelectedBook}
+                    />
+                    <DraggableShelf 
+                      title="Want to Read" 
+                      icon={<BookOpenCheck size={24} />} 
+                      books={wantToReadShelf} 
+                      droppableId="want-to-read-shelf"
+                      onBookClick={setSelectedBook}
+                    />
+                    <DraggableShelf 
+                      title="Read" 
+                      icon={<BookMarked size={24} />} 
+                      books={readShelf} 
+                      droppableId="read-shelf"
+                      onBookClick={setSelectedBook}
+                    />
+                    <DraggableShelf 
+                      title="Did Not Finish" 
+                      icon={<X size={24} />} 
+                      books={dnfShelf} 
+                      droppableId="dnf-shelf"
+                      onBookClick={setSelectedBook}
+                    />
+                  </>
+                )}
+              </div>
+            </DragDropContext>
           )}
 
           {activeTab === "posts" && (
@@ -1045,19 +1146,22 @@ const UserProfilePage = () => {
                   Loading creations...
                 </p>
               )}
-              {creationsFetchStatus !== "loading" && privateCreations.length > 0
-                ? privateCreations.map((c) => (
-                    <PrivateCreationCard
-                      key={c.id}
-                      creation={c}
-                      onPost={handleOpenPostModal}
-                    />
-                  ))
-                : creationsFetchStatus !== "loading" && (
-                    <p className="col-span-full text-center text-secondary py-10">
-                      Your generated art will be saved here.
-                    </p>
-                  )}
+              {creationsFetchStatus !== "loading" &&
+              privateCreations.length > 0 ? (
+                privateCreations.map((c) => (
+                  <PrivateCreationCard
+                    key={c.id}
+                    creation={c}
+                    onPost={handleOpenPostModal}
+                  />
+                ))
+              ) : (
+                creationsFetchStatus !== "loading" && (
+                  <p className="col-span-full text-center text-secondary py-10">
+                    Your generated art will be saved here.
+                  </p>
+                )
+              )}
             </div>
           )}
         </div>
