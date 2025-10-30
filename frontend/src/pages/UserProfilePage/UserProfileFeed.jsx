@@ -1,9 +1,12 @@
 import React from 'react';
 import PostCard from '@components/PostCard';
+import ConfessionCard from '@pages/ConfessionPage/ConfessionCard'; 
+import JournalHighlightCard from './JournalHighlightCard'; 
 import {
   MessageSquare,
   Wand2,
-  X,
+  BookHeart,
+  ShieldOff,
 } from "lucide-react";
 
 const PrivateCreationCard = ({ creation, onPost }) => {
@@ -39,6 +42,11 @@ const UserProfileFeed = ({
   privateCreations,
   creationsFetchStatus,
   handleOpenPostModal,
+  isOwner,
+  journalEntries,
+  journalStatus,
+  confessions,
+  confessionsStatus,
 }) => {
   return (
     <div className="w-full lg:w-2/3">
@@ -54,6 +62,18 @@ const UserProfileFeed = ({
         >
           <MessageSquare size={18} /> Showcase ({posts.length})
         </button>
+        
+        <button
+          onClick={() => setActiveTab("journal")}
+          className={`px-6 py-3 text-sm font-medium transition-colors flex items-center gap-2 ${
+            activeTab === "journal"
+              ? "border-b-2 border-primary text-primary"
+              : "text-secondary hover:text-primary"
+          }`}
+        >
+          <BookHeart size={18} /> Journal ({journalEntries.length})
+        </button>
+        
         <button
           onClick={() => setActiveTab("creations")}
           className={`px-6 py-3 text-sm font-medium transition-colors flex items-center gap-2 ${
@@ -64,6 +84,19 @@ const UserProfileFeed = ({
         >
           <Wand2 size={18} /> My Creations ({privateCreations.length})
         </button>
+
+        {isOwner && (
+          <button
+            onClick={() => setActiveTab("confessions")}
+            className={`px-6 py-3 text-sm font-medium transition-colors flex items-center gap-2 ${
+              activeTab === "confessions"
+                ? "border-b-2 border-primary text-primary"
+                : "text-secondary hover:text-primary"
+            }`}
+          >
+            <ShieldOff size={18} /> Confessions ({confessions.length})
+          </button>
+        )}
       </div>
 
       {/* --- TAB CONTENT --- */}
@@ -76,6 +109,23 @@ const UserProfileFeed = ({
               <p className="col-span-full text-center text-secondary py-10">
                 Shared posts will appear here.
               </p>
+            )}
+          </div>
+        )}
+        
+        {activeTab === "journal" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {journalStatus === "loading" && <p>Loading journal...</p>}
+            {journalStatus === "succeeded" && journalEntries.length > 0 ? (
+              journalEntries.map((entry) => (
+                <JournalHighlightCard key={entry.uid} entry={entry} />
+              ))
+            ) : (
+              journalStatus !== "loading" && (
+                <p className="col-span-full text-center text-secondary py-10">
+                  Journal highlights will appear here.
+                </p>
+              )
             )}
           </div>
         )}
@@ -100,6 +150,23 @@ const UserProfileFeed = ({
               creationsFetchStatus !== "loading" && (
                 <p className="col-span-full text-center text-secondary py-10">
                   Your generated art will be saved here.
+                </p>
+              )
+            )}
+          </div>
+        )}
+        
+        {isOwner && activeTab === "confessions" && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {confessionsStatus === "loading" && <p>Loading confessions...</p>}
+            {confessionsStatus === "succeeded" && confessions.length > 0 ? (
+              confessions.map((entry) => (
+                <ConfessionCard key={entry.uid} confession={entry} isOwner={true} />
+              ))
+            ) : (
+              confessionsStatus !== "loading" && (
+                <p className="col-span-full text-center text-secondary py-10">
+                  Your private confessions are kept here.
                 </p>
               )
             )}

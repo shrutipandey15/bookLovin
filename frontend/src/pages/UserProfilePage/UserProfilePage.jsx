@@ -25,6 +25,8 @@ import {
 } from "@api/profile";
 import { fetchPrivateCreations } from "@redux/creationsSlice";
 import { createPost } from "@redux/postsSlice";
+import { fetchEntries } from "@redux/journalSlice";
+import { fetchConfessions } from "@redux/confessionSlice";
 import {
   User,
   Loader,
@@ -45,6 +47,7 @@ import { useNotification } from "@components/Layout";
 import { useAuth } from "@context/AuthContext";
 import UserProfileSidebar from "./UserProfileSidebar";
 import UserProfileFeed from "./UserProfileFeed";
+import ReadingBadge from "./ReadingBadge";
 
 const PostCreationModal = ({ creation, onClose, onShare }) => {
   const [caption, setCaption] = useState("");
@@ -269,14 +272,26 @@ const UserProfilePage = () => {
     error: profileError,
   } = useSelector((state) => state.profile);
   const { user, posts } = profile || { user: {}, posts: [] };
+  
   const {
     items: shelfItems,
     status: shelfStatus,
     error: shelfError,
   } = useSelector((state) => state.books);
+  
   const { privateCreations, fetchStatus: creationsFetchStatus } = useSelector(
     (state) => state.creations
   );
+  
+  const { items: journalEntries, status: journalStatus } = useSelector(
+    (state) => state.journal
+  );
+  
+  const { confessions, status: confessionsStatus } = useSelector(
+    (state) => state.confessions
+  );
+
+  const isOwner = currentUser?.name === name;
 
   useEffect(() => {
     if (
@@ -284,6 +299,10 @@ const UserProfilePage = () => {
       (profileStatus === "idle" || profile?.user?.username !== name)
     ) {
       dispatch(fetchUserProfile(name));
+      dispatch(fetchEntries());
+      if (isOwner) {
+        dispatch(fetchConfessions());
+      }
     }
     if (shelfStatus === "idle") {
       dispatch(fetchShelf());
@@ -298,6 +317,7 @@ const UserProfilePage = () => {
     shelfStatus,
     creationsFetchStatus,
     profile,
+    isOwner,
   ]);
 
   useEffect(() => {
@@ -378,6 +398,7 @@ const UserProfilePage = () => {
           count: count,
         })
       );
+      
       showNotification("Reading goal updated!");
       setIsEditingGoal(false);
     } catch (error) {
@@ -404,8 +425,6 @@ const UserProfilePage = () => {
       setIsSavingArchetype(false);
     }
   };
-
-  const isOwner = currentUser?.name === name;
 
   const handleOpenPostModal = (creation) => {
     setCreationToPost(creation);
@@ -502,7 +521,6 @@ const UserProfilePage = () => {
     }
   };
 
-  // --- RENDER LOGIC ---
   if (profileStatus === "loading") {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -526,11 +544,11 @@ const UserProfilePage = () => {
     followers_count: 0,
   };
   const goalProgress =
-    user.reading_personality?.reading_goal_count && stats.books_read_count
+    user.reading_personality?.reading_goal_count && readShelf.length
       ? Math.min(
           100,
           Math.round(
-            (stats.books_read_count /
+            (readShelf.length /
               user.reading_personality.reading_goal_count) *
               100
           )
@@ -556,9 +574,20 @@ const UserProfilePage = () => {
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 font-body">
         {/* --- HEADER --- */}
         <header className="mb-6 flex flex-col items-center text-center relative">
-          <div className="w-28 h-28 rounded-full bg-primary/20 flex items-center justify-center mb-4">
-            <User className="w-16 h-16 text-primary" />
+          
+          {/* NEW: Avatar */}
+          <div className="w-28 h-28 rounded-full bg-primary/20 flex items-center justify-center mb-4 overflow-hidden border-4 border-background shadow-lg">
+            {user.avatar_url ? (
+              <img 
+                src={user.avatar_url} 
+                alt={user.username} 
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <User className="w-16 h-16 text-primary" />
+            )}
           </div>
+          
           <h1 className="text-5xl font-bold text-primary">
             {user.username || "Book Lover"}
           </h1>
@@ -566,6 +595,8 @@ const UserProfilePage = () => {
             {user.bio || "Avid reader exploring worlds between pages."}
           </p>
 
+          <ReadingBadge readingShelf={readingShelf} />
+          
           <div className="mt-6 w-full max-w-2xl px-4 py-3 bg-card-background/50 border border-border-color rounded-lg shadow-sm relative group">
             {isEditingQuote ? (
               <>
@@ -641,7 +672,7 @@ const UserProfilePage = () => {
           <div className="flex flex-col items-center">
             <BookMarked className="h-6 w-6 text-primary mb-1" />
             <span className="text-xl font-bold text-text-primary">
-              {readShelf.length} {/* <-- FIX 1: Using live data */}
+              {readShelf.length}
             </span>
             <span className="text-xs text-secondary uppercase tracking-wider">
               Books Read
@@ -650,7 +681,7 @@ const UserProfilePage = () => {
           <div className="flex flex-col items-center">
             <StickyNote className="h-6 w-6 text-primary mb-1" />
             <span className="text-xl font-bold text-text-primary">
-              {stats.journal_entries_count} {/* This is still stale, will be fixed in Phase 2 */}
+              {journalEntries.length}
             </span>
             <span className="text-xs text-secondary uppercase tracking-wider">
               Journal Entries
@@ -659,7 +690,7 @@ const UserProfilePage = () => {
           <div className="flex flex-col items-center">
             <PenSquare className="h-6 w-6 text-primary mb-1" />
             <span className="text-xl font-bold text-text-primary">
-              {posts.length} {/* <-- FIX 2: Using live data */}
+              {posts.length}
             </span>
             <span className="text-xs text-secondary uppercase tracking-wider">
               Posts
@@ -681,7 +712,7 @@ const UserProfilePage = () => {
           <div className="flex flex-col lg:flex-row gap-10">
             <UserProfileSidebar
               user={user}
-              stats={stats}
+              stats={stats} 
               shelfStatus={shelfStatus}
               shelfError={shelfError}
               shelfItems={shelfItems}
@@ -722,6 +753,11 @@ const UserProfilePage = () => {
               privateCreations={privateCreations}
               creationsFetchStatus={creationsFetchStatus}
               handleOpenPostModal={handleOpenPostModal}
+              isOwner={isOwner}
+              journalEntries={journalEntries}
+              journalStatus={journalStatus}
+              confessions={confessions}
+              confessionsStatus={confessionsStatus}
             />
           </div>
         </DragDropContext>
