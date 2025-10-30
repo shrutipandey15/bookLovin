@@ -9,7 +9,7 @@ import {
   updateShelfOrder, 
   removeBookFromShelf,
 } from "@redux/booksSlice";
-import { DragDropContext, Droppable } from "react-beautiful-dnd"; 
+import { DragDropContext, Droppable } from "@hello-pangea/dnd";
 import BookSpine from "@components/BookSpine"; 
 import {
   fetchUserProfile,
@@ -294,7 +294,13 @@ const DraggableShelf = ({ title, icon, books, droppableId, onBookClick }) => {
       <h3 className="text-2xl font-bold text-primary mb-4 flex items-center gap-2">
         {icon} {title} ({books.length})
       </h3>
-      <Droppable droppableId={droppableId} direction="horizontal">
+      <Droppable 
+        droppableId={droppableId} 
+        direction="horizontal" 
+        isDropDisabled={false}
+        isCombineEnabled={false}
+        ignoreContainerClipping={true} 
+      >
         {(provided) => (
           <div
             ref={provided.innerRef}
@@ -306,7 +312,7 @@ const DraggableShelf = ({ title, icon, books, droppableId, onBookClick }) => {
                 key={book.ol_key} 
                 book={book} 
                 index={index} 
-                onBookClick={onBookClick} // <-- Pass the click handler
+                onBookClick={onBookClick} 
               />
             ))}
             {provided.placeholder}
@@ -360,6 +366,12 @@ const UserProfilePage = () => {
   const { privateCreations, fetchStatus: creationsFetchStatus } = useSelector(
     (state) => state.creations
   );
+
+  const favoritesShelf = shelfItems.filter((s) => s.is_favorite);
+  const readingShelf = shelfItems.filter((s) => s.status === "reading");
+  const wantToReadShelf = shelfItems.filter((s) => s.status === "want_to_read");
+  const readShelf = shelfItems.filter((s) => s.status === "read");
+  const dnfShelf = shelfItems.filter((s) => s.status === "did_not_finish");
 
   useEffect(() => {
     if (
@@ -539,46 +551,45 @@ const UserProfilePage = () => {
       }
     }
     else {
-       const reorderedItems = Array.from(shelfItems);
-       const globalSourceIndex = shelfItems.findIndex(b => b.ol_key === draggableId);
-       
-       let subList = [];
-       if (destination.droppableId === 'favorites-shelf') subList = favoritesShelf;
-       else if (destination.droppableId === 'reading-shelf') subList = readingShelf;
-       else if (destination.droppableId === 'want-to-read-shelf') subList = wantToReadShelf;
-       else if (destination.droppableId === 'read-shelf') subList = readShelf;
-       else if (destination.droppableId === 'dnf-shelf') subList = dnfShelf;
+        const newOrderedList = Array.from(shelfItems);        
+        const sourceIndex = newOrderedList.findIndex(b => b.ol_key === draggableId);
+        if (sourceIndex === -1) return;
+        const [movedItem] = newOrderedList.splice(sourceIndex, 1);
+        
+        let currentShelfBooks = [];
+        if (source.droppableId === 'favorites-shelf') currentShelfBooks = [...favoritesShelf];
+        else if (source.droppableId === 'reading-shelf') currentShelfBooks = [...readingShelf];
+        else if (source.droppableId === 'want-to-read-shelf') currentShelfBooks = [...wantToReadShelf];
+        else if (source.droppableId === 'read-shelf') currentShelfBooks = [...readShelf];
+        else if (source.droppableId === 'dnf-shelf') currentShelfBooks = [...dnfShelf];
+        else return;
+        
+        const destinationItem = currentShelfBooks[destination.index];
+        
+        let targetIndex = -1;
 
-       const destinationItem = subList[destination.index];
-       let globalDestinationIndex = -1;
+        if (destinationItem) {
+          targetIndex = newOrderedList.findIndex(b => b.ol_key === destinationItem.ol_key);
+        } else {
+          const lastItemInLocalList = currentShelfBooks
+            .filter(b => b.ol_key !== draggableId)
+            .pop();
 
-       if (!destinationItem) {
-         const lastItemInSublist = subList[subList.length - 1];
-         if (!lastItemInSublist) {
-           console.error("Drag-and-drop error: sublist is empty.");
-           return;
-         }
-         globalDestinationIndex = shelfItems.findIndex(b => b.ol_key === lastItemInSublist.ol_key);
-       } else {
-         globalDestinationIndex = shelfItems.findIndex(b => b.ol_key === destinationItem.ol_key);
-       }
-         
-       if (globalSourceIndex === -1 || globalDestinationIndex === -1) {
-         console.error("Could not find global index for drag-and-drop");
-         return;
-       }
-       
-       const [movedItem] = reorderedItems.splice(globalSourceIndex, 1);
-       const newGlobalDestIndex = reorderedItems.findIndex(b => b.ol_key === (destinationItem?.ol_key || null));
-       
-       if (newGlobalDestIndex !== -1) {
-            reorderedItems.splice(newGlobalDestIndex, 0, movedItem);
-       } else {
-           reorderedItems.push(movedItem);
-       }
+          if (lastItemInLocalList) {
+            const lastItemGlobalIndex = newOrderedList.findIndex(b => b.ol_key === lastItemInLocalList.ol_key);
+            targetIndex = lastItemGlobalIndex + 1;
+          } else {
+            targetIndex = newOrderedList.length;
+          }
+        }
 
-       const ordered_keys = reorderedItems.map((item) => item.ol_key);
-       dispatch(updateShelfOrder(ordered_keys));
+        if (targetIndex > -1 && targetIndex <= newOrderedList.length) {
+          newOrderedList.splice(targetIndex, 0, movedItem);
+        } else {
+          newOrderedList.push(movedItem);
+        }
+
+        dispatch(updateShelfOrder(newOrderedList));
     }
   };
 
@@ -616,12 +627,6 @@ const UserProfilePage = () => {
           )
         )
       : 0;
-  
-  const favoritesShelf = shelfItems.filter((s) => s.is_favorite);
-  const readingShelf = shelfItems.filter((s) => s.status === "reading");
-  const wantToReadShelf = shelfItems.filter((s) => s.status === "want_to_read");
-  const readShelf = shelfItems.filter((s) => s.status === "read");
-  const dnfShelf = shelfItems.filter((s) => s.status === "did_not_finish");
 
   return (
     <>
@@ -1083,7 +1088,6 @@ const UserProfilePage = () => {
                   </div>
                 )}
 
-                {/* --- NEW: Replaced carousels with DraggableShelf components --- */}
                 {shelfStatus === "succeeded" && (
                   <>
                     <DraggableShelf 

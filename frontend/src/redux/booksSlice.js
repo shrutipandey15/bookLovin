@@ -27,13 +27,16 @@ export const fetchShelf = createAsyncThunk(
 
 export const addBookToShelf = createAsyncThunk(
   'books/addBookToShelf',
-  async (bookData, { rejectWithValue }) => {
-    console.log('Thunk received:', bookData);
+  async (bookData, { getState, rejectWithValue }) => {
+    const oldItems = getState().books.items;
     try {
       const data = await bookApi.addToShelf(bookData);
       return data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.detail || 'Could not add book');
+      return rejectWithValue({ 
+        error: error.response?.data?.detail || 'Could not add book',
+        oldItems: oldItems 
+      });
     }
   }
 );
@@ -76,12 +79,17 @@ export const updateBookProgress = createAsyncThunk(
 
 export const updateShelfOrder = createAsyncThunk(
   'books/updateShelfOrder',
-  async (ordered_keys, { rejectWithValue }) => {
+  async (newOrderedList, { getState, rejectWithValue }) => {
+    const oldItems = getState().books.items;
     try {
+      const ordered_keys = newOrderedList.map((item) => item.ol_key);
       const data = await bookApi.updateShelfOrder(ordered_keys);
       return data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.detail || 'Could not re-order shelf');
+      return rejectWithValue({
+        error: error.response?.data?.detail || 'Could not re-order shelf',
+        oldItems: oldItems
+      });
     }
   }
 );
@@ -115,17 +123,31 @@ const booksSlice = createSlice({
         state.error = action.payload;
       })
       
-      .addCase(addBookToShelf.fulfilled, (state, action) => {
-        const newItem = action.payload;
+      .addCase(addBookToShelf.pending, (state, action) => {
+        const newItem = action.meta.arg;
         const existingIndex = state.items.findIndex(
           (item) => item.ol_key === newItem.ol_key
         );
-
         if (existingIndex !== -1) {
           state.items[existingIndex] = newItem;
         } else {
           state.items.push(newItem);
         }
+      })
+      .addCase(addBookToShelf.fulfilled, (state, action) => {
+        const newItem = action.payload;
+        const existingIndex = state.items.findIndex(
+          (item) => item.ol_key === newItem.ol_key
+        );
+        if (existingIndex !== -1) {
+          state.items[existingIndex] = newItem;
+        } else {
+          state.items.push(newItem);
+        }
+      })
+      .addCase(addBookToShelf.rejected, (state, action) => {
+        state.items = action.payload.oldItems;
+        state.error = action.payload.error;
       })
       
       .addCase(removeBookFromShelf.fulfilled, (state, action) => {
@@ -153,9 +175,17 @@ const booksSlice = createSlice({
         }
       })
       
+      .addCase(updateShelfOrder.pending, (state, action) => {
+        state.items = action.meta.arg;
+      })
       .addCase(updateShelfOrder.fulfilled, (state, action) => {
         state.items = action.payload;
       })
+      .addCase(updateShelfOrder.rejected, (state, action) => {
+        state.items = action.payload.oldItems;
+        state.error = action.payload.error;
+      })
+
       .addCase(searchOpenLibrary.pending, (state) => {
         state.searchStatus = 'loading';
       })
