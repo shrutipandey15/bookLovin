@@ -1,19 +1,52 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchShelf, removeBookFromShelf } from "@redux/booksSlice";
-import { fetchUserProfile, updateProfileQuote, updateProfileArchetype } from "@redux/profileSlice";
-import { updateUserQuote, updateUserGenres, updateUserGoal, updateUserArchetype } from "@api/profile";
+import {
+  fetchShelf,
+  removeBookFromShelf,
+  updateBookFavorite,
+  updateBookProgress
+} from "@redux/booksSlice";
+import {
+  fetchUserProfile,
+  updateProfileQuote,
+  updateProfileArchetype,
+} from "@redux/profileSlice";
+import {
+  updateUserQuote,
+  updateUserGenres,
+  updateUserGoal,
+  updateUserArchetype,
+} from "@api/profile";
 import { fetchPrivateCreations } from "@redux/creationsSlice";
 import { createPost } from "@redux/postsSlice";
 import {
-    User, BookOpenCheck, MessageSquare, Loader, Image, Wand2, X, Trash2, BookUser,
-    Quote, Edit3, Save, BookMarked, StickyNote, PenSquare, Users,
-    Tag, Target, Award, Sparkles
+  User,
+  BookOpenCheck,
+  MessageSquare,
+  Loader,
+  Image,
+  Wand2,
+  X,
+  Trash2,
+  BookUser,
+  Quote,
+  Edit3,
+  Save,
+  BookMarked,
+  StickyNote,
+  PenSquare,
+  Users,
+  Tag,
+  Target,
+  Award,
+  Sparkles,
+  Star,
+  BookText
 } from "lucide-react";
 import PostCard from "@components/PostCard";
-import { useNotification } from '@components/Layout';
-import { useAuth } from '@context/AuthContext';
+import { useNotification } from "@components/Layout";
+import { useAuth } from "@context/AuthContext";
 
 const PostCreationModal = ({ creation, onClose, onShare }) => {
   const [caption, setCaption] = useState("");
@@ -83,7 +116,7 @@ const PrivateCreationCard = ({ creation, onPost }) => {
   );
 };
 
-const ShelfBookCard = ({ shelfItem }) => {
+const ShelfBookCard = ({ shelfItem, isReading }) => {
   const dispatch = useDispatch();
   const { showNotification } = useNotification();
 
@@ -100,15 +133,72 @@ const ShelfBookCard = ({ shelfItem }) => {
     }
   };
 
+  const handleFavorite = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dispatch(
+      updateBookFavorite({
+        olKey: shelfItem.ol_key,
+        is_favorite: !shelfItem.is_favorite,
+      })
+    );
+  };
+
+  const handleSetProgress = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Use a simple prompt to ask for progress
+    const progressInput = window.prompt(
+      `Set progress for "${shelfItem.title}" (0-100):`,
+      shelfItem.progress_percent || 0
+    );
+
+    if (progressInput === null) return; // User cancelled
+
+    const progress = parseInt(progressInput, 10);
+
+    if (isNaN(progress) || progress < 0 || progress > 100) {
+      showNotification("Please enter a valid number between 0 and 100.", "error");
+      return;
+    }
+
+    dispatch(updateBookProgress({
+      olKey: shelfItem.ol_key,
+      progress: progress
+    }));
+    showNotification("Progress updated!");
+  };
+
   const studioLink = `/studio/create/${encodeURIComponent(shelfItem.ol_key)}`;
 
   return (
     <div className="flex-shrink-0 w-36 text-center group relative border border-secondary/20 rounded-lg p-2 bg-card-background/50 shadow-sm hover:shadow-md transition-shadow duration-200">
+      <button
+        onClick={handleFavorite}
+        title={
+          shelfItem.is_favorite ? "Remove from Favorites" : "Add to Favorites"
+        }
+        className="absolute top-2 right-2 z-10 p-1 bg-card-background/70 rounded-full text-secondary hover:text-primary"
+      >
+        <Star
+          className="h-5 w-5"
+          fill={shelfItem.is_favorite ? "currentColor" : "none"}
+        />
+      </button>
       <img
         src={coverUrl}
         alt={shelfItem.title}
         className="w-full h-48 object-cover rounded-md shadow-lg mb-2"
       />
+      {isReading && (
+        <div className="w-full bg-secondary/30 rounded-full h-1.5 mt-2">
+          <div 
+            className="bg-primary h-1.5 rounded-full" 
+            style={{ width: `${shelfItem.progress_percent || 0}%` }}
+          ></div>
+        </div>
+      )}
       <div className="absolute inset-2 bg-black/70 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-md gap-2">
         <Link
           to={studioLink}
@@ -118,6 +208,16 @@ const ShelfBookCard = ({ shelfItem }) => {
           <Wand2 className="h-6 w-6 mb-1" />
           <span className="font-semibold text-xs">Create Art</span>
         </Link>
+        {isReading && (
+          <button
+            onClick={handleSetProgress}
+            title="Set Reading Progress"
+            className="flex flex-col items-center text-white hover:text-primary transition-colors"
+          >
+            <BookText className="h-6 w-6 mb-1" />
+            <span className="font-semibold text-xs">Set Progress</span>
+          </button>
+        )}
         <button
           onClick={handleRemove}
           title="Remove from Shelf"
@@ -154,25 +254,35 @@ const UserProfilePage = () => {
   const [creationToPost, setCreationToPost] = useState(null);
 
   const [isEditingQuote, setIsEditingQuote] = useState(false);
-  const [quoteInput, setQuoteInput] = useState('');
+  const [quoteInput, setQuoteInput] = useState("");
   const [isSavingQuote, setIsSavingQuote] = useState(false);
 
   const [isEditingGenres, setIsEditingGenres] = useState(false);
-  const [genresInput, setGenresInput] = useState('');
+  const [genresInput, setGenresInput] = useState("");
   const [isSavingGenres, setIsSavingGenres] = useState(false);
   const [isEditingGoal, setIsEditingGoal] = useState(false);
   const [goalYearInput, setGoalYearInput] = useState(new Date().getFullYear());
-  const [goalCountInput, setGoalCountInput] = useState('');
+  const [goalCountInput, setGoalCountInput] = useState("");
   const [isSavingGoal, setIsSavingGoal] = useState(false);
 
   const [isEditingArchetype, setIsEditingArchetype] = useState(false);
-  const [archetypeInput, setArchetypeInput] = useState('');
+  const [archetypeInput, setArchetypeInput] = useState("");
   const [isSavingArchetype, setIsSavingArchetype] = useState(false);
 
-  const { data: profile, status: profileStatus, error: profileError } = useSelector((state) => state.profile);
+  const {
+    data: profile,
+    status: profileStatus,
+    error: profileError,
+  } = useSelector((state) => state.profile);
   const { user, posts } = profile || { user: {}, posts: [] };
-  const { items: shelfItems, status: shelfStatus, error: shelfError } = useSelector((state) => state.books);
-  const { privateCreations, fetchStatus: creationsFetchStatus } = useSelector((state) => state.creations);
+  const {
+    items: shelfItems,
+    status: shelfStatus,
+    error: shelfError,
+  } = useSelector((state) => state.books);
+  const { privateCreations, fetchStatus: creationsFetchStatus } = useSelector(
+    (state) => state.creations
+  );
 
   console.log("--- PROFILE DEBUG START ---");
   console.log("Full profile object from Redux (profile):", profile);
@@ -180,107 +290,157 @@ const UserProfilePage = () => {
   console.log("--- PROFILE DEBUG END ---");
 
   useEffect(() => {
-    if (name && (profileStatus === 'idle' || profile?.user?.username !== name)) {
-        dispatch(fetchUserProfile(name));
+    if (
+      name &&
+      (profileStatus === "idle" || profile?.user?.username !== name)
+    ) {
+      dispatch(fetchUserProfile(name));
     }
-    if (shelfStatus === 'idle') { dispatch(fetchShelf()); }
-    if (creationsFetchStatus === 'idle') { dispatch(fetchPrivateCreations()); }
-  }, [dispatch, name, profileStatus, shelfStatus, creationsFetchStatus, profile]);
+    if (shelfStatus === "idle") {
+      dispatch(fetchShelf());
+    }
+    if (creationsFetchStatus === "idle") {
+      dispatch(fetchPrivateCreations());
+    }
+  }, [
+    dispatch,
+    name,
+    profileStatus,
+    shelfStatus,
+    creationsFetchStatus,
+    profile,
+  ]);
 
   useEffect(() => {
-    setQuoteInput(user?.favorite_quote || '');
+    setQuoteInput(user?.favorite_quote || "");
   }, [user?.favorite_quote]);
 
   useEffect(() => {
-      setGenresInput(user?.reading_personality?.favorite_genres?.join(', ') || '');
-      setGoalYearInput(user?.reading_personality?.reading_goal_year || new Date().getFullYear());
-      setGoalCountInput(user?.reading_personality?.reading_goal_count?.toString() || '');
+    setGenresInput(
+      user?.reading_personality?.favorite_genres?.join(", ") || ""
+    );
+    setGoalYearInput(
+      user?.reading_personality?.reading_goal_year || new Date().getFullYear()
+    );
+    setGoalCountInput(
+      user?.reading_personality?.reading_goal_count?.toString() || ""
+    );
   }, [user?.reading_personality]);
 
   useEffect(() => {
-      setArchetypeInput(user?.reading_personality?.literary_archetype || '');
+    setArchetypeInput(user?.reading_personality?.literary_archetype || "");
   }, [user?.reading_personality]);
 
   const handleSaveQuote = async () => {
     if (isSavingQuote) return;
     setIsSavingQuote(true);
     try {
-        const updatedUserData = await updateUserQuote(quoteInput);
-        dispatch(updateProfileQuote(updatedUserData.favorite_quote));
-        showNotification("Favorite quote updated!");
-        setIsEditingQuote(false);
+      const updatedUserData = await updateUserQuote(quoteInput);
+      dispatch(updateProfileQuote(updatedUserData.favorite_quote));
+      showNotification("Favorite quote updated!");
+      setIsEditingQuote(false);
     } catch (error) {
-        console.error("Failed to save quote:", error);
-        showNotification(`Failed to save quote: ${error.message || 'Unknown error'}`, "error");
+      console.error("Failed to save quote:", error);
+      showNotification(
+        `Failed to save quote: ${error.message || "Unknown error"}`,
+        "error"
+      );
     } finally {
-        setIsSavingQuote(false);
+      setIsSavingQuote(false);
     }
   };
 
   const handleSaveGenres = async () => {
-      if (isSavingGenres) return;
-      setIsSavingGenres(true);
-      try {
-          const genresArray = genresInput.split(',').map(g => g.trim()).filter(g => g !== '');
-          const updatedUserData = await updateUserGenres(genresArray);
-          if (profile && profile.user && profile.user.reading_personality) {
-              const newReadingPersonality = { ...profile.user.reading_personality, favorite_genres: updatedUserData.favorite_genres || [] };
-              const newUser = { ...profile.user, reading_personality: newReadingPersonality };
-              dispatch(fetchUserProfile.fulfilled({ ...profile, user: newUser }, 'updateGenres', name)); // Pass args if needed
-          }
-          showNotification("Favorite genres updated!");
-          setIsEditingGenres(false);
-      } catch (error) {
-          console.error("Failed to save genres:", error);
-          showNotification("Failed to save genres.", "error");
-      } finally {
-          setIsSavingGenres(false);
+    if (isSavingGenres) return;
+    setIsSavingGenres(true);
+    try {
+      const genresArray = genresInput
+        .split(",")
+        .map((g) => g.trim())
+        .filter((g) => g !== "");
+      const updatedUserData = await updateUserGenres(genresArray);
+      if (profile && profile.user && profile.user.reading_personality) {
+        const newReadingPersonality = {
+          ...profile.user.reading_personality,
+          favorite_genres: updatedUserData.favorite_genres || [],
+        };
+        const newUser = {
+          ...profile.user,
+          reading_personality: newReadingPersonality,
+        };
+        dispatch(
+          fetchUserProfile.fulfilled(
+            { ...profile, user: newUser },
+            "updateGenres",
+            name
+          )
+        ); // Pass args if needed
       }
+      showNotification("Favorite genres updated!");
+      setIsEditingGenres(false);
+    } catch (error) {
+      console.error("Failed to save genres:", error);
+      showNotification("Failed to save genres.", "error");
+    } finally {
+      setIsSavingGenres(false);
+    }
   };
 
   const handleSaveGoal = async () => {
-      if (isSavingGoal) return;
-      const year = parseInt(goalYearInput);
-      const count = parseInt(goalCountInput);
-      if (isNaN(year) || isNaN(count) || count <= 0) {
-          showNotification("Please enter a valid year and a positive number for the goal count.", "error");
-          return;
+    if (isSavingGoal) return;
+    const year = parseInt(goalYearInput);
+    const count = parseInt(goalCountInput);
+    if (isNaN(year) || isNaN(count) || count <= 0) {
+      showNotification(
+        "Please enter a valid year and a positive number for the goal count.",
+        "error"
+      );
+      return;
+    }
+    setIsSavingGoal(true);
+    try {
+      const updatedUserData = await updateUserGoal(year, count);
+      if (profile && profile.user && profile.user.reading_personality) {
+        const newReadingPersonality = {
+          ...profile.user.reading_personality,
+          reading_goal_year: updatedUserData.reading_goal_year,
+          reading_goal_count: updatedUserData.reading_goal_count,
+        };
+        const newUser = {
+          ...profile.user,
+          reading_personality: newReadingPersonality,
+        };
+        dispatch(
+          fetchUserProfile.fulfilled(
+            { ...profile, user: newUser },
+            "updateGoal",
+            name
+          )
+        ); // Pass args if needed
       }
-      setIsSavingGoal(true);
-      try {
-          const updatedUserData = await updateUserGoal(year, count);
-          if (profile && profile.user && profile.user.reading_personality) {
-              const newReadingPersonality = {
-                  ...profile.user.reading_personality,
-                  reading_goal_year: updatedUserData.reading_goal_year,
-                  reading_goal_count: updatedUserData.reading_goal_count
-              };
-              const newUser = { ...profile.user, reading_personality: newReadingPersonality };
-              dispatch(fetchUserProfile.fulfilled({ ...profile, user: newUser }, 'updateGoal', name)); // Pass args if needed
-          }
-          showNotification("Reading goal updated!");
-          setIsEditingGoal(false);
-      } catch (error) {
-          console.error("Failed to save goal:", error);
-          showNotification("Failed to save reading goal.", "error");
-      } finally {
-          setIsSavingGoal(false);
-      }
+      showNotification("Reading goal updated!");
+      setIsEditingGoal(false);
+    } catch (error) {
+      console.error("Failed to save goal:", error);
+      showNotification("Failed to save reading goal.", "error");
+    } finally {
+      setIsSavingGoal(false);
+    }
   };
 
   const handleSaveArchetype = async () => {
     if (isSavingArchetype) return;
     setIsSavingArchetype(true);
     try {
-        const updatedUserData = await updateUserArchetype(archetypeInput);
-        dispatch(updateProfileArchetype(updatedUserData.literary_archetype));
-        showNotification("Literary archetype updated!");
-        setIsEditingArchetype(false);
+      const updatedUserData = await updateUserArchetype(archetypeInput);
+      dispatch(updateProfileArchetype(updatedUserData.literary_archetype));
+      showNotification("Literary archetype updated!");
+      setIsEditingArchetype(false);
     } catch (error) {
-        console.error("Failed to save archetype:", error);
-        showNotification("Failed to save archetype.", "error");
+      console.error("Failed to save archetype:", error);
+      showNotification("Failed to save archetype.", "error");
     } finally {
-        setIsSavingArchetype(false);
+      setIsSavingArchetype(false);
     }
   };
 
@@ -321,12 +481,29 @@ const UserProfilePage = () => {
   const readingShelf = shelfItems.filter((s) => s.status === "reading");
   const readShelf = shelfItems.filter((s) => s.status === "read");
   const wantToReadShelf = shelfItems.filter((s) => s.status === "want_to_read");
-  const stats = user.stats || { books_read_count: 0, journal_entries_count: 0, posts_count: 0, followers_count: 0 };
-  const personality = user.reading_personality || { favorite_genres: [], reading_goal_year: null, reading_goal_count: null, literary_archetype: null };
-  const goalProgress = (personality.reading_goal_count && stats.books_read_count)
-                       ? Math.min(100, Math.round((stats.books_read_count / personality.reading_goal_count) * 100))
-                       : 0;
-
+  const dnfShelf = shelfItems.filter((s) => s.status === "did_not_finish");
+  const favoritesShelf = shelfItems.filter((s) => s.is_favorite);
+  const stats = user.stats || {
+    books_read_count: 0,
+    journal_entries_count: 0,
+    posts_count: 0,
+    followers_count: 0,
+  };
+  const personality = user.reading_personality || {
+    favorite_genres: [],
+    reading_goal_year: null,
+    reading_goal_count: null,
+    literary_archetype: null,
+  };
+  const goalProgress =
+    personality.reading_goal_count && stats.books_read_count
+      ? Math.min(
+          100,
+          Math.round(
+            (stats.books_read_count / personality.reading_goal_count) * 100
+          )
+        )
+      : 0;
 
   return (
     <>
@@ -338,7 +515,6 @@ const UserProfilePage = () => {
         />
       )}
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 font-body">
-        
         {/* --- HEADER --- */}
         <header className="mb-6 flex flex-col items-center text-center relative">
           <div className="w-28 h-28 rounded-full bg-primary/20 flex items-center justify-center mb-4">
@@ -352,187 +528,408 @@ const UserProfilePage = () => {
           </p>
 
           <div className="mt-6 w-full max-w-2xl px-4 py-3 bg-card-background/50 border border-border-color rounded-lg shadow-sm relative group">
-              {isEditingQuote ? (
-                  <>
-                      <textarea
-                          value={quoteInput}
-                          onChange={(e) => setQuoteInput(e.target.value)}
-                          placeholder="Enter your favorite quote..."
-                          className="w-full h-20 bg-background border border-secondary rounded-md p-2 text-text-primary focus:outline-none focus:ring-1 focus:ring-primary text-sm italic mb-2"
-                          maxLength={250}
-                      />
-                      <div className="flex justify-end gap-2">
-                          <button
-                              onClick={() => { setIsEditingQuote(false); setQuoteInput(user.favorite_quote || ''); }} // Reset on cancel
-                              className="text-xs px-3 py-1 rounded text-secondary hover:bg-secondary/20"
-                              disabled={isSavingQuote}
-                          >
-                              Cancel
-                          </button>
-                          <button
-                              onClick={handleSaveQuote}
-                              className="text-xs px-3 py-1 rounded bg-primary text-text-contrast hover:opacity-90 flex items-center gap-1 disabled:opacity-50"
-                              disabled={isSavingQuote}
-                          >
-                              {isSavingQuote ? <Loader size={14} className="animate-spin"/> : <Save size={14}/>}
-                              Save
-                          </button>
-                      </div>
-                  </>
-              ) : (
-                  <>
-                      {user.favorite_quote ? (
-                          <p className="text-text-primary/90 italic text-center">
-                             <Quote size={16} className="inline mr-1 text-secondary opacity-50 transform -scale-x-100"/>
-                             {user.favorite_quote}
-                             <Quote size={16} className="inline ml-1 text-secondary opacity-50"/>
-                          </p>
-                      ) : (
-                          <p className="text-secondary italic text-center text-sm">
-                              {isOwner ? "Add your favorite quote..." : "No favorite quote set."}
-                          </p>
-                      )}
-                      {isOwner && (
-                          <button
-                              onClick={() => setIsEditingQuote(true)}
-                              className="absolute top-2 right-2 p-1 text-secondary opacity-0 group-hover:opacity-100 hover:text-primary transition-opacity duration-200"
-                              title="Edit Quote"
-                          >
-                              <Edit3 size={16}/>
-                          </button>
-                      )}
-                  </>
-              )}
+            {isEditingQuote ? (
+              <>
+                <textarea
+                  value={quoteInput}
+                  onChange={(e) => setQuoteInput(e.target.value)}
+                  placeholder="Enter your favorite quote..."
+                  className="w-full h-20 bg-background border border-secondary rounded-md p-2 text-text-primary focus:outline-none focus:ring-1 focus:ring-primary text-sm italic mb-2"
+                  maxLength={250}
+                />
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => {
+                      setIsEditingQuote(false);
+                      setQuoteInput(user.favorite_quote || "");
+                    }} // Reset on cancel
+                    className="text-xs px-3 py-1 rounded text-secondary hover:bg-secondary/20"
+                    disabled={isSavingQuote}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveQuote}
+                    className="text-xs px-3 py-1 rounded bg-primary text-text-contrast hover:opacity-90 flex items-center gap-1 disabled:opacity-50"
+                    disabled={isSavingQuote}
+                  >
+                    {isSavingQuote ? (
+                      <Loader size={14} className="animate-spin" />
+                    ) : (
+                      <Save size={14} />
+                    )}
+                    Save
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                {user.favorite_quote ? (
+                  <p className="text-text-primary/90 italic text-center">
+                    <Quote
+                      size={16}
+                      className="inline mr-1 text-secondary opacity-50 transform -scale-x-100"
+                    />
+                    {user.favorite_quote}
+                    <Quote
+                      size={16}
+                      className="inline ml-1 text-secondary opacity-50"
+                    />
+                  </p>
+                ) : (
+                  <p className="text-secondary italic text-center text-sm">
+                    {isOwner
+                      ? "Add your favorite quote..."
+                      : "No favorite quote set."}
+                  </p>
+                )}
+                {isOwner && (
+                  <button
+                    onClick={() => setIsEditingQuote(true)}
+                    className="absolute top-2 right-2 p-1 text-secondary opacity-0 group-hover:opacity-100 hover:text-primary transition-opacity duration-200"
+                    title="Edit Quote"
+                  >
+                    <Edit3 size={16} />
+                  </button>
+                )}
+              </>
+            )}
           </div>
         </header>
 
         {/* --- STATS ROW --- */}
         <div className="mb-10 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center border-y border-border-color py-4">
-            <div className="flex flex-col items-center">
-                <BookMarked className="h-6 w-6 text-primary mb-1"/>
-                <span className="text-xl font-bold text-text-primary">{stats.books_read_count}</span>
-                <span className="text-xs text-secondary uppercase tracking-wider">Books Read</span>
-            </div>
-            <div className="flex flex-col items-center">
-                <StickyNote className="h-6 w-6 text-primary mb-1"/>
-                <span className="text-xl font-bold text-text-primary">{stats.journal_entries_count}</span>
-                <span className="text-xs text-secondary uppercase tracking-wider">Journal Entries</span>
-            </div>
-            <div className="flex flex-col items-center">
-                <PenSquare className="h-6 w-6 text-primary mb-1"/>
-                <span className="text-xl font-bold text-text-primary">{stats.posts_count}</span>
-                <span className="text-xs text-secondary uppercase tracking-wider">Posts</span>
-            </div>
-             <div className="flex flex-col items-center">
-                <Users className="h-6 w-6 text-primary mb-1"/>
-                <span className="text-xl font-bold text-text-primary">{stats.followers_count}</span>
-                <span className="text-xs text-secondary uppercase tracking-wider">Followers</span>
-            </div>
+          <div className="flex flex-col items-center">
+            <BookMarked className="h-6 w-6 text-primary mb-1" />
+            <span className="text-xl font-bold text-text-primary">
+              {stats.books_read_count}
+            </span>
+            <span className="text-xs text-secondary uppercase tracking-wider">
+              Books Read
+            </span>
+          </div>
+          <div className="flex flex-col items-center">
+            <StickyNote className="h-6 w-6 text-primary mb-1" />
+            <span className="text-xl font-bold text-text-primary">
+              {stats.journal_entries_count}
+            </span>
+            <span className="text-xs text-secondary uppercase tracking-wider">
+              Journal Entries
+            </span>
+          </div>
+          <div className="flex flex-col items-center">
+            <PenSquare className="h-6 w-6 text-primary mb-1" />
+            <span className="text-xl font-bold text-text-primary">
+              {stats.posts_count}
+            </span>
+            <span className="text-xs text-secondary uppercase tracking-wider">
+              Posts
+            </span>
+          </div>
+          <div className="flex flex-col items-center">
+            <Users className="h-6 w-6 text-primary mb-1" />
+            <span className="text-xl font-bold text-text-primary">
+              {stats.followers_count}
+            </span>
+            <span className="text-xs text-secondary uppercase tracking-wider">
+              Followers
+            </span>
+          </div>
         </div>
 
         {/* --- READING PERSONALITY SECTION --- */}
         <section className="mb-10 p-6 bg-card-background/30 border border-border-color rounded-lg shadow-sm">
-            <h2 className="text-2xl font-bold text-primary mb-6 text-center">Reading Personality</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-
-                {/* Left Column: Genres & Goal */}
-                <div className="space-y-6">
-                    {/* Favorite Genres */}
-                     <div className="relative group">
-                        <h3 className="text-lg font-semibold text-text-primary mb-2 flex items-center gap-2"><Tag size={18}/> Favorite Genres</h3>
-                        {isEditingGenres ? (
-                            <div className="space-y-2">
-                                <input type="text" value={genresInput} onChange={(e) => setGenresInput(e.target.value)} placeholder="e.g., Fantasy, Sci-Fi, Mystery" className="w-full bg-background border border-secondary rounded-md p-2 text-text-primary focus:outline-none focus:ring-1 focus:ring-primary text-sm"/>
-                                <p className="text-xs text-secondary">Separate genres with commas.</p>
-                                <div className="flex justify-end gap-2">
-                                    <button onClick={() => { setIsEditingGenres(false); setGenresInput(personality.favorite_genres?.join(', ') || ''); }} className="text-xs px-3 py-1 rounded text-secondary hover:bg-secondary/20" disabled={isSavingGenres}>Cancel</button>
-                                    <button onClick={handleSaveGenres} className="text-xs px-3 py-1 rounded bg-primary text-text-contrast hover:opacity-90 flex items-center gap-1 disabled:opacity-50" disabled={isSavingGenres}> {isSavingGenres ? <Loader size={14} className="animate-spin"/> : <Save size={14}/>} Save Genres </button>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="flex flex-wrap gap-2">
-                                {personality.favorite_genres && personality.favorite_genres.length > 0 ? (
-                                    personality.favorite_genres.map((genre, index) => (<span key={index} className="px-3 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full">{genre}</span>))
-                                ) : (<p className="text-secondary text-sm italic">{isOwner ? "Add your favorite genres..." : "No genres specified."}</p>)}
-                            </div>
-                        )}
-                        {isOwner && !isEditingGenres && (<button onClick={() => setIsEditingGenres(true)} className="absolute top-0 right-0 p-1 text-secondary opacity-0 group-hover:opacity-100 hover:text-primary transition-opacity" title="Edit Genres"><Edit3 size={16}/></button>)}
-                    </div>
-
-                    {/* Reading Goal */}
-                     <div className="relative group">
-                        <h3 className="text-lg font-semibold text-text-primary mb-2 flex items-center gap-2"><Target size={18}/> Reading Goal ({personality.reading_goal_year || 'Set Year'})</h3>
-                        {isEditingGoal ? (
-                            <div className="space-y-2">
-                                <div className="flex gap-2">
-                                     <input type="number" value={goalYearInput} onChange={(e) => setGoalYearInput(e.target.value)} placeholder="Year" className="w-1/2 bg-background border border-secondary rounded-md p-2 text-text-primary focus:outline-none focus:ring-1 focus:ring-primary text-sm"/>
-                                     <input type="number" value={goalCountInput} onChange={(e) => setGoalCountInput(e.target.value)} placeholder="No. of books" className="w-1/2 bg-background border border-secondary rounded-md p-2 text-text-primary focus:outline-none focus:ring-1 focus:ring-primary text-sm" min="1"/>
-                                </div>
-                                <div className="flex justify-end gap-2">
-                                    <button onClick={() => { setIsEditingGoal(false); setGoalYearInput(personality.reading_goal_year || new Date().getFullYear()); setGoalCountInput(personality.reading_goal_count?.toString() || ''); }} className="text-xs px-3 py-1 rounded text-secondary hover:bg-secondary/20" disabled={isSavingGoal}>Cancel</button>
-                                    <button onClick={handleSaveGoal} className="text-xs px-3 py-1 rounded bg-primary text-text-contrast hover:opacity-90 flex items-center gap-1 disabled:opacity-50" disabled={isSavingGoal}> {isSavingGoal ? <Loader size={14} className="animate-spin"/> : <Save size={14}/>} Save Goal </button>
-                                </div>
-                            </div>
-                        ) : (
-                            <div>
-                                {personality.reading_goal_count && personality.reading_goal_year ? (
-                                    <>
-                                        <p className="text-sm text-text-primary mb-1">Read <span className="font-bold">{stats.books_read_count}</span> of <span className="font-bold">{personality.reading_goal_count}</span> books for {personality.reading_goal_year}.</p>
-                                        <div className="w-full bg-secondary/30 rounded-full h-2.5 dark:bg-gray-700"> <div className="bg-primary h-2.5 rounded-full" style={{ width: `${goalProgress}%` }}></div> </div>
-                                        <p className="text-xs text-secondary text-right mt-1">{goalProgress}% complete</p>
-                                    </>
-                                ) : (<p className="text-secondary text-sm italic">{isOwner ? "Set your yearly reading goal..." : "No reading goal set."}</p>)}
-                             </div>
-                        )}
-                        {isOwner && !isEditingGoal && (<button onClick={() => setIsEditingGoal(true)} className="absolute top-0 right-0 p-1 text-secondary opacity-0 group-hover:opacity-100 hover:text-primary transition-opacity" title="Edit Goal"><Edit3 size={16}/></button>)}
-                    </div>
-                </div>
-
-                 {/* Right Column: Mood & Archetype */}
-<div className="space-y-6">
+          <h2 className="text-2xl font-bold text-primary mb-6 text-center">
+            Reading Personality
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            {/* Left Column: Genres & Goal */}
+            <div className="space-y-6">
+              {/* Favorite Genres */}
               <div className="relative group">
-                  <h3 className="text-lg font-semibold text-text-primary mb-2 flex items-center gap-2"><Award size={18}/> Literary Archetype</h3>
-                  
-                  {isEditingArchetype ? (
-                      <div className="space-y-2">
-                          <input type="text" value={archetypeInput} onChange={(e) => setArchetypeInput(e.target.value)} placeholder="e.g., The Sage, The Hero..." className="w-full bg-background border border-secondary rounded-md p-2 text-text-primary focus:outline-none focus:ring-1 focus:ring-primary text-sm"/>
-                          <div className="flex justify-end gap-2">
-                              <button onClick={() => { setIsEditingArchetype(false); setArchetypeInput(personality.literary_archetype || ''); }} className="text-xs px-3 py-1 rounded text-secondary hover:bg-secondary/20" disabled={isSavingArchetype}>Cancel</button>
-                              <button onClick={handleSaveArchetype} className="text-xs px-3 py-1 rounded bg-primary text-text-contrast hover:opacity-90 flex items-center gap-1 disabled:opacity-50" disabled={isSavingArchetype}>
-                                  {isSavingArchetype ? <Loader size={14} className="animate-spin"/> : <Save size={14}/>} Save
-                              </button>
-                          </div>
-                      </div>
-                  ) : (
-                      <div>
-                          {personality.literary_archetype ? (
-                              <span className="px-3 py-1 bg-secondary/10 text-secondary text-sm font-medium rounded-full border border-secondary/30">{personality.literary_archetype}</span>
-                          ):( <p className="text-secondary text-sm italic">{isOwner ? "Define your reading style..." : "Archetype not set."}</p> )}
-                      </div>
-                  )}
-
-                  {isOwner && !isEditingArchetype && (
-                      <button 
-                          onClick={() => setIsEditingArchetype(true)} 
-                          className="absolute top-0 right-0 p-1 text-secondary opacity-0 group-hover:opacity-100 hover:text-primary transition-opacity" 
-                          title="Edit Archetype">
-                          <Edit3 size={16}/>
+                <h3 className="text-lg font-semibold text-text-primary mb-2 flex items-center gap-2">
+                  <Tag size={18} /> Favorite Genres
+                </h3>
+                {isEditingGenres ? (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={genresInput}
+                      onChange={(e) => setGenresInput(e.target.value)}
+                      placeholder="e.g., Fantasy, Sci-Fi, Mystery"
+                      className="w-full bg-background border border-secondary rounded-md p-2 text-text-primary focus:outline-none focus:ring-1 focus:ring-primary text-sm"
+                    />
+                    <p className="text-xs text-secondary">
+                      Separate genres with commas.
+                    </p>
+                    <div className="flex justify-end gap-2">
+                      <button
+                        onClick={() => {
+                          setIsEditingGenres(false);
+                          setGenresInput(
+                            personality.favorite_genres?.join(", ") || ""
+                          );
+                        }}
+                        className="text-xs px-3 py-1 rounded text-secondary hover:bg-secondary/20"
+                        disabled={isSavingGenres}
+                      >
+                        Cancel
                       </button>
-                  )}
+                      <button
+                        onClick={handleSaveGenres}
+                        className="text-xs px-3 py-1 rounded bg-primary text-text-contrast hover:opacity-90 flex items-center gap-1 disabled:opacity-50"
+                        disabled={isSavingGenres}
+                      >
+                        {" "}
+                        {isSavingGenres ? (
+                          <Loader size={14} className="animate-spin" />
+                        ) : (
+                          <Save size={14} />
+                        )}{" "}
+                        Save Genres{" "}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {personality.favorite_genres &&
+                    personality.favorite_genres.length > 0 ? (
+                      personality.favorite_genres.map((genre, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full"
+                        >
+                          {genre}
+                        </span>
+                      ))
+                    ) : (
+                      <p className="text-secondary text-sm italic">
+                        {isOwner
+                          ? "Add your favorite genres..."
+                          : "No genres specified."}
+                      </p>
+                    )}
+                  </div>
+                )}
+                {isOwner && !isEditingGenres && (
+                  <button
+                    onClick={() => setIsEditingGenres(true)}
+                    className="absolute top-0 right-0 p-1 text-secondary opacity-0 group-hover:opacity-100 hover:text-primary transition-opacity"
+                    title="Edit Genres"
+                  >
+                    <Edit3 size={16} />
+                  </button>
+                )}
               </div>
+
+              {/* Reading Goal */}
+              <div className="relative group">
+                <h3 className="text-lg font-semibold text-text-primary mb-2 flex items-center gap-2">
+                  <Target size={18} /> Reading Goal (
+                  {personality.reading_goal_year || "Set Year"})
+                </h3>
+                {isEditingGoal ? (
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        value={goalYearInput}
+                        onChange={(e) => setGoalYearInput(e.target.value)}
+                        placeholder="Year"
+                        className="w-1/2 bg-background border border-secondary rounded-md p-2 text-text-primary focus:outline-none focus:ring-1 focus:ring-primary text-sm"
+                      />
+                      <input
+                        type="number"
+                        value={goalCountInput}
+                        onChange={(e) => setGoalCountInput(e.target.value)}
+                        placeholder="No. of books"
+                        className="w-1/2 bg-background border border-secondary rounded-md p-2 text-text-primary focus:outline-none focus:ring-1 focus:ring-primary text-sm"
+                        min="1"
+                      />
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <button
+                        onClick={() => {
+                          setIsEditingGoal(false);
+                          setGoalYearInput(
+                            personality.reading_goal_year ||
+                              new Date().getFullYear()
+                          );
+                          setGoalCountInput(
+                            personality.reading_goal_count?.toString() || ""
+                          );
+                        }}
+                        className="text-xs px-3 py-1 rounded text-secondary hover:bg-secondary/20"
+                        disabled={isSavingGoal}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleSaveGoal}
+                        className="text-xs px-3 py-1 rounded bg-primary text-text-contrast hover:opacity-90 flex items-center gap-1 disabled:opacity-50"
+                        disabled={isSavingGoal}
+                      >
+                        {" "}
+                        {isSavingGoal ? (
+                          <Loader size={14} className="animate-spin" />
+                        ) : (
+                          <Save size={14} />
+                        )}{" "}
+                        Save Goal{" "}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    {personality.reading_goal_count &&
+                    personality.reading_goal_year ? (
+                      <>
+                        <p className="text-sm text-text-primary mb-1">
+                          Read{" "}
+                          <span className="font-bold">
+                            {stats.books_read_count}
+                          </span>{" "}
+                          of{" "}
+                          <span className="font-bold">
+                            {personality.reading_goal_count}
+                          </span>{" "}
+                          books for {personality.reading_goal_year}.
+                        </p>
+                        <div className="w-full bg-secondary/30 rounded-full h-2.5 dark:bg-gray-700">
+                          {" "}
+                          <div
+                            className="bg-primary h-2.5 rounded-full"
+                            style={{ width: `${goalProgress}%` }}
+                          ></div>{" "}
+                        </div>
+                        <p className="text-xs text-secondary text-right mt-1">
+                          {goalProgress}% complete
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-secondary text-sm italic">
+                        {isOwner
+                          ? "Set your yearly reading goal..."
+                          : "No reading goal set."}
+                      </p>
+                    )}
+                  </div>
+                )}
+                {isOwner && !isEditingGoal && (
+                  <button
+                    onClick={() => setIsEditingGoal(true)}
+                    className="absolute top-0 right-0 p-1 text-secondary opacity-0 group-hover:opacity-100 hover:text-primary transition-opacity"
+                    title="Edit Goal"
+                  >
+                    <Edit3 size={16} />
+                  </button>
+                )}
               </div>
             </div>
+
+            {/* Right Column: Mood & Archetype */}
+            <div className="space-y-6">
+              <div className="relative group">
+                <h3 className="text-lg font-semibold text-text-primary mb-2 flex items-center gap-2">
+                  <Award size={18} /> Literary Archetype
+                </h3>
+
+                {isEditingArchetype ? (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={archetypeInput}
+                      onChange={(e) => setArchetypeInput(e.target.value)}
+                      placeholder="e.g., The Sage, The Hero..."
+                      className="w-full bg-background border border-secondary rounded-md p-2 text-text-primary focus:outline-none focus:ring-1 focus:ring-primary text-sm"
+                    />
+                    <div className="flex justify-end gap-2">
+                      <button
+                        onClick={() => {
+                          setIsEditingArchetype(false);
+                          setArchetypeInput(
+                            personality.literary_archetype || ""
+                          );
+                        }}
+                        className="text-xs px-3 py-1 rounded text-secondary hover:bg-secondary/20"
+                        disabled={isSavingArchetype}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={handleSaveArchetype}
+                        className="text-xs px-3 py-1 rounded bg-primary text-text-contrast hover:opacity-90 flex items-center gap-1 disabled:opacity-50"
+                        disabled={isSavingArchetype}
+                      >
+                        {isSavingArchetype ? (
+                          <Loader size={14} className="animate-spin" />
+                        ) : (
+                          <Save size={14} />
+                        )}{" "}
+                        Save
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    {personality.literary_archetype ? (
+                      <span className="px-3 py-1 bg-secondary/10 text-secondary text-sm font-medium rounded-full border border-secondary/30">
+                        {personality.literary_archetype}
+                      </span>
+                    ) : (
+                      <p className="text-secondary text-sm italic">
+                        {isOwner
+                          ? "Define your reading style..."
+                          : "Archetype not set."}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {isOwner && !isEditingArchetype && (
+                  <button
+                    onClick={() => setIsEditingArchetype(true)}
+                    className="absolute top-0 right-0 p-1 text-secondary opacity-0 group-hover:opacity-100 hover:text-primary transition-opacity"
+                    title="Edit Archetype"
+                  >
+                    <Edit3 size={16} />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
         </section>
 
         <div className="mb-8 flex justify-center border-b border-secondary">
-          <button onClick={() => setActiveTab("shelves")} className={`px-6 py-3 text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "shelves" ? "border-b-2 border-primary text-primary" : "text-secondary hover:text-primary"}`}>
-              <BookOpenCheck size={18} /> Bookshelves ({shelfItems.length})
+          <button
+            onClick={() => setActiveTab("shelves")}
+            className={`px-6 py-3 text-sm font-medium transition-colors flex items-center gap-2 ${
+              activeTab === "shelves"
+                ? "border-b-2 border-primary text-primary"
+                : "text-secondary hover:text-primary"
+            }`}
+          >
+            <BookOpenCheck size={18} /> Bookshelves ({shelfItems.length})
           </button>
-          <button onClick={() => setActiveTab("posts")} className={`px-6 py-3 text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "posts" ? "border-b-2 border-primary text-primary" : "text-secondary hover:text-primary"}`}>
-              <MessageSquare size={18} /> Showcase ({posts.length})
+          <button
+            onClick={() => setActiveTab("posts")}
+            className={`px-6 py-3 text-sm font-medium transition-colors flex items-center gap-2 ${
+              activeTab === "posts"
+                ? "border-b-2 border-primary text-primary"
+                : "text-secondary hover:text-primary"
+            }`}
+          >
+            <MessageSquare size={18} /> Showcase ({posts.length})
           </button>
-          <button onClick={() => setActiveTab("creations")} className={`px-6 py-3 text-sm font-medium transition-colors flex items-center gap-2 ${activeTab === "creations" ? "border-b-2 border-primary text-primary" : "text-secondary hover:text-primary"}`}>
-              <Wand2 size={18} /> My Creations ({privateCreations.length})
+          <button
+            onClick={() => setActiveTab("creations")}
+            className={`px-6 py-3 text-sm font-medium transition-colors flex items-center gap-2 ${
+              activeTab === "creations"
+                ? "border-b-2 border-primary text-primary"
+                : "text-secondary hover:text-primary"
+            }`}
+          >
+            <Wand2 size={18} /> My Creations ({privateCreations.length})
           </button>
         </div>
 
@@ -562,6 +959,18 @@ const UserProfilePage = () => {
                   </Link>
                 </div>
               )}
+              {shelfStatus === "succeeded" && favoritesShelf.length > 0 && (
+                <div>
+                  <h3 className="text-2xl font-bold text-primary mb-4 flex items-center gap-2">
+                    <Star size={24} /> Favorites ({favoritesShelf.length})
+                  </h3>
+                  <div className="flex space-x-4 overflow-x-auto pb-4">
+                    {favoritesShelf.map((item) => (
+                      <ShelfBookCard key={item.uid} shelfItem={item} />
+                    ))}
+                  </div>
+                </div>
+              )}
               {/* Currently Reading Shelf */}
               {shelfStatus === "succeeded" && readingShelf.length > 0 && (
                 <div>
@@ -570,7 +979,7 @@ const UserProfilePage = () => {
                   </h3>
                   <div className="flex space-x-4 overflow-x-auto pb-4">
                     {readingShelf.map((item) => (
-                      <ShelfBookCard key={item.uid} shelfItem={item} />
+                      <ShelfBookCard key={item.uid} shelfItem={item} isReading={true} />
                     ))}
                   </div>
                 </div>
@@ -596,6 +1005,19 @@ const UserProfilePage = () => {
                   </h3>
                   <div className="flex space-x-4 overflow-x-auto pb-4">
                     {readShelf.map((item) => (
+                      <ShelfBookCard key={item.uid} shelfItem={item} />
+                    ))}
+                  </div>
+                </div>
+              )}
+              {/* Did Not Finish Shelf */}
+              {shelfStatus === "succeeded" && dnfShelf.length > 0 && (
+                <div>
+                  <h3 className="text-2xl font-bold text-primary mb-4">
+                    Did Not Finish ({dnfShelf.length})
+                  </h3>
+                  <div className="flex space-x-4 overflow-x-auto pb-4">
+                    {dnfShelf.map((item) => (
                       <ShelfBookCard key={item.uid} shelfItem={item} />
                     ))}
                   </div>
@@ -632,10 +1054,10 @@ const UserProfilePage = () => {
                     />
                   ))
                 : creationsFetchStatus !== "loading" && (
-                   <p className="col-span-full text-center text-secondary py-10">
+                    <p className="col-span-full text-center text-secondary py-10">
                       Your generated art will be saved here.
-                   </p>
-                 )}
+                    </p>
+                  )}
             </div>
           )}
         </div>

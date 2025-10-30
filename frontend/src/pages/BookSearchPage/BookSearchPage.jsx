@@ -64,6 +64,14 @@ const BookResultCard = ({ book }) => {
                     >
                         Read
                     </button>
+                    <button
+                        onClick={() => handleAddToShelf('did_not_finish')}
+                        className="text-xs px-3 py-1 rounded-full whitespace-nowrap
+                                   bg-red-100 text-red-800 hover:bg-red-200
+                                   dark:bg-red-500/20 dark:text-red-300 dark:hover:bg-red-500/40"
+                    >
+                        Did Not Finish
+                    </button>
                 </div>
             </div>
         </div>

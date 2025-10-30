@@ -23,3 +23,30 @@ export const removeFromShelf = async (olKey) => {
   );
   return response.data;
 };
+
+export const updateBookFavorite = async (olKey, is_favorite) => {
+  if (olKey.startsWith('/')) {
+    olKey = olKey.substring(1);
+  }
+  const response = await axiosInstance.put(`/books/shelf/${olKey}/favorite`, {
+    is_favorite,
+  });
+  return response.data;
+};
+
+export const updateBookProgress = async (olKey, progress) => {
+  if (olKey.startsWith('/')) {
+    olKey = olKey.substring(1);
+  }
+  const response = await axiosInstance.put(`/books/shelf/${olKey}/progress`, {
+    progress,
+  });
+  return response.data;
+};
+
+export const updateShelfOrder = async (ordered_keys) => {
+  const response = await axiosInstance.put('/books/shelf/order', {
+    ordered_keys,
+  });
+  return response.data;
+};

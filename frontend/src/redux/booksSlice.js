@@ -50,6 +50,41 @@ export const removeBookFromShelf = createAsyncThunk(
   }
 );
 
+export const updateBookFavorite = createAsyncThunk(
+  'books/updateBookFavorite',
+  async ({ olKey, is_favorite }, { rejectWithValue }) => {
+    try {
+      const data = await bookApi.updateBookFavorite(olKey, is_favorite);
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.detail || 'Could not update favorite');
+    }
+  }
+);
+
+export const updateBookProgress = createAsyncThunk(
+  'books/updateBookProgress',
+  async ({ olKey, progress }, { rejectWithValue }) => {
+    try {
+      const data = await bookApi.updateBookProgress(olKey, progress);
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.detail || 'Could not update progress');
+    }
+  }
+);
+
+export const updateShelfOrder = createAsyncThunk(
+  'books/updateShelfOrder',
+  async (ordered_keys, { rejectWithValue }) => {
+    try {
+      const data = await bookApi.updateShelfOrder(ordered_keys);
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.detail || 'Could not re-order shelf');
+    }
+  }
+);
 
 const booksSlice = createSlice({
   name: 'books',
@@ -97,6 +132,29 @@ const booksSlice = createSlice({
         state.items = state.items.filter(
           (item) => item.ol_key !== action.payload
         );
+      })
+      .addCase(updateBookFavorite.fulfilled, (state, action) => {
+        const updatedItem = action.payload;
+        const existingIndex = state.items.findIndex(
+          (item) => item.ol_key === updatedItem.ol_key
+        );
+        if (existingIndex !== -1) {
+          state.items[existingIndex] = updatedItem;
+        }
+      })
+      
+      .addCase(updateBookProgress.fulfilled, (state, action) => {
+        const updatedItem = action.payload;
+        const existingIndex = state.items.findIndex(
+          (item) => item.ol_key === updatedItem.ol_key
+        );
+        if (existingIndex !== -1) {
+          state.items[existingIndex] = updatedItem;
+        }
+      })
+      
+      .addCase(updateShelfOrder.fulfilled, (state, action) => {
+        state.items = action.payload;
       })
       
       .addCase(searchOpenLibrary.pending, (state) => {
