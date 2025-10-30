@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Request, HTTPException, status
 from booklovin.core.config import APIResponse
-from booklovin.models.profile import UpdateGoalRequest, UserProfile, UpdateQuoteRequest, UpdateGenresRequest
+from booklovin.models.profile import UpdateGoalRequest, UserProfile, UpdateQuoteRequest, UpdateGenresRequest, UpdateArchetypeRequest
 from booklovin.models.errors import UserError
 from booklovin.models.users import User
 from booklovin.services import database
@@ -64,4 +64,21 @@ async def set_reading_goal(
     result = await database.profile.update_user_goal(db, user.uid, goal_data.year, goal_data.count)
     if isinstance(result, UserError):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=result.message)
+    return result
+
+@router.put("/me/archetype", response_model=User, response_class=APIResponse)
+async def set_literary_archetype(
+    request: Request,
+    archetype_data: UpdateArchetypeRequest,
+    user: User = Depends(get_from_token)
+) -> User | UserError:
+    """Update the literary archetype for the authenticated user."""
+    db = request.app.state.db
+    result = await database.profile.update_user_archetype(
+        db, user.uid, archetype_data.archetype
+    )
+
+    if isinstance(result, UserError):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=result.message)
+
     return result

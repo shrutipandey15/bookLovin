@@ -98,3 +98,16 @@ async def update_user_goal(db: Any, user_id: str, year: int, count: int) -> User
          updated_user_doc.pop("_id", None)
          return User.model_validate(updated_user_doc)
     return errors.NOT_FOUND
+
+async def update_user_archetype(db: Any, user_id: str, archetype: str) -> User | UserError:
+    """Updates the literary_archetype for a specific user."""
+    result = await db["users"].update_one(
+        {"uid": user_id},
+        {"$set": {"literary_archetype": archetype}}
+    )
+    if result.matched_count == 0: return errors.NOT_FOUND
+    updated_user_doc = await db["users"].find_one({"uid": user_id})
+    if updated_user_doc:
+         updated_user_doc.pop("_id", None)
+         return User.model_validate(updated_user_doc)
+    return errors.NOT_FOUND

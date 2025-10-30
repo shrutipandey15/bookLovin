@@ -7,6 +7,7 @@ class ShelfStatus(str, Enum):
     WANT_TO_READ = "want_to_read"
     READING = "reading"
     READ = "read"
+    DNF = "did_not_finish"
 
 class Book(BaseModel):
     ol_key: str = Field(..., alias="key")
@@ -37,3 +38,16 @@ class ShelfItem(UserObject, FlexModel):
     title: str
     cover_id: Optional[int]
     author_names: Optional[List[str]]
+
+    page_count: Optional[int] = None     
+    progress_percent: int = Field(default=0)
+    is_favorite: bool = Field(default=False)
+    sort_order: int = Field(default=0)
+
+class UpdateBookProgressRequest(BaseModel):
+    progress: int = Field(..., ge=0, le=100)
+
+class UpdateBookFavoriteRequest(BaseModel):
+    is_favorite: bool
+class UpdateShelfOrderRequest(BaseModel):
+    ordered_keys: List[str]

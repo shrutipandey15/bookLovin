@@ -19,3 +19,8 @@ export const updateUserGoal = async (year, count) => {
   const response = await axiosInstance.put('/profile/me/goal', { year, count });
   return response.data;
 };
+
+export const updateUserArchetype = async (archetype) => {
+  const response = await axiosInstance.put('/profile/me/archetype', { archetype });
+  return response.data;
+};

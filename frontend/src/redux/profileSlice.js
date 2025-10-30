@@ -26,6 +26,11 @@ reducers: {
         state.data.user.favorite_quote = action.payload;
       }
     },
+    updateProfileArchetype: (state, action) => {
+      if (state.data && state.data.user && state.data.user.reading_personality) {
+        state.data.user.reading_personality.literary_archetype = action.payload;
+      }
+    },
   },
     extraReducers: (builder) => {
     builder
@@ -45,6 +50,6 @@ reducers: {
   },
 });
 
-export const { updateProfileQuote } = profileSlice.actions;
+export const { updateProfileQuote, updateProfileArchetype } = profileSlice.actions;
 
 export default profileSlice.reducer;

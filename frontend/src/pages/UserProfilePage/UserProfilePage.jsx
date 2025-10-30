@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchShelf, removeBookFromShelf } from "@redux/booksSlice";
-import { fetchUserProfile, updateProfileQuote } from "@redux/profileSlice";
-import { updateUserQuote, updateUserGenres, updateUserGoal } from "@api/profile";
+import { fetchUserProfile, updateProfileQuote, updateProfileArchetype } from "@redux/profileSlice";
+import { updateUserQuote, updateUserGenres, updateUserGoal, updateUserArchetype } from "@api/profile";
 import { fetchPrivateCreations } from "@redux/creationsSlice";
 import { createPost } from "@redux/postsSlice";
 import {
@@ -165,10 +165,19 @@ const UserProfilePage = () => {
   const [goalCountInput, setGoalCountInput] = useState('');
   const [isSavingGoal, setIsSavingGoal] = useState(false);
 
+  const [isEditingArchetype, setIsEditingArchetype] = useState(false);
+  const [archetypeInput, setArchetypeInput] = useState('');
+  const [isSavingArchetype, setIsSavingArchetype] = useState(false);
+
   const { data: profile, status: profileStatus, error: profileError } = useSelector((state) => state.profile);
   const { user, posts } = profile || { user: {}, posts: [] };
   const { items: shelfItems, status: shelfStatus, error: shelfError } = useSelector((state) => state.books);
   const { privateCreations, fetchStatus: creationsFetchStatus } = useSelector((state) => state.creations);
+
+  console.log("--- PROFILE DEBUG START ---");
+  console.log("Full profile object from Redux (profile):", profile);
+  console.log("Destructured user object (user):", user);
+  console.log("--- PROFILE DEBUG END ---");
 
   useEffect(() => {
     if (name && (profileStatus === 'idle' || profile?.user?.username !== name)) {
@@ -186,6 +195,10 @@ const UserProfilePage = () => {
       setGenresInput(user?.reading_personality?.favorite_genres?.join(', ') || '');
       setGoalYearInput(user?.reading_personality?.reading_goal_year || new Date().getFullYear());
       setGoalCountInput(user?.reading_personality?.reading_goal_count?.toString() || '');
+  }, [user?.reading_personality]);
+
+  useEffect(() => {
+      setArchetypeInput(user?.reading_personality?.literary_archetype || '');
   }, [user?.reading_personality]);
 
   const handleSaveQuote = async () => {
@@ -253,6 +266,22 @@ const UserProfilePage = () => {
       } finally {
           setIsSavingGoal(false);
       }
+  };
+
+  const handleSaveArchetype = async () => {
+    if (isSavingArchetype) return;
+    setIsSavingArchetype(true);
+    try {
+        const updatedUserData = await updateUserArchetype(archetypeInput);
+        dispatch(updateProfileArchetype(updatedUserData.literary_archetype));
+        showNotification("Literary archetype updated!");
+        setIsEditingArchetype(false);
+    } catch (error) {
+        console.error("Failed to save archetype:", error);
+        showNotification("Failed to save archetype.", "error");
+    } finally {
+        setIsSavingArchetype(false);
+    }
   };
 
   const isOwner = currentUser?.name === name;
@@ -460,16 +489,38 @@ const UserProfilePage = () => {
                 </div>
 
                  {/* Right Column: Mood & Archetype */}
-                <div className="space-y-6">
-                    {/* Literary Archetype */}
-                    <div>
-                        <h3 className="text-lg font-semibold text-text-primary mb-2 flex items-center gap-2"><Award size={18}/> Literary Archetype</h3>
-                        {personality.literary_archetype ? (
-                            <span className="px-3 py-1 bg-secondary/10 text-secondary text-sm font-medium rounded-full border border-secondary/30">{personality.literary_archetype}</span>
-                        ):( <p className="text-secondary text-sm italic">{isOwner ? "Define your reading style..." : "Archetype not set."}</p> )}
-                        {/* Add edit button here later if desired */}
-                    </div>
-                </div>
+<div className="space-y-6">
+              <div className="relative group">
+                  <h3 className="text-lg font-semibold text-text-primary mb-2 flex items-center gap-2"><Award size={18}/> Literary Archetype</h3>
+                  
+                  {isEditingArchetype ? (
+                      <div className="space-y-2">
+                          <input type="text" value={archetypeInput} onChange={(e) => setArchetypeInput(e.target.value)} placeholder="e.g., The Sage, The Hero..." className="w-full bg-background border border-secondary rounded-md p-2 text-text-primary focus:outline-none focus:ring-1 focus:ring-primary text-sm"/>
+                          <div className="flex justify-end gap-2">
+                              <button onClick={() => { setIsEditingArchetype(false); setArchetypeInput(personality.literary_archetype || ''); }} className="text-xs px-3 py-1 rounded text-secondary hover:bg-secondary/20" disabled={isSavingArchetype}>Cancel</button>
+                              <button onClick={handleSaveArchetype} className="text-xs px-3 py-1 rounded bg-primary text-text-contrast hover:opacity-90 flex items-center gap-1 disabled:opacity-50" disabled={isSavingArchetype}>
+                                  {isSavingArchetype ? <Loader size={14} className="animate-spin"/> : <Save size={14}/>} Save
+                              </button>
+                          </div>
+                      </div>
+                  ) : (
+                      <div>
+                          {personality.literary_archetype ? (
+                              <span className="px-3 py-1 bg-secondary/10 text-secondary text-sm font-medium rounded-full border border-secondary/30">{personality.literary_archetype}</span>
+                          ):( <p className="text-secondary text-sm italic">{isOwner ? "Define your reading style..." : "Archetype not set."}</p> )}
+                      </div>
+                  )}
+
+                  {isOwner && !isEditingArchetype && (
+                      <button 
+                          onClick={() => setIsEditingArchetype(true)} 
+                          className="absolute top-0 right-0 p-1 text-secondary opacity-0 group-hover:opacity-100 hover:text-primary transition-opacity" 
+                          title="Edit Archetype">
+                          <Edit3 size={16}/>
+                      </button>
+                  )}
+              </div>
+              </div>
             </div>
         </section>
 
