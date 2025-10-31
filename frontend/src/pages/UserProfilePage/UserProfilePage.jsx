@@ -437,7 +437,6 @@ const UserProfilePage = () => {
       caption_text: captionText,
       mediaUrl: creationToPost.imageUrl,
       bookId: creationToPost.bookId || "unknown",
-      moodKey: "empowered", 
     };
     dispatch(createPost(newPost));
     navigate("/posts");

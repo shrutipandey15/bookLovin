@@ -8,13 +8,6 @@ const PostCard = ({ post }) => {
   const dispatch = useDispatch();
   const hasMedia = post.mediaUrl && post.mediaUrl.length > 0;
   
-  const textPostStyles = {
-    healing: 'bg-gradient-to-br from-green-100 to-blue-100 text-gray-800',
-    heartbroken: 'bg-gradient-to-br from-slate-200 to-indigo-200 text-slate-800',
-    empowered: 'bg-gradient-to-br from-yellow-100 via-orange-100 to-red-200 text-orange-900',
-    default: 'bg-gray-100 text-gray-800'
-  };
-
   const handleReaction = (e, reactionType) => {
     e.preventDefault();
     e.stopPropagation();
@@ -39,7 +32,7 @@ const PostCard = ({ post }) => {
                     <span className="font-semibold">{post.author?.username || 'Anonymous'}</span> {post.caption_text}
                 </p>
                 <div className="mt-4 flex items-center justify-start space-x-1">
-                    {Object.entries(REACTION_CONFIG).map(([key, { Icon, title }]) => (
+                    {Object.entries(REACTION_CONFIG).map(([key, {  title }]) => (
                         <button key={key} onClick={(e) => handleReaction(e, key)} title={title} className="flex items-center space-x-1.5 rounded-full px-3 py-1 text-secondary transition-colors hover:bg-primary/10 hover:text-primary">
                             <Icon className="h-4 w-4" /><span className="text-sm font-medium">{post.reactions?.[key] || 0}</span>
                         </button>
@@ -53,14 +46,14 @@ const PostCard = ({ post }) => {
   // Card for text-only posts
   return (
     <Link to={`/posts/${post.uid}`} className="flex h-96">
-        <div className={`w-full rounded-2xl p-8 flex flex-col text-center shadow-sm transition-all hover:shadow-lg ${textPostStyles[post.moodKey] || textPostStyles.default}`}>
+        <div className={`w-full rounded-2xl p-8 flex flex-col text-center shadow-sm transition-all hover:shadow-lg `}>
             <div className="m-auto">
                 <p className="text-3xl font-serif leading-snug">"{post.caption_text}"</p>
             </div>
             <div className="mt-auto">
                 <p className="text-sm opacity-80">by <span className="font-semibold">{post.author?.username || 'Anonymous'}</span></p>
                 <div className="mt-2 flex justify-center space-x-1">
-                    {Object.entries(REACTION_CONFIG).map(([key, { Icon, title }]) => (
+                    {Object.entries(REACTION_CONFIG).map(([key, { title }]) => (
                         <button key={key} onClick={(e) => handleReaction(e, key)} title={title} className="flex items-center space-x-1.5 rounded-full px-3 py-1 opacity-70 transition-opacity hover:opacity-100 bg-black/5">
                             <Icon className="h-4 w-4" /><span className="text-sm font-medium">{post.reactions?.[key] || 0}</span>
                         </button>
