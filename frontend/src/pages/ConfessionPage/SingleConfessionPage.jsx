@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchConfessionById } from '@redux/confessionSlice';
 import { X, Loader2 } from 'lucide-react';
-import { MOOD_CONFIG } from '@config/moods';
 
 const SingleConfessionPage = ({ confessionId, onClose }) => {
   const dispatch = useDispatch();
@@ -35,10 +34,8 @@ const SingleConfessionPage = ({ confessionId, onClose }) => {
       );
     }
   
-    const moodColor = MOOD_CONFIG[currentConfession.moodKey]?.accents?.daydream?.primary || '#9ca3af';
-
     return (
-      <div className="relative w-full max-w-2xl rounded-2xl bg-background p-8 shadow-2xl border" style={{ borderColor: moodColor }}>
+      <div className="relative w-full max-w-2xl rounded-2xl bg-background p-8 shadow-2xl border">
         <button onClick={onClose} className="absolute top-4 right-4 text-secondary transition-colors hover:text-primary">
             <X size={24} />
         </button>

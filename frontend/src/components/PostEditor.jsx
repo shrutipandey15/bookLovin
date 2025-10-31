@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { createPost, updatePost, fetchSinglePost } from '@redux/postsSlice';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useMood } from '@components/MoodContext';
 
 const PostEditor = () => {
   const { id: postId } = useParams();
@@ -10,7 +9,6 @@ const PostEditor = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  const { mood, moodConfig } = useMood();
   const { currentPost, status } = useSelector(state => state.posts);
 
   const [captionText, setCaptionText] = useState('');
@@ -26,11 +24,9 @@ const PostEditor = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const moodKey = Object.keys(moodConfig).find(key => moodConfig[key].enum === mood);
     
     const postData = {
       caption_text: captionText,
-      moodKey,
       bookId: 'mockBookId123',
       mediaUrl: null,
     };
@@ -43,17 +39,12 @@ const PostEditor = () => {
     
     navigate('/posts');
   };
-  
-  const currentMoodLabel = moodConfig[Object.keys(moodConfig).find(key => moodConfig[key].enum === mood)]?.label || '...';
-  
+    
   return (
     <div className="mx-auto max-w-3xl p-4 font-body text-text-primary">
       <h1 className="mb-2 text-3xl font-bold text-primary">
         {isEditing ? 'Edit Reflection' : 'Share a Reflection'}
       </h1>
-      <p className="mb-6 text-sm italic text-secondary">
-        Writing in a {currentMoodLabel} mood
-      </p>
 
       <form onSubmit={handleSubmit} className="space-y-6 rounded-2xl border border-secondary bg-card-background p-6 shadow-md backdrop-blur-md">
         

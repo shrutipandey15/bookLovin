@@ -3,30 +3,19 @@ import { Send } from "lucide-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { getWordCount } from "@utils/journalUtils";
-import MoodSelectDropdown from "@pages/JournalPage/MoodSelectDropdown";
-import { useMood } from "@components/MoodContext";
 
-const LetterComposer = ({ onSave, onCancel }) => {
-  const { mood: globalMood, setMood: setGlobalMood } = useMood();
-  
+const LetterComposer = ({ onSave, onCancel }) => {  
   const [recipient, setRecipient] = useState("");
   const [subject, setSubject] = useState("");
   const [content, setContent] = useState("");
-  const [mood, setMood] = useState(globalMood);
   const textareaRef = useRef(null);
   const wordCount = getWordCount(content);
-
-  const handleMoodChange = (newMood) => {
-    setMood(newMood);
-    setGlobalMood(newMood);
-  };
 
   const handleSave = () => {
     const letterData = {
       recipient: recipient.trim(),
       subject: subject.trim(),
       content: content.trim(),
-      moodKey: mood,
       word_count: wordCount,
     };
     onSave(letterData);
@@ -66,7 +55,6 @@ const LetterComposer = ({ onSave, onCancel }) => {
                     onChange={(e) => setRecipient(e.target.value)}
                     className="w-full border-b border-border-color bg-transparent pb-2 text-text-primary placeholder:text-secondary focus:outline-none"
                 />
-                 <MoodSelectDropdown selectedMood={mood} onMoodChange={handleMoodChange} />
             </div>
              <input
                 type="text"

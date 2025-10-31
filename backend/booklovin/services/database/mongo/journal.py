@@ -3,7 +3,7 @@
 from datetime import datetime, timezone
 
 from booklovin.models.errors import UserError
-from booklovin.models.journals import JournalEntry, JournalEntryUpdate, Mood
+from booklovin.models.journals import JournalEntry, JournalEntryUpdate
 from booklovin.models.users import User
 from booklovin.services import errors
 from booklovin.services.streak_logic import calculate_streak_changes
@@ -59,13 +59,11 @@ async def update(db: Database, user: User, entry_id: str, journal_entry: Journal
     return errors.NOT_FOUND
 
 async def query(
-    db: Database, user_id: str, mood: Mood | None = None, search: str | None = None, favorite: bool | None = None
+    db: Database, user_id: str, search: str | None = None, favorite: bool | None = None
 ) -> list[JournalEntry] | UserError:
     """List journal entries with optional filtering."""
     query = {"authorId": user_id}
 
-    if mood:
-        query["mood"] = mood.value  # type: ignore
     if search:
         query["$text"] = {"$search": search}  # type: ignore
     if favorite is not None:

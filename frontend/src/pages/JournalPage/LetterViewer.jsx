@@ -1,5 +1,4 @@
 import { Mail } from 'lucide-react';
-import { MOOD_CONFIG } from '@config/moods';
 
 export const LetterViewer = ({ letter, onMarkAsOpened }) => {
   if (!letter) {
@@ -13,7 +12,6 @@ export const LetterViewer = ({ letter, onMarkAsOpened }) => {
   }
 
   const formatDate = (dateString) => new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-  const moodEmoji = MOOD_CONFIG[letter.moodKey]?.emoji || '💌';
 
   return (
     <article className="h-full flex flex-col rounded-2xl border border-secondary bg-background p-8 shadow-lg">
@@ -31,7 +29,6 @@ export const LetterViewer = ({ letter, onMarkAsOpened }) => {
       <footer className="mt-8 border-t border-secondary pt-6">
         <div className="flex items-center justify-between text-sm text-secondary">
           <div>
-            <p>Mood when written: {moodEmoji}</p>
             <p>{letter.wordCount} words</p>
           </div>
           <div className="text-right">

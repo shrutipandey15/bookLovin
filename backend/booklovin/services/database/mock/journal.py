@@ -2,7 +2,7 @@ from datetime import datetime
 
 from booklovin.models.errors import ErrorCode, UserError, gen_error
 from booklovin.services.streak_logic import calculate_streak_changes
-from booklovin.models.journals import JournalEntry, JournalEntryUpdate, Mood
+from booklovin.models.journals import JournalEntry, JournalEntryUpdate
 from booklovin.models.users import User
 
 from .core import State
@@ -65,7 +65,7 @@ async def update(db: State, user: User, entry_id: str, journal_entry: JournalEnt
 
 
 async def query(
-    db: State, user_id: str, mood: Mood | None = None, search: str | None = None, favorite: bool | None = None
+    db: State, user_id: str, search: str | None = None, favorite: bool | None = None
 ) -> list[JournalEntry] | UserError:
     """List journal entries with optional filtering."""
     # Check if user exists
@@ -76,9 +76,6 @@ async def query(
     filtered_entries = []
 
     for entry in entries:
-        # Apply mood filter if specified
-        if mood is not None and entry.mood != mood:
-            continue
 
         # Apply search filter if specified
         if search is not None:

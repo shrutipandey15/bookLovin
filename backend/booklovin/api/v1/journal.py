@@ -2,7 +2,7 @@
 
 from booklovin.core.config import APIResponse
 from booklovin.models.errors import UserError
-from booklovin.models.journals import JournalEntry, NewJournalEntry, Mood, JournalEntryUpdate
+from booklovin.models.journals import JournalEntry, NewJournalEntry, JournalEntryUpdate
 from booklovin.models.users import User
 from booklovin.services import database
 from booklovin.utils.user_token import get_from_token
@@ -45,12 +45,11 @@ async def update_journal_entry(
 async def list_journal_entries(
     request: Request,
     user: User = Depends(get_from_token),
-    mood: Mood | None = None,
     search: str | None = None,
     favorite: bool | None = None,
 ) -> list[JournalEntry] | UserError:
     """List journal entries with optional filtering."""
-    result = await database.journal.query(db=request.app.state.db, user_id=user.uid, mood=mood, search=search, favorite=favorite)
+    result = await database.journal.query(db=request.app.state.db, user_id=user.uid, search=search, favorite=favorite)
 
     if isinstance(result, UserError):
         return result

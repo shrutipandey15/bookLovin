@@ -5,7 +5,7 @@ from booklovin.models.errors import UserError
 from booklovin.models.post import Post
 from booklovin.models.comments import Comment
 from booklovin.models.users import User
-from booklovin.models.journals import JournalEntry, JournalEntryUpdate, Mood
+from booklovin.models.journals import JournalEntry, JournalEntryUpdate
 from booklovin.models.confessions import Confession, NewConfession
 from booklovin.models.books import ShelfItem
 from fastapi import FastAPI
@@ -19,7 +19,7 @@ class JournalService(Protocol):
     async def update(self, db: Any, user: User, entry_id: str, journal_entry: JournalEntryUpdate) -> None | UserError: ...
     # query
     async def query(
-        self, db: Any, user_id: str, mood: Mood | None = None, search: str | None = None, favorite: bool | None = None
+        self, db: Any, user_id: str, search: str | None = None, favorite: bool | None = None
     ) -> list[JournalEntry] | UserError: ...
 
 

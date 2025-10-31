@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useMood } from "@components/MoodContext";
 import { X } from "lucide-react";
 
 const suggestedTags = [
@@ -11,7 +10,6 @@ const suggestedTags = [
 const ConfessionEditor = ({ isOpen, onClose, onSave }) => {
   const [content, setContent] = useState("");
   const [tags, setTags] = useState([]);
-  const { mood } = useMood();
 
   if (!isOpen) return null;
 
@@ -29,7 +27,6 @@ const ConfessionEditor = ({ isOpen, onClose, onSave }) => {
 
     const confessionData = {
       content: content.trim(),
-      moodKey: mood,
       tags: tags,
       isAnonymous: true, // As per design, all are anonymous
     };

@@ -1,10 +1,7 @@
 import { Star, Trash2 } from 'lucide-react';
-import { MOOD_CONFIG, MOOD_ICONS } from '@config/moods';
 import EntryStats from './EntryStats';
 
 const EntryCard = ({ entry, onEdit, onDelete, onToggleFavorite }) => {
-  const { moodKey = 'healing' } = entry;
-  const MoodIcon = MOOD_ICONS[moodKey];
 
   return (
     <div
@@ -14,7 +11,6 @@ const EntryCard = ({ entry, onEdit, onDelete, onToggleFavorite }) => {
       <div className="flex-grow">
         <div className="mb-4 flex items-start justify-between">
           <div className="flex min-w-0 items-center space-x-2 pr-2">
-            {MoodIcon && <MoodIcon className="h-5 w-5 flex-shrink-0 text-primary" />}
             <h3 className="flex-grow truncate text-lg font-semibold text-primary">{entry.title || 'Untitled Entry'}</h3>
           </div>
           <div className="flex items-center space-x-1 opacity-0 transition-opacity duration-300 group-hover:opacity-100">

@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
 import lettersService from "@api/letters";
-import { MOOD_ENUM_TO_KEY } from "@config/moods";
 
 export function useLetters() {
   const [letters, setLetters] = useState([]);
@@ -20,7 +19,6 @@ export function useLetters() {
         targetDate: letter.target_date,
         wordCount: letter.word_count,
         openedAt: letter.opened_at,
-        moodKey: MOOD_ENUM_TO_KEY[letter.mood] || "healing",
       }));
 
       setLetters(formattedLetters);
@@ -59,7 +57,6 @@ export function useLetters() {
       targetDate: updatedLetterFromServer.target_date,
       wordCount: updatedLetterFromServer.word_count,
       openedAt: updatedLetterFromServer.opened_at,
-      moodKey: MOOD_ENUM_TO_KEY[updatedLetterFromServer.mood] || "healing",
     };
 
     setLetters((prev) =>

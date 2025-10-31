@@ -1,11 +1,8 @@
 import React from 'react';
-import { MOOD_CONFIG } from '@config/moods';
 import { Heart, Star, Sun } from 'lucide-react';
 
 const ConfessionCard = ({ confession, onTagClick, onCardClick }) => {
-  const { content, soulName, moodKey, tags } = confession || {};
-
-  const moodPrimaryColor = MOOD_CONFIG[moodKey]?.themes?.starlight?.['--primary'] || '#9ca3af';
+  const { content, soulName, tags } = confession || {};
 
   if (!confession) {
     return null;
@@ -24,8 +21,6 @@ const ConfessionCard = ({ confession, onTagClick, onCardClick }) => {
       <div
         className="flex h-full min-h-[220px] w-full flex-col rounded-2xl border bg-card-background p-6 font-body text-text-primary shadow-lg backdrop-blur-md transition-all duration-300 group-hover:!border-primary/80 group-hover:scale-105"
         style={{
-          borderColor: moodPrimaryColor,
-          boxShadow: `0 0 15px 0 ${moodPrimaryColor}20`,
         }}
       >
         <p className="mb-4 flex-grow text-base leading-relaxed text-text-primary/90 line-clamp-4">{content}</p>

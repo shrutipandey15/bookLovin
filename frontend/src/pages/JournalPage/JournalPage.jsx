@@ -71,7 +71,7 @@ const JournalView = () => {
 
   useEffect(() => {
     fetchUserProfile();
-    dispatch(fetchEntries({ searchTerm, moodFilter: "all" }));
+    dispatch(fetchEntries({ searchTerm}));
   }, [dispatch, searchTerm, fetchUserProfile]);
 
   const handleNewEntry = () => {

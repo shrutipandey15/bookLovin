@@ -1,19 +1,10 @@
 from datetime import datetime, timezone
-from enum import IntEnum, auto
+from enum import auto
 
 from booklovin.models.base import FlexModel, UserObject, optional_fields
 from pydantic import Field, field_serializer, field_validator
 import bleach
-
-
-class Mood(IntEnum):
-    HEARTBROKEN = auto()
-    HEALING = auto()
-    EMPOWERED = auto()
-
-
 class NewJournalEntry(FlexModel):
-    mood: Mood
     content: str
     title: str = ""
     writingTime: int = 0  # time spent to write the journal entry

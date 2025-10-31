@@ -1,12 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Save } from "lucide-react";
 import { useAutoSave } from "@hooks/useAutoSave";
-import MoodSelectDropdown from "./MoodSelectDropdown";
-import { useMood } from "@components/MoodContext";
-import { MOOD_ENUM_TO_KEY, MOOD_KEY_TO_ENUM, MOOD_CONFIG } from "@config/moods";
 
 const JournalEditor = ({ entry, onSave, onCancel }) => {
-  const { mood: globalMood, setMood: setGlobalMood } = useMood();
   const [title, setTitle] = useState(entry?.title || "");
   const [content, setContent] = useState(entry?.content || "");
   const [tags, _setTags] = useState(entry?.tags?.join(", ") || "");
@@ -14,28 +10,10 @@ const JournalEditor = ({ entry, onSave, onCancel }) => {
 
   const textareaRef = useRef(null);
 
-  const shimmerColorDark = MOOD_CONFIG[globalMood]?.accents?.daydream.primary || '#A0522D';
-  const shimmerColorLight = MOOD_CONFIG[globalMood]?.accents?.daydream.secondary || '#D2B48C';
-
-  const magicalInkStyle = {
-    '--shimmer-color-dark': shimmerColorDark,
-    '--shimmer-color-light': shimmerColorLight,
-  };
-
-  useEffect(() => {
-    if (entry?.mood) {
-      const moodKey = MOOD_ENUM_TO_KEY[entry.mood];
-      if (moodKey) {
-        setGlobalMood(moodKey);
-      }
-    }
-  }, [entry, setGlobalMood]);
-
   const memoizedSaveEntry = useCallback(async () => {
     const entryData = {
       title: title.trim(),
       content: content.trim(),
-      mood: MOOD_KEY_TO_ENUM[globalMood],
       tags: tags
         .split(",")
         .map((tag) => tag.trim())
@@ -44,7 +22,7 @@ const JournalEditor = ({ entry, onSave, onCancel }) => {
       favorite: entry?.favorite || false,
     };
     await onSave(entryData);
-  }, [title, content, globalMood, tags, writingStartTime, entry, onSave]);
+  }, [title, content, tags, writingStartTime, entry, onSave]);
 
   const { manualSave } = useAutoSave(
     content,
@@ -106,13 +84,8 @@ const JournalEditor = ({ entry, onSave, onCancel }) => {
             
             <div className="flex items-center justify-between gap-4">
                 <div className="flex-1">
-                    <label className="block text-sm font-medium text-text-secondary mb-1">Current Mood</label>
                     <p className="text-text-primary">How are you feeling about this book?</p>
                 </div>
-                <MoodSelectDropdown
-                  selectedMood={globalMood}
-                  onMoodChange={setGlobalMood}
-                />
             </div>
 
             <div className="flex flex-col flex-grow">
@@ -126,7 +99,6 @@ const JournalEditor = ({ entry, onSave, onCancel }) => {
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Share your thoughts, feelings, favorite quotes..."
                 className="w-full flex-grow resize-none border-0 bg-transparent text-base leading-relaxed placeholder:text-secondary/70 focus:outline-none magical-ink"
-                style={magicalInkStyle}
               />
             </div>
           </div>

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import axiosInstance from '@api/axiosInstance';
-import { MOOD_ENUM_TO_KEY } from '@config/moods';
 
 export function useDashboardData() {
   const [user, setUser] = useState(null);
@@ -28,7 +27,6 @@ export function useDashboardData() {
         // Set the last journal entry, adding the moodKey
         if (journalRes.data && journalRes.data.length > 0) {
           const entry = journalRes.data[0];
-          entry.moodKey = MOOD_ENUM_TO_KEY[entry.mood] || 'healing';
           setLastEntry(entry);
         }
         

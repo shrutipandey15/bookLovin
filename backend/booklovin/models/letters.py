@@ -3,8 +3,6 @@ from enum import StrEnum
 from typing import Optional
 
 from booklovin.models.base import UserObject, FlexModel
-from booklovin.models.journals import Mood
-
 class LetterType(StrEnum):
     FUTURE = "future"
     PAST = "past"
@@ -16,7 +14,6 @@ class LetterStatus(StrEnum):
 class NewLetter(FlexModel):
     content: str
     target_date: datetime
-    mood: Mood
     type: LetterType = LetterType.FUTURE
     word_count: int = 0
 
