@@ -1,22 +1,3 @@
-// const labels = {
-//     post: {
-//       create: "Pen a Page",
-//       edit: "Revise Page",
-//       delete: "Tear the Page",
-//       view: "Read Scroll",
-//       feedTitle: "The Library",
-//       title: "Chapter Title",
-//       content: "Quill Notes",
-//       image: "Visual Magic",
-//       links: "Portals",
-//       author: "Inked By",
-//       createdAt: "Penned On",
-//       submit: "Release Scroll",
-//     }
-//   };
-
-//   export default labels;
-
 const labels = {
   post: {
     create: "Inscribe New Scroll",

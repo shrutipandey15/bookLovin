@@ -1,66 +1,108 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Mail, Send, Search, Trash2 } from "lucide-react";
+import { Mail, Send, Search, Clock, Calendar } from "lucide-react";
+import { LetterType } from "@constants/letterType";
 
-const LetterCard = ({ letter, isSelected, onSelect }) => {
-  const formatDate = (dateStr) => new Date(dateStr).toLocaleDateString();
+const LetterCard = ({ letter, isSelected }) => {
+  const displayDate =
+    letter.type === LetterType.PAST ? letter.targetDate : letter.createdAt;
+
+  const formatDate = (dateStr) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  const isReadyToOpen =
+    letter.type === LetterType.FUTURE &&
+    letter.status === "scheduled" &&
+    new Date(letter.targetDate) <= new Date();
 
   return (
     <div
-      onClick={onSelect}
       className={`group relative cursor-pointer rounded-lg border p-4 transition-all duration-200
-        ${isSelected ? 'border-primary bg-primary/10 shadow-md' : 'border-border-color bg-card-background hover:border-primary/50 hover:bg-card-background/80'}`}
+        ${
+          isSelected
+            ? "border-primary bg-primary/10 shadow-md"
+            : "border-border-color bg-card-background hover:border-primary/50 hover:bg-card-background/80"
+        }`}
     >
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-secondary/20 text-sm font-bold text-primary">
-            {letter.isSender ? 'Me' : letter.sender?.charAt(0) || 'A'}
+          <div
+            className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full ${
+              isSelected ? "bg-primary/20" : "bg-secondary/20"
+            } text-primary`}
+          >
+            {letter.type === LetterType.FUTURE ? (
+              <Clock size={20} />
+            ) : (
+              <Calendar size={20} />
+            )}
           </div>
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-text-primary">
-              {letter.isSender ? `To: ${letter.recipient}` : `From: ${letter.sender}`}
+              {letter.type === LetterType.FUTURE
+                ? "Letter to Future Self"
+                : "Memory from Past Self"}
             </p>
-            <p className="truncate text-sm font-bold text-text-primary">{letter.subject}</p>
-            <p className="truncate text-xs text-secondary">{letter.content}</p>
+            {/* We use content as the preview now */}
+            <p className="truncate text-sm font-medium text-text-primary">
+              {letter.content.substring(0, 50)}...
+            </p>
           </div>
         </div>
-        {!letter.isRead && !letter.isSender && (
-          <div className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-primary" />
+        {/* Show dot for unread *future* letters */}
+        {letter.status === "scheduled" && letter.type === LetterType.FUTURE && (
+          <div
+            className={`absolute right-2 top-2 h-2.5 w-2.5 rounded-full ${
+              isReadyToOpen ? "bg-red-500 animate-pulse" : "bg-primary"
+            }`}
+            title={isReadyToOpen ? "Ready to open!" : "Scheduled"}
+          />
         )}
       </div>
-      <p className="mt-2 text-right text-xs text-secondary">{formatDate(letter.createdAt)}</p>
+      <p className="mt-2 text-right text-xs text-secondary">
+        {letter.type === LetterType.FUTURE
+          ? `Written: ${formatDate(displayDate)}`
+          : `Memory Date: ${formatDate(displayDate)}`}
+      </p>
     </div>
   );
 };
 
 export const LetterList = ({ letters = [] }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState(LetterType.FUTURE); // Default to future
   const { letterId: selectedLetterId } = useParams();
 
-  const filteredLetters = (letters || []).filter(letter => {
-    const term = searchTerm.toLowerCase();
-    const matchTerm = !term ||
-      letter.subject?.toLowerCase().includes(term) ||
-      letter.content?.toLowerCase().includes(term) ||
-      letter.sender?.toLowerCase().includes(term) ||
-      letter.recipient?.toLowerCase().includes(term);
+  const filteredLetters = (letters || [])
+    .filter((letter) => {
+      // Filter by type (Past/Future)
+      return letter.type === filter;
+    })
+    .filter((letter) => {
+      // Then filter by search term
+      const term = searchTerm.toLowerCase();
+      return !term || letter.content?.toLowerCase().includes(term);
+    })
+    .sort((a, b) => new Date(b.targetDate) - new Date(a.targetDate)); // Sort by target date
 
-    const matchFilter = filter === 'all' ||
-      (filter === 'received' && !letter.isSender) ||
-      (filter === 'sent' && letter.isSender);
-      
-    return matchTerm && matchFilter;
-  });
-
-  const receivedCount = letters.filter(l => !l.isSender).length;
-  const sentCount = letters.filter(l => l.isSender).length;
+  const futureCount = letters.filter(
+    (l) => l.type === LetterType.FUTURE
+  ).length;
+  const pastCount = letters.filter((l) => l.type === LetterType.PAST).length;
 
   return (
     <>
       <header className="flex-shrink-0 border-b border-border-color p-4">
         <div className="mb-4 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-text-primary">Literary Letters</h1>
+          <h1 className="text-2xl font-bold text-text-primary">
+            Literary Letters
+          </h1>
           <Link
             to="/journal/letters/new"
             className="flex items-center space-x-2 whitespace-nowrap rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-text-contrast shadow transition-transform hover:scale-105"
@@ -80,18 +122,44 @@ export const LetterList = ({ letters = [] }) => {
           />
         </div>
         <div className="flex items-center gap-2">
-            {['all', 'received', 'sent'].map(f => (
-                <button 
-                    key={f} 
-                    onClick={() => setFilter(f)}
-                    className={`rounded-full px-3 py-1 text-sm font-semibold transition-colors ${filter === f ? 'bg-primary text-text-contrast' : 'bg-background hover:bg-secondary/20'}`}
-                >
-                    {f.charAt(0).toUpperCase() + f.slice(1)} 
-                    <span className={`ml-1.5 rounded-full px-1.5 py-0.5 text-xs ${filter === f ? 'bg-white/20' : 'bg-secondary/20'}`}>
-                        {f === 'all' ? letters.length : f === 'received' ? receivedCount : sentCount}
-                    </span>
-                </button>
-            ))}
+          <button
+            key="future"
+            onClick={() => setFilter(LetterType.FUTURE)}
+            className={`rounded-full px-3 py-1 text-sm font-semibold transition-colors ${
+              filter === LetterType.FUTURE
+                ? "bg-primary text-text-contrast"
+                : "bg-background hover:bg-secondary/20"
+            }`}
+          >
+            Future
+            <span
+              className={`ml-1.5 rounded-full px-1.5 py-0.5 text-xs ${
+                filter === LetterType.FUTURE
+                  ? "bg-white/20"
+                  : "bg-secondary/20"
+              }`}
+            >
+              {futureCount}
+            </span>
+          </button>
+          <button
+            key="past"
+            onClick={() => setFilter(LetterType.PAST)}
+            className={`rounded-full px-3 py-1 text-sm font-semibold transition-colors ${
+              filter === LetterType.PAST
+                ? "bg-primary text-text-contrast"
+                : "bg-background hover:bg-secondary/20"
+            }`}
+          >
+            Past
+            <span
+              className={`ml-1.5 rounded-full px-1.5 py-0.5 text-xs ${
+                filter === LetterType.PAST ? "bg-white/20" : "bg-secondary/20"
+              }`}
+            >
+              {pastCount}
+            </span>
+          </button>
         </div>
       </header>
       <div className="flex-grow overflow-y-auto p-4 space-y-3">
@@ -107,7 +175,7 @@ export const LetterList = ({ letters = [] }) => {
         ) : (
           <div className="py-10 text-center text-secondary">
             <Mail className="mx-auto h-10 w-10 opacity-50" />
-            <p className="mt-2 text-sm">No letters found.</p>
+            <p className="mt-2 text-sm">No letters found in this view.</p>
           </div>
         )}
       </div>

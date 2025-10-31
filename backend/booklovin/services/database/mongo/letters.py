@@ -1,13 +1,19 @@
 from datetime import datetime, timezone
-from booklovin.models.letters import Letter, LetterStatus
+from booklovin.models.letters import Letter, LetterStatus, LetterType
 from booklovin.services import errors
 from pymongo.asynchronous.database import AsyncDatabase as Database
 
 async def create(db: Database, letter: Letter) -> Letter:
     """Creates a new letter document in the database."""
+    if letter.target_date is None:
+        letter.target_date = datetime.now(timezone.utc)
+    
+    if letter.type == LetterType.PAST:
+        letter.status = LetterStatus.OPENED
+        letter.opened_at = datetime.now(timezone.utc)
+    
     await db.letters.insert_one(letter.model_dump())
     return letter
-
 async def get_all_for_user(db: Database, user_id: str) -> list[Letter]:
     """Retrieves all letters for a specific user from the database."""
     cursor = db.letters.find({"authorId": user_id}).sort("target_date", -1)

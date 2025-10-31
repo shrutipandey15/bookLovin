@@ -1,6 +1,6 @@
-import { Routes, Route, useNavigate, useParams, Link } from "react-router-dom";
+import { Routes, Route, useNavigate, useParams, useLocation, Link } from "react-router-dom";
 import { useLetters } from "@hooks/useLetters";
-import { ScrollText, Send } from "lucide-react"; // Changed icon from Mail to ScrollText
+import { ScrollText, Send } from "lucide-react";
 
 import { LetterList } from "./LetterInbox";
 import { LetterViewer } from "./LetterViewer";
@@ -10,7 +10,6 @@ const LettersWelcome = () => {
   return (
     <div className="flex h-full flex-col items-center justify-center text-center">
       <div className="animate-float">
-        {/* Replaced the Mail icon with the ScrollText icon to match your image */}
         <ScrollText className="h-24 w-24 text-primary opacity-50" strokeWidth={1.5} />
       </div>
       <h2 className="mt-8 text-2xl font-bold text-text-primary">Your Literary Correspondence</h2>
@@ -30,8 +29,15 @@ const LettersWelcome = () => {
 
 const LettersPage = () => {
   const navigate = useNavigate();
-  const { letterId } = useParams();
-  const { letters, saveLetter, deleteLetter, markLetterAsOpened } = useLetters();
+  const params = useParams();
+  const location = useLocation();
+  
+  const { letters, saveLetter, deleteLetter, markLetterAsOpened, loading } = useLetters();
+  
+  const wildcardPath = params['*'] || '';
+  const letterId = wildcardPath.startsWith('view/') 
+    ? wildcardPath.replace('view/', '') 
+    : undefined;
 
   const activeLetter = letterId ? letters.find(l => l.uid === letterId) : null;
 
@@ -39,6 +45,19 @@ const LettersPage = () => {
     await saveLetter(letterData);
     navigate("/journal/letters");
   };
+
+  if (loading && letterId) {
+    return (
+      <div className="flex h-[calc(100vh-4rem)]">
+        <div className="flex w-full max-w-sm flex-col border-r border-border-color lg:max-w-md">
+          <LetterList letters={letters} onDeleteLetter={deleteLetter} />
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center text-secondary">Loading letter...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-[calc(100vh-4rem)]">
@@ -52,9 +71,9 @@ const LettersPage = () => {
       {/* Right Pane: Viewer, Composer, or Welcome */}
       <div className="flex-1 overflow-y-auto p-6 lg:p-8">
         <Routes>
-          <Route path="/" element={<LettersWelcome />} />
+          <Route index element={<LettersWelcome />} />
           <Route 
-            path="/new" 
+            path="new" 
             element={
               <LetterComposer
                 onSave={handleSaveLetter}
@@ -63,13 +82,25 @@ const LettersPage = () => {
             } 
           />
           <Route 
-            path="/view/:letterId" 
+            path="view/:letterId" 
             element={
-              <LetterViewer
-                letter={activeLetter}
-                onClose={() => navigate("/journal/letters")}
-                onMarkAsOpened={markLetterAsOpened}
-              />
+              activeLetter ? (
+                <LetterViewer
+                  letter={activeLetter}
+                  onClose={() => navigate("/journal/letters")}
+                  onMarkAsOpened={markLetterAsOpened}
+                />
+              ) : (
+                <div className="text-center text-secondary">
+                  <p>Letter not found</p>
+                  <button 
+                    onClick={() => navigate("/journal/letters")}
+                    className="mt-4 rounded-lg bg-primary px-4 py-2 text-text-contrast"
+                  >
+                    Back to Letters
+                  </button>
+                </div>
+              )
             } 
           />
         </Routes>

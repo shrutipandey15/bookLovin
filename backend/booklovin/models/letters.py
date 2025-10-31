@@ -13,7 +13,7 @@ class LetterStatus(StrEnum):
 
 class NewLetter(FlexModel):
     content: str
-    target_date: datetime
+    target_date: Optional[datetime] = None
     type: LetterType = LetterType.FUTURE
     word_count: int = 0
 

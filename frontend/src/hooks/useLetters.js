@@ -14,8 +14,8 @@ export function useLetters() {
 
       const formattedLetters = data.map((letter) => ({
         ...letter,
-        _id: letter.uid,
-        createdAt: letter.creationTime,
+        uid: letter.uid,
+        createdAt: new Date(letter.creationTime * 1000).toISOString(),
         targetDate: letter.target_date,
         wordCount: letter.word_count,
         openedAt: letter.opened_at,
@@ -41,31 +41,41 @@ export function useLetters() {
     [fetchLetters]
   );
 
-  const deleteLetter = useCallback(async (letterId) => {
-    await lettersService.deleteLetter(letterId);
-    setLetters((prev) => prev.filter((l) => l._id !== letterId));
-  }, []);
+  const deleteLetter = useCallback(
+    async (letterId) => {
+      await lettersService.deleteLetter(letterId);
+      setLetters((prev) => prev.filter((l) => l.uid !== letterId));
+    },
+    []
+  );
 
-  const markLetterAsOpened = useCallback(async (letterId) => {
-    const updatedLetterFromServer = await lettersService.markLetterAsOpened(
-      letterId
-    );
-    const formattedUpdatedLetter = {
-      ...updatedLetterFromServer,
-      _id: updatedLetterFromServer.uid,
-      createdAt: updatedLetterFromServer.creationTime,
-      targetDate: updatedLetterFromServer.target_date,
-      wordCount: updatedLetterFromServer.word_count,
-      openedAt: updatedLetterFromServer.opened_at,
-    };
+  const markLetterAsOpened = useCallback(
+    async (letterId) => {
+      const updatedLetterFromServer = await lettersService.markLetterAsOpened(
+        letterId
+      );
 
-    setLetters((prev) =>
-      prev.map((l) => (l._id === letterId ? formattedUpdatedLetter : l))
-    );
-  }, []);
+      const formattedUpdatedLetter = {
+        ...updatedLetterFromServer,
+        uid: updatedLetterFromServer.uid,
+        createdAt: new Date(updatedLetterFromServer.creationTime * 1000).toISOString(),
+        targetDate: updatedLetterFromServer.target_date,
+        wordCount: updatedLetterFromServer.word_count,
+        openedAt: updatedLetterFromServer.opened_at,
+      };
+
+      setLetters((prev) =>
+        prev.map((l) => (l.uid === letterId ? formattedUpdatedLetter : l))
+      );
+    },
+    []
+  );
 
   const hasReadyLetters = letters.some(
-    (l) => l.status === "scheduled" && new Date(l.targetDate) <= new Date()
+    (l) =>
+      l.type === "future" &&
+      l.status === "scheduled" &&
+      new Date(l.targetDate) <= new Date()
   );
 
   return {
