@@ -35,6 +35,7 @@ function App() {
               <Route path="/profile/:name" element={<UserProfilePage />} />
               <Route path="/studio/create/:bookId" element={<AIStudioPage />} />
               <Route path="/journal/letters/*" element={<LettersPage />} />
+              <Route path="/feed" element={<FeedPage />} />
             </Route>
           </Routes>
           </Layout>

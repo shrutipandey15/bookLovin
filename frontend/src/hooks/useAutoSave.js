@@ -1,4 +1,3 @@
-// useAutoSave.js
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 export const useAutoSave = (content, entryId, onSave) => {
@@ -11,8 +10,8 @@ export const useAutoSave = (content, entryId, onSave) => {
     onSaveRef.current = onSave;
   }, [onSave]);
 
-  const performSave = useCallback(async () => {
-    if (!content.trim() || !hasUnsavedChanges) {
+  const performSave = useCallback(async (force = false) => {
+    if (!content.trim() || (!hasUnsavedChanges && !force)) {
       return;
     }
 
@@ -43,7 +42,7 @@ export const useAutoSave = (content, entryId, onSave) => {
   }, [content, hasUnsavedChanges, performSave]);
 
   const manualSave = useCallback(() => {
-    performSave();
+    performSave(true);
   }, [performSave]);
 
   return {

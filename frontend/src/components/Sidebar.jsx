@@ -50,6 +50,7 @@ const Sidebar = () => {
     { name: 'Confessions', path: '/confessions', icon: MessageSquare },
     { name: 'Books', path: '/books/search', icon: Book },
     { name: 'Art Studio', path: '/studio/create/some-book-id', icon: Wand2 },
+    { name: 'Posts', path: '/posts', icon: Info },
     ...(user && user.name ?
         [{ name: 'User Profile', path: `/profile/${user.name}`, icon: User }]
         : [])

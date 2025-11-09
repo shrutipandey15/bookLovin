@@ -18,6 +18,8 @@ import {
   Edit,
 } from "lucide-react";
 import ConfirmModal from "@components/ConfirmModal";
+import "react-responsive-carousel/lib/styles/carousel.min.css";
+import { Carousel } from "react-responsive-carousel";
 
 const Comment = ({ comment, currentUserId, onCommentDelete }) => {
   const isAuthor = comment.authorId === currentUserId;
@@ -122,7 +124,7 @@ const CommentSection = ({ postId, commentsList, currentUserId }) => {
           </p>
         )}
       </div>
-      
+
       <ConfirmModal
         isOpen={showConfirmModal}
         message="Are you sure you want to delete this comment? This action cannot be undone."
@@ -169,12 +171,12 @@ const SinglePostPage = () => {
     setShowConfirmModal(false);
     navigate("/posts");
   };
-  
+
   const confirmPostDelete = () => {
     setShowConfirmModal(true);
   };
 
-  if (status === "loading" && !currentPost) {
+  if (status === "loading" || !currentPost || !currentUser) {
     return (
       <div className="py-16 text-center text-lg italic text-secondary">
         Loading reflection...
@@ -192,6 +194,8 @@ const SinglePostPage = () => {
 
   const isAuthor = currentUser?.uid === currentPost.authorId;
   const postComments = comments[postId] || [];
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000/api/v1";
+  const backendRoot = apiUrl.split("/api/v1")[0];
 
   return (
     <div className="mx-auto max-w-4xl p-4 font-body text-text-primary sm:p-6 lg:p-8">
@@ -229,26 +233,36 @@ const SinglePostPage = () => {
           <User className="h-4 w-4" />
           <span>{currentPost.author?.penName || "Quiet Soul"}</span>
         </div>
-
-        {currentPost.imageUrl && (
-          <img
-            src={currentPost.imageUrl}
-            alt={currentPost.title}
-            className="mb-8 aspect-video w-full rounded-lg object-cover"
-          />
+        {currentPost.imageUrls && currentPost.imageUrls.length > 0 && (
+          <div className="mb-8 rounded-lg overflow-hidden">
+            <Carousel
+              showThumbs={false}
+              showStatus={false}
+              infiniteLoop={true}
+              useKeyboardArrows={true}
+            >
+              {currentPost.imageUrls.map((url, index) => (
+                <div key={index} className="h-96">
+                  {" "}
+                  <img
+                    src={`${backendRoot}${url}`}
+                    alt={`Post image ${index + 1}`}
+                    className="object-cover w-full h-full"
+                  />
+                </div>
+              ))}
+            </Carousel>
+          </div>
         )}
-
         <div className="prose prose-lg dark:prose-invert max-w-none text-text-primary whitespace-pre-wrap">
           <p>{currentPost.content}</p>
         </div>
-
         <CommentSection
           postId={postId}
           commentsList={postComments}
           currentUserId={currentUser?.uid}
         />
       </article>
-      
       <ConfirmModal
         isOpen={showConfirmModal}
         message="Are you sure you want to delete this post? This action cannot be undone."

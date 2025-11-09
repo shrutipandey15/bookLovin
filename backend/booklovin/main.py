@@ -7,6 +7,8 @@ from booklovin.core import config
 from booklovin.services import database
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import os
+from fastapi.staticfiles import StaticFiles
 
 providers = ("auth", "posts", "journal", "letters", "confessions", "books", "profile")
 database_config = database.init(config.DB_TYPE)
@@ -33,6 +35,9 @@ for api_provider in providers:
     except AttributeError as e:
         print(f"Error: {api_provider} module does not contain a 'router' attribute.")
         raise e
+    
+os.makedirs("static", exist_ok=True)
+booklovin.mount("/static", StaticFiles(directory="static"), name="static")
 
 if config.DEBUG:
     booklovin.add_middleware(

@@ -1,4 +1,16 @@
 """Routes for /posts."""
+import json
+from typing import List
+from fastapi import (
+    APIRouter,
+    Depends,
+    Request,
+    HTTPException,
+    status,
+    Form,
+    File,
+    UploadFile,
+)
 
 from booklovin.core.config import APIResponse
 from booklovin.models.comments import Comment, NewComment
@@ -7,24 +19,53 @@ from booklovin.models.post import NewPost, Post
 from booklovin.models.users import User
 from booklovin.services import database, errors
 from booklovin.utils.user_token import get_from_token
-from fastapi import APIRouter, Depends, Request, HTTPException
 from booklovin.models.reactions import ReactionRequest
+from booklovin.core.storage import save_uploaded_images
 
 router = APIRouter(tags=["posts"])
 
 crouter = APIRouter(tags=["comments"])
 
 
-# create
 @router.post("/", response_model=Post | UserError, response_class=APIResponse)
-async def create_post(request: Request, post: NewPost, user: User = Depends(get_from_token)) -> Post:
-    """Create one post."""
-    new_post = Post.from_new_model(post, user.uid)
-    await database.post.create(db=request.app.state.db, post=new_post)
-    return new_post
+async def create_post(
+    request: Request,
+    user: User = Depends(get_from_token),
+    
+    title: str = Form(...),
+    content: str = Form(...),
+    links: str = Form("[]"),
+    images: List[UploadFile] = File(default=[])
+) -> Post:
+    """Create one post with text and optional images."""
+    try:
+        image_urls = await save_uploaded_images(images)
+
+        try:
+            links_list = json.loads(links)
+        except json.JSONDecodeError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid 'links' format. Must be a JSON string.",
+            )
+
+        post_data = NewPost(
+            title=title,
+            content=content,
+            links=links_list,
+            imageUrls=image_urls,
+        )
+
+        new_post = Post.from_new_model(post_data, user.uid)
+        await database.post.create(db=request.app.state.db, post=new_post)
+        return new_post
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
 
 
-# list all, deprecated
 @router.get("/", response_model=list[Post] | UserError, response_class=APIResponse)
 async def read_all_posts(request: Request, s: int, e: int, user: User = Depends(get_from_token)) -> list[Post] | UserError:
     """Get a range of posts (from most recent to oldest)."""

@@ -33,18 +33,26 @@ export const fetchCommentsForPost = createAsyncThunk(
   }
 );
 
-export const createPost = createAsyncThunk("posts/create", async (postData) => {
-  // FIX: Transform the frontend data to match the backend's expected model.
-  // The frontend sends a flexible object, but the backend currently expects 'title' and 'content'.
-  const transformedData = {
-    title: postData.caption_text.substring(0, 80) || "Untitled Post", // Use a snippet of the caption as a title
-    content: postData.caption_text,
-    imageUrl: postData.mediaUrl || "", // Ensure imageUrl is a string, not null
-    links: [], // Add default empty array if backend requires it
-  };
-  const response = await axiosInstance.post("/posts/", transformedData);
-  return response.data;
-});
+export const createPost = createAsyncThunk(
+  "posts/create",
+  async (postData, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post(
+        "/posts/", // The URL
+        postData,   // The FormData
+        {           // The new config object
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error("Error creating post:", error.response?.data || error.message);
+      return rejectWithValue(error.response?.data);
+    }
+  }
+);
 
 export const updatePost = createAsyncThunk(
   "posts/update",
@@ -62,7 +70,6 @@ export const deletePost = createAsyncThunk("posts/delete", async (postId) => {
 export const reactToPost = createAsyncThunk(
   "posts/react",
   async ({ postId, reactionType }) => {
-    // FIX: The URL was incorrect. It needs to include the /posts/ segment.
     const response = await axiosInstance.put(`/posts/${postId}/react`, {
       reaction: reactionType,
     });
