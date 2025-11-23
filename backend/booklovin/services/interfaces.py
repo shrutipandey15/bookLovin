@@ -8,6 +8,7 @@ from booklovin.models.users import User
 from booklovin.models.journals import JournalEntry, JournalEntryUpdate
 from booklovin.models.confessions import Confession, NewConfession
 from booklovin.models.books import ShelfItem
+from booklovin.models.studio import CreationData
 from fastapi import FastAPI
 from pydantic import BaseModel
 
@@ -65,6 +66,11 @@ class ProfileService(Protocol):
     async def update_user_quote(self, db: Any, user_id: str, quote: str) -> User | UserError: ...
     async def update_user_genres(self, db: Any, user_id: str, genres: List[str]) -> User | UserError: ...
     async def update_user_goal(self, db: Any, user_id: str, year: int, count: int) -> User | UserError: ...
+
+@runtime_checkable
+class StudioService(Protocol):
+    async def save_new_creation(self, db: Any, creation_doc: CreationData) -> None: ...
+    async def get_creations_by_user(self, db: Any, user_id: str) -> list[CreationData]: ...
 
 class ServiceSetup(BaseModel):
     async def setup(self, app: FastAPI):

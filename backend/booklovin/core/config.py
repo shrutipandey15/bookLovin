@@ -16,6 +16,10 @@ MONGO_SERVER = (os.environ.get("MONGO_HOST", "localhost"), int(os.environ.get("M
 # REDIS
 REDIS_SERVER = (os.environ.get("REDIS_HOST", "localhost"), int(os.environ.get("REDIS_PORT", "6379")))
 
+HUGGINGFACE_API_KEY = os.environ.get("HUGGINGFACE_API_KEY")
+if not HUGGINGFACE_API_KEY and DEBUG:
+    print("Warning: HUGGINGFACE_API_KEY not set. AI Studio will not work.")
+
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/login")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

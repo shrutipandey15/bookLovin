@@ -7,8 +7,9 @@ from booklovin.services.interfaces import PostService, ServiceSetup, UserService
 from booklovin.services.interfaces import ConfessionService
 from booklovin.services.interfaces import ShelfService
 from booklovin.services.interfaces import ProfileService
+from booklovin.services.interfaces import StudioService
 
-sub_services = ["post", "users", "journal", "letters", "confessions", "books", "profile"]
+sub_services = ["post", "users", "journal", "letters", "confessions", "books", "profile", "studio"]
 if config.DEBUG:
     sub_services.append("test_setup")
 

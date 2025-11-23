@@ -5,7 +5,6 @@ from pymongo import TEXT
 from booklovin.core.config import DB_NAME, MONGO_SERVER
 from booklovin.services.interfaces import ServiceSetup
 
-
 class MongoSetup(ServiceSetup):
     async def setup(self, app: FastAPI):
         app.state.client = pymongo.AsyncMongoClient(*MONGO_SERVER)
@@ -25,6 +24,9 @@ class MongoSetup(ServiceSetup):
         await db.journals.create_index([("creationTime", -1), ("authorId", 1)])
         await db.journals.create_index([("title", TEXT), ("content", TEXT)])
         await db.journals.create_index([("tags", 1)])
+        await db.creations.create_index([("user_id", 1)])
+        await db.creations.create_index([("book_id", 1)])        
+        await db.creations.create_index([("user_id", 1), ("created_at", -1)])
 
     async def teardown(self, app: FastAPI):
         await app.state.client.close()

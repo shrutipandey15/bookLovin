@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 from fastapi.staticfiles import StaticFiles
 
-providers = ("auth", "posts", "journal", "letters", "confessions", "books", "profile")
+providers = ("auth", "posts", "journal", "letters", "confessions", "books", "profile", "studio")
 database_config = database.init(config.DB_TYPE)
 
 

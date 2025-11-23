@@ -9,7 +9,7 @@ const AIStudioPage = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    const [prompt, setPrompt] = useState('A melancholic girl under a glass bell jar, surreal 1950s New York City skyline, distorted colors, style of an old photograph.');
+    const [prompt, setPrompt] = useState('');
     const { generatedImageUrl, status, error } = useSelector((state) => state.creations);
 
     const handleGenerate = () => {
@@ -17,7 +17,6 @@ const AIStudioPage = () => {
         dispatch(generateImage(prompt));
     };
 
-    // MODIFIED: This function is now `async` to allow for `await`.
     const handleSaveCreation = async () => {
         if (!generatedImageUrl) return;
         const creationData = {
@@ -26,11 +25,8 @@ const AIStudioPage = () => {
             bookId,
         };
 
-        // MODIFIED: We now `await` the dispatch. This pauses the function
-        // until the save operation is fully complete.
         await dispatch(saveCreation(creationData));
 
-        // These lines will now only run AFTER the save is finished.
         dispatch(clearGeneratedImage());
         navigate('/profile/MockUser');
     };

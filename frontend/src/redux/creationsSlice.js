@@ -1,40 +1,68 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { mockCreationsService } from '@api/aiCreationmock';
+import axiosInstance from '@api/axiosInstance'; // Correct default import
 
-export const generateImage = createAsyncThunk('creations/generateImage', async (prompt) => {
-  const data = await mockCreationsService.generateAiImage(prompt);
-  return data.imageUrl;
-});
+// 1. UPDATED to call your real backend
+export const generateImage = createAsyncThunk(
+  'creations/generateImage',
+  async (prompt, { rejectWithValue }) => {
+    try {
+    const response = await axiosInstance.post('/studio/generate-image', { prompt });      
+    return response.data.imageUrl; // This will be the real URL from the backend
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.detail || 'Failed to generate image');
+    }
+  }
+);
 
-export const saveCreation = createAsyncThunk('creations/saveCreation', async (creationData) => {
-    return await mockCreationsService.saveCreationToPrivateCollection(creationData);
-});
+// 2. UPDATED to call your real backend
+export const saveCreation = createAsyncThunk(
+  'creations/saveCreation',
+  async (creationData, { rejectWithValue }) => {
+    try {
+    const response = await axiosInstance.post('/studio/save-creation', creationData);      // We return the response from the save endpoint, which includes the new ID
+      return response.data; 
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.detail || 'Failed to save creation');
+    }
+  }
+);
 
-export const fetchPrivateCreations = createAsyncThunk('creations/fetchPrivate', async () => {
-    return await mockCreationsService.getPrivateCreations();
-});
+// 3. This is the ONLY fetch function we need
+export const fetchMyCreations = createAsyncThunk(
+  'creations/fetchMyCreations',
+  async (_, { rejectWithValue }) => {
+    try {
+    const response = await axiosInstance.get('/studio/my-creations');
+     return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.detail || 'Failed to fetch creations');
+    }
+  }
+);
+
+// 4. All mock thunks (like fetchPrivateCreations) are GONE.
 
 const creationsSlice = createSlice({
   name: 'creations',
   initialState: {
-    privateCreations: [],
+    myCreations: [], // This is the only array we need for creations
     generatedImageUrl: null,
-    status: 'idle', 
-    fetchStatus: 'idle', 
+    status: 'idle', // 'idle' | 'generating' | 'saving' | 'fetching' | 'succeeded' | 'failed'
     error: null,
   },
   reducers: {
     clearGeneratedImage: (state) => {
         state.generatedImageUrl = null;
         state.status = 'idle';
-        state.error = null;
     }
   },
   extraReducers: (builder) => {
     builder
+      // Generate Image Cases
       .addCase(generateImage.pending, (state) => {
         state.status = 'generating';
         state.generatedImageUrl = null;
+        state.error = null;
       })
       .addCase(generateImage.fulfilled, (state, action) => {
         state.status = 'succeeded';
@@ -42,22 +70,36 @@ const creationsSlice = createSlice({
       })
       .addCase(generateImage.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.error.message;
+        state.error = action.payload;
+      })
+      
+      // Save Creation Cases
+      .addCase(saveCreation.pending, (state) => {
+        state.status = 'saving';
       })
       .addCase(saveCreation.fulfilled, (state, action) => {
-        state.privateCreations.unshift(action.payload);
-        state.fetchStatus = 'succeeded';
+        state.status = 'succeeded';
+        // The backend returns {status: "success", ..., creationId: "..."}
+        // But our save_creation API in studio.py doesn't return the full new object.
+        // For now, we just succeed. To see it, the user will need to re-fetch.
       })
-      .addCase(fetchPrivateCreations.pending, (state) => {
-        state.fetchStatus = 'loading';
+      .addCase(saveCreation.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
       })
-      .addCase(fetchPrivateCreations.fulfilled, (state, action) => {
-        state.privateCreations = action.payload;
-        state.fetchStatus = 'succeeded';
+
+      // Fetch My Creations Cases
+      .addCase(fetchMyCreations.pending, (state) => {
+        state.status = 'fetching';
+        state.error = null;
       })
-      .addCase(fetchPrivateCreations.rejected, (state, action) => {
-        state.fetchStatus = 'failed';
-        state.error = action.error.message;
+      .addCase(fetchMyCreations.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.myCreations = action.payload;
+      })
+      .addCase(fetchMyCreations.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
       });
   },
 });
