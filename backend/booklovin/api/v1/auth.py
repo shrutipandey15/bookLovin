@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta, timezone
 from typing import cast
 
-from booklovin.core.config import APIResponse, pwd_context
+from booklovin.core.config import APIResponse, pwd_context, DEBUG
 from booklovin.core.settings import ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM, SECRET_KEY
 from booklovin.models.errors import ErrorCode, UserError, gen_error
 from booklovin.models.users import NewUser, User
@@ -73,4 +73,4 @@ def _create_access_token(user_id: str, expires_delta: timedelta = timedelta(minu
     return cast(str, jwt.encode(data, SECRET_KEY, algorithm=ALGORITHM))
 
 
-routers = (router, debug_router)
+routers = (router, debug_router) if DEBUG else (router,)

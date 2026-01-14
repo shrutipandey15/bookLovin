@@ -1,14 +1,13 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '@context/AuthContext';
-import { BookHeart, Feather, MessageSquare, Book, User, LogOut, Sun } from 'lucide-react';
+import { BookHeart, Feather, MessageSquare, Book, User, Sun } from 'lucide-react';
 
 const navLinks = [
   { name: 'Home', path: '/', icon: BookHeart },
   { name: 'Journal', path: '/journal', icon: Feather },
   { name: 'Confessions', path: '/confessions', icon: MessageSquare },
   { name: 'Books', path: '/books/search', icon: Book },
-  { name: 'Art Studio', path: '/studio/create/some-book-id', icon: User },
 ];
 
 const Navbar = () => {

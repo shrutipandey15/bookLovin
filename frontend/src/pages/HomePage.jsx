@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useDashboardData } from '@hooks/useDashboardData';
-import { Plus, BookOpen, Heart, Wand2, Feather } from 'lucide-react';
+import { Plus, BookOpen, Heart, Feather, Rss } from 'lucide-react';
 import EntryCard from './JournalPage/EntryCard';
 
 const HomePage = () => {
@@ -43,14 +43,14 @@ const HomePage = () => {
                 <span className="font-heading font-semibold text-text-primary">Browse Confessions</span>
             </div>
           </Link>
-          <Link to="/studio/create/some-book-id" className="bg-card-background border border-border-color p-6 rounded-xl hover:shadow-lg transition-shadow">
+          <Link to="/posts" className="bg-card-background border border-border-color p-6 rounded-xl hover:shadow-lg transition-shadow">
             <div className="flex items-center gap-4">
-                <div className="bg-primary/10 p-3 rounded-full"><Wand2 className="text-primary" size={20}/></div>
-                <span className="font-heading font-semibold text-text-primary">Create Art</span>
+                <div className="bg-primary/10 p-3 rounded-full"><Rss className="text-primary" size={20}/></div>
+                <span className="font-heading font-semibold text-text-primary">Browse Posts</span>
             </div>
           </Link>
       </div>
-      
+
       <div>
         <div className="flex justify-between items-center mb-4">
             <h2 className="font-heading text-3xl text-text-primary font-bold">Recent Reflections</h2>

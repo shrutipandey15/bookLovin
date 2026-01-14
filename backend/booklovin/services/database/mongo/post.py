@@ -75,7 +75,7 @@ async def get_recent(db: Database, user: User) -> list[Post] | UserError:
         .limit(RECENT_POSTS_LIMIT)
         .to_list()
     )
-    return result
+    return [Post.from_dict(p) for p in result]
 
 
 async def get_popular(db: Database) -> list[Post] | UserError:

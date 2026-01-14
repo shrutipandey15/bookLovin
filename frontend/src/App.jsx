@@ -12,7 +12,6 @@ import ConfessionsPage from '@pages/ConfessionPage/ConfessionWallPage';
 import SingleConfessionPage from '@pages/ConfessionPage/SingleConfessionPage';
 import BookSearchPage from '@pages/BookSearchPage/BookSearchPage';
 import UserProfilePage from '@pages/UserProfilePage/UserProfilePage';
-import AIStudioPage from '@pages/StudioPage/AiStudioPage';
 import LettersPage from '@pages/JournalPage/LettersPage';
 
 import './App.css';
@@ -33,7 +32,6 @@ function App() {
               <Route path="/confessions/:id" element={<SingleConfessionPage />} />
               <Route path="/books/search" element={<BookSearchPage />} />
               <Route path="/profile/:name" element={<UserProfilePage />} />
-              <Route path="/studio/create/:bookId" element={<AIStudioPage />} />
               <Route path="/journal/letters/*" element={<LettersPage />} />
               <Route path="/feed" element={<FeedPage />} />
             </Route>

@@ -1,19 +1,18 @@
-import React from 'react';
-import { BookOpen, Plus } from 'lucide-react';
+import { Feather } from 'lucide-react';
 
 const JournalWelcome = ({ onNewEntry }) => (
-  <div className="flex h-full flex-col items-center justify-center text-center">
-    <div className="animate-float">
-      <BookOpen className="h-24 w-24 text-primary opacity-50" strokeWidth={1.5} />
+  <div className="flex h-full flex-col items-center justify-center text-center px-8">
+    <div className="mb-8 opacity-30">
+      <Feather className="h-16 w-16 text-slate-400" strokeWidth={1} />
     </div>
-    <h2 className="mt-8 text-2xl font-bold text-text-primary">Your Journal is a Blank Page</h2>
-    <p className="mt-2 text-secondary">Ready to write your first entry?</p>
+    <p className="text-slate-500 text-lg font-light max-w-md leading-relaxed">
+      Select an entry to read, or start writing something new.
+    </p>
     <button
       onClick={onNewEntry}
-      className="mt-8 flex items-center space-x-2 whitespace-nowrap rounded-lg bg-primary px-6 py-3 text-text-contrast shadow-lg transition-transform hover:scale-105"
+      className="mt-10 text-sm text-slate-400 hover:text-slate-600 transition-colors"
     >
-      <Plus className="h-5 w-5" />
-      <span>Start Journaling</span>
+      Begin writing
     </button>
   </div>
 );

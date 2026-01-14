@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 from fastapi.staticfiles import StaticFiles
 
-providers = ("auth", "posts", "journal", "letters", "confessions", "books", "profile", "studio")
+providers = ("auth", "posts", "journal", "letters", "confessions", "books", "profile")
 database_config = database.init(config.DB_TYPE)
 
 
@@ -35,14 +35,18 @@ for api_provider in providers:
     except AttributeError as e:
         print(f"Error: {api_provider} module does not contain a 'router' attribute.")
         raise e
-    
+
 os.makedirs("static", exist_ok=True)
 booklovin.mount("/static", StaticFiles(directory="static"), name="static")
 
-if config.DEBUG:
+# CORS configuration
+cors_origins = [config.REACT_DEV_SERVER] if config.DEBUG else os.environ.get("CORS_ORIGINS", "").split(",")
+cors_origins = [o.strip() for o in cors_origins if o.strip()]
+
+if cors_origins:
     booklovin.add_middleware(
         CORSMiddleware,
-        allow_origins=[config.REACT_DEV_SERVER],
+        allow_origins=cors_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

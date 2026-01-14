@@ -1,6 +1,5 @@
 """Utility functions to handle user tokens."""
 
-from functools import lru_cache
 from typing import cast
 
 from fastapi import Depends, HTTPException, Request, status
@@ -18,7 +17,6 @@ CredentialsException = HTTPException(
 )
 
 
-@lru_cache
 def decode_token(token: str) -> str | None:
     """Decode a JWT token to extract the user ID."""
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])

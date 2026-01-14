@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchShelf,
@@ -23,14 +23,11 @@ import {
   updateUserGoal,
   updateUserArchetype,
 } from "@api/profile";
-import { fetchMyCreations } from "@redux/creationsSlice";
-import { createPost } from "@redux/postsSlice";
 import { fetchEntries } from "@redux/journalSlice";
 import { fetchConfessions } from "@redux/confessionSlice";
 import {
   User,
   Loader,
-  Wand2,
   X,
   Trash2,
   Quote,
@@ -48,48 +45,6 @@ import { useAuth } from "@context/AuthContext";
 import UserProfileSidebar from "./UserProfileSidebar";
 import UserProfileFeed from "./UserProfileFeed";
 import ReadingBadge from "./ReadingBadge";
-
-const PostCreationModal = ({ creation, onClose, onShare }) => {
-  const [caption, setCaption] = useState("");
-  const handleShare = () => {
-    onShare(caption);
-    onClose();
-  };
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-      <div className="bg-background rounded-2xl shadow-xl max-w-lg w-full p-6 relative">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-secondary hover:text-primary"
-        >
-          <X />
-        </button>
-        <h2 className="text-2xl font-bold text-primary mb-4">
-          Share your Vision
-        </h2>
-        <img
-          src={creation.imageUrl}
-          alt={creation.prompt}
-          className="w-full h-64 object-contain rounded-lg mb-4 bg-black/20"
-        />
-        <textarea
-          value={caption}
-          onChange={(e) => setCaption(e.target.value)}
-          placeholder="Add a caption to your post..."
-          className="w-full h-24 bg-card-background border border-secondary rounded-lg p-2 text-text-primary focus:outline-none focus:ring-2 focus:ring-primary"
-        />
-        <div className="flex justify-end mt-4">
-          <button
-            onClick={handleShare}
-            className="px-5 py-2 rounded-lg bg-primary text-text-contrast font-semibold hover:opacity-90 transition-opacity"
-          >
-            Share Post
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const ShelfBookCard = ({ shelfItem, onCloseModal }) => {
   const dispatch = useDispatch();
@@ -150,8 +105,6 @@ const ShelfBookCard = ({ shelfItem, onCloseModal }) => {
     showNotification("Progress updated!");
   };
 
-  const studioLink = `/studio/create/${encodeURIComponent(shelfItem.ol_key)}`;
-
   return (
     <div className="flex-shrink-0 w-full text-center group relative p-2">
       <button
@@ -190,14 +143,6 @@ const ShelfBookCard = ({ shelfItem, onCloseModal }) => {
       </p>
 
       <div className="flex flex-col items-center justify-center gap-2">
-        <Link
-          to={studioLink}
-          title="Create Vision"
-          className="flex items-center justify-center gap-2 text-text-primary hover:text-primary transition-colors w-full p-2 bg-secondary/10 rounded-lg"
-        >
-          <Wand2 className="h-5 w-5" />
-          <span className="font-semibold text-sm">Create AI Art</span>
-        </Link>
         {shelfItem.status === "reading" && (
           <button
             onClick={handleSetProgress}
@@ -248,13 +193,10 @@ const BookDetailModal = ({ book, onClose }) => {
 const UserProfilePage = () => {
   const { name } = useParams();
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const { showNotification } = useNotification();
   const { user: currentUser } = useAuth();
 
   const [activeTab, setActiveTab] = useState("posts");
-  const [isPostModalOpen, setIsPostModalOpen] = useState(false);
-  const [creationToPost, setCreationToPost] = useState(null);
 
   const [selectedBook, setSelectedBook] = useState(null);
 
@@ -287,9 +229,6 @@ const UserProfilePage = () => {
     error: shelfError,
   } = useSelector((state) => state.books);
 
-  const { myCreations: privateCreations, status: creationsFetchStatus } =
-    useSelector((state) => state.creations);
-
   const { items: journalEntries, status: journalStatus } = useSelector(
     (state) => state.journal
   );
@@ -314,15 +253,11 @@ const UserProfilePage = () => {
     if (shelfStatus === "idle") {
       dispatch(fetchShelf());
     }
-    if (creationsFetchStatus === "idle") {
-      dispatch(fetchMyCreations());
-    }
   }, [
     dispatch,
     name,
     profileStatus,
     shelfStatus,
-    creationsFetchStatus,
     profile,
     isOwner,
   ]);
@@ -433,22 +368,6 @@ const UserProfilePage = () => {
     } finally {
       setIsSavingArchetype(false);
     }
-  };
-
-  const handleOpenPostModal = (creation) => {
-    setCreationToPost(creation);
-    setIsPostModalOpen(true);
-  };
-
-  const handleSharePost = (captionText) => {
-    if (!creationToPost) return;
-    const newPost = {
-      caption_text: captionText,
-      mediaUrl: creationToPost.imageUrl,
-      bookId: creationToPost.bookId || "unknown",
-    };
-    dispatch(createPost(newPost));
-    navigate("/posts");
   };
 
   const favoritesShelf = shelfItems.filter((s) => s.is_favorite);
@@ -583,13 +502,6 @@ const UserProfilePage = () => {
         />
       )}
 
-      {isPostModalOpen && (
-        <PostCreationModal
-          creation={creationToPost}
-          onClose={() => setIsPostModalOpen(false)}
-          onShare={handleSharePost}
-        />
-      )}
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 font-body">
         {/* --- HEADER --- */}
         <header className="mb-6 flex flex-col items-center text-center relative">
@@ -768,9 +680,6 @@ const UserProfilePage = () => {
               activeTab={activeTab}
               setActiveTab={setActiveTab}
               posts={posts}
-              privateCreations={privateCreations}
-              creationsFetchStatus={creationsFetchStatus}
-              handleOpenPostModal={handleOpenPostModal}
               isOwner={isOwner}
               journalEntries={journalEntries}
               journalStatus={journalStatus}

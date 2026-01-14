@@ -1,25 +1,24 @@
+import logging
 import os
+
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.responses import ORJSONResponse, JSONResponse
 
+logger = logging.getLogger(__name__)
+
 DEBUG = "ENV_MODE" in os.environ and os.environ["ENV_MODE"] == "dev"
 
-print(f"debug mode: {DEBUG}")
+logger.info(f"Debug mode: {DEBUG}")
 # DB
 AVAILABLE_DB_ENGINES = ("mock", "mongo")
 DB_TYPE = os.environ.get("DB_TYPE", "mongo")  # mongo or mock
 DB_NAME = "booklovin_test" if DEBUG else "booklovin"
-print(f"Database: {DB_TYPE.upper()}::{DB_NAME}")
+logger.info(f"Database: {DB_TYPE.upper()}::{DB_NAME}")
 # MONGO
 MONGO_SERVER = (os.environ.get("MONGO_HOST", "localhost"), int(os.environ.get("MONGO_PORT", "27017")))
 # REDIS
 REDIS_SERVER = (os.environ.get("REDIS_HOST", "localhost"), int(os.environ.get("REDIS_PORT", "6379")))
-
-HUGGINGFACE_API_KEY = os.environ.get("HUGGINGFACE_API_KEY")
-if not HUGGINGFACE_API_KEY and DEBUG:
-    print("Warning: HUGGINGFACE_API_KEY not set. AI Studio will not work.")
-
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/login")
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

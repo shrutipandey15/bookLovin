@@ -32,15 +32,10 @@ class FlexModel(BaseModel):
         return kls.from_dict(loads(post_data))
 
     @classmethod
-    def from_dict(kls: Type[FM], dict_obj: dict[str, Any], validate=True) -> FM:
+    def from_dict(kls: Type[FM], dict_obj: dict[str, Any]) -> FM:
         """Get a new instance from an Object"""
         if "creationTime" in dict_obj:
             dict_obj["creationTime"] = datetime.fromtimestamp(dict_obj["creationTime"], tz=timezone.utc)
-        # TODO: ensure it works without validation
-        # if validate:
-        #     return kls.model_validate(dict_obj)
-        # else:
-        #     return kls.model_construct(dict_obj)  # type: ignore
         return kls.model_validate(dict_obj)
 
     @classmethod

@@ -29,18 +29,17 @@ async def create(db: State, entry: JournalEntry, user: User) -> None | UserError
     return None
 
 
-async def delete(db: State, entry_id: str) -> None | UserError:
-    """Delete a journal entry by ID."""
-    # Search through all users' journal entries
-    for user_id, entries in db.journal_entries.items():
-        for i, entry in enumerate(entries):
-            if entry.uid == entry_id:
-                # Remove the entry and save
-                db.journal_entries[user_id].pop(i)
-                db.save()
-                return None
+async def delete(db: State, entry_id: str, user_id: str) -> None | UserError:
+    """Delete a journal entry by ID, only if owned by the user."""
+    if user_id not in db.journal_entries:
+        return gen_error(ErrorCode.NOT_FOUND, f"Journal entry with ID {entry_id} not found.")
 
-    # If we get here, entry wasn't found
+    for i, entry in enumerate(db.journal_entries[user_id]):
+        if entry.uid == entry_id:
+            db.journal_entries[user_id].pop(i)
+            db.save()
+            return None
+
     return gen_error(ErrorCode.NOT_FOUND, f"Journal entry with ID {entry_id} not found.")
 
 
@@ -64,9 +63,7 @@ async def update(db: State, user: User, entry_id: str, journal_entry: JournalEnt
     return gen_error(ErrorCode.NOT_FOUND, f"Journal entry with ID {entry_id} not found.")
 
 
-async def query(
-    db: State, user_id: str, search: str | None = None, favorite: bool | None = None
-) -> list[JournalEntry] | UserError:
+async def query(db: State, user_id: str, search: str | None = None, favorite: bool | None = None) -> list[JournalEntry] | UserError:
     """List journal entries with optional filtering."""
     # Check if user exists
     if user_id not in db.journal_entries:
@@ -76,7 +73,6 @@ async def query(
     filtered_entries = []
 
     for entry in entries:
-
         # Apply search filter if specified
         if search is not None:
             search_text = search.lower()

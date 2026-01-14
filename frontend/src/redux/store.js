@@ -5,7 +5,6 @@ import journalReducer from './journalSlice';
 import letterReducer from './letterSlice';
 import booksReducer from './booksSlice';
 import profileReducer from './profileSlice';
-import creationsReducer from './creationsSlice';
 
 const store = configureStore({
   reducer: {
@@ -15,8 +14,6 @@ const store = configureStore({
     letter: letterReducer,
     books: booksReducer,
     profile: profileReducer,
-    creations: creationsReducer
-
   },
 });
 

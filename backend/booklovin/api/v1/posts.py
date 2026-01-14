@@ -1,4 +1,5 @@
 """Routes for /posts."""
+
 import json
 from typing import List
 from fastapi import (
@@ -31,11 +32,10 @@ crouter = APIRouter(tags=["comments"])
 async def create_post(
     request: Request,
     user: User = Depends(get_from_token),
-    
     title: str = Form(...),
     content: str = Form(...),
     links: str = Form("[]"),
-    images: List[UploadFile] = File(default=[])
+    images: List[UploadFile] = File(default=[]),
 ) -> Post:
     """Create one post with text and optional images."""
     try:
@@ -61,15 +61,14 @@ async def create_post(
         return new_post
 
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 
 @router.get("/", response_model=list[Post] | UserError, response_class=APIResponse)
 async def read_all_posts(request: Request, s: int, e: int, user: User = Depends(get_from_token)) -> list[Post] | UserError:
     """Get a range of posts (from most recent to oldest)."""
-    assert e > s
+    if e <= s:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="End must be greater than start")
     if e - s > 40:
         return errors.ABUSIVE_USAGE
     return await database.post.get_all(db=request.app.state.db, start=s, end=e)
@@ -97,8 +96,13 @@ async def read_one_post(request: Request, post_id: str, user: User = Depends(get
 
 # update
 @router.put("/{post_id}", response_model=None | UserError, response_class=APIResponse)
-async def update_post(request: Request, post_id: str, post: Post, user: User = Depends(get_from_token)) -> None:
+async def update_post(request: Request, post_id: str, post: Post, user: User = Depends(get_from_token)) -> None | UserError:
     """Update a specific post."""
+    existing_post = await database.post.get_one(db=request.app.state.db, post_id=post_id)
+    if not existing_post:
+        return errors.POST_NOT_FOUND
+    if existing_post.authorId != user.uid:
+        return errors.FORBIDDEN
     await database.post.update(db=request.app.state.db, post_id=post_id, post_data=post)
 
 
@@ -118,6 +122,11 @@ async def react_to_post(request: Request, post_id: str, payload: ReactionRequest
 @router.delete("/{post_id}", response_model=None | UserError, response_class=APIResponse)
 async def delete_post(request: Request, post_id: str, user: User = Depends(get_from_token)) -> None | UserError:
     """Delete a specific post."""
+    existing_post = await database.post.get_one(db=request.app.state.db, post_id=post_id)
+    if not existing_post:
+        return errors.POST_NOT_FOUND
+    if existing_post.authorId != user.uid:
+        return errors.FORBIDDEN
     return await database.post.delete(
         db=request.app.state.db,
         post_id=post_id,

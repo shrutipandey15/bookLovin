@@ -1,7 +1,7 @@
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "@context/AuthContext";
-import { BookHeart, Feather, MessageSquare, Book, User, LogOut, Info, Wand2 } from "lucide-react";
+import { BookHeart, Feather, MessageSquare, Book, User, LogOut, Info } from "lucide-react";
 
 const CurrentlyReading = () => {
   const book = {
@@ -49,7 +49,6 @@ const Sidebar = () => {
     { name: 'Journal', path: '/journal', icon: Feather },
     { name: 'Confessions', path: '/confessions', icon: MessageSquare },
     { name: 'Books', path: '/books/search', icon: Book },
-    { name: 'Art Studio', path: '/studio/create/some-book-id', icon: Wand2 },
     { name: 'Posts', path: '/posts', icon: Info },
     ...(user && user.name ?
         [{ name: 'User Profile', path: `/profile/${user.name}`, icon: User }]

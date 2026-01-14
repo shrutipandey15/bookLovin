@@ -3,9 +3,10 @@ from enum import IntEnum, auto
 from typing import Optional, List
 from uuid import uuid4
 
-from booklovin.models.base import FlexModel
-from pydantic import Field, field_serializer, field_validator
 import bleach
+from pydantic import Field, field_serializer, field_validator, EmailStr
+
+from booklovin.models.base import FlexModel
 
 
 class UserRole(IntEnum):
@@ -17,7 +18,7 @@ class UserRole(IntEnum):
 
 
 class UserLogin(FlexModel):
-    email: str
+    email: EmailStr
     password: str
 
 
@@ -26,7 +27,7 @@ class NewUser(UserLogin):
 
     @field_validator("username")
     @classmethod
-    def sanitize_strings(cls, v: str) -> str:
+    def sanitize_username(cls, v: str) -> str:
         return bleach.clean(v, tags=[], attributes={}, strip=True)
 
 

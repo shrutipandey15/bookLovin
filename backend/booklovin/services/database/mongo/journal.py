@@ -19,7 +19,6 @@ async def trigger_new_journal_actions(db: Database, user: User, entry_date: date
         entry_date=entry_date,
         last_journal_date=user.lastJournalDate.replace(tzinfo=timezone.utc) if user.lastJournalDate else None,
         current_streak_start=user.currentStreakStart.replace(tzinfo=timezone.utc) if user.currentStreakStart else None,
-
         current_streak=user.currentStreak,
         longest_streak=user.longestStreak,
     )
@@ -35,12 +34,13 @@ async def create(db: Database, entry: JournalEntry, user: User) -> None | UserEr
     return None
 
 
-async def delete(db: Database, entry_id: str) -> None | UserError:
-    """Delete a journal entry by ID."""
-    result = await db.journals.delete_one({"uid": entry_id})
+async def delete(db: Database, entry_id: str, user_id: str) -> None | UserError:
+    """Delete a journal entry by ID, only if owned by the user."""
+    result = await db.journals.delete_one({"uid": entry_id, "authorId": user_id})
     if result.deleted_count == 0:
         return errors.NOT_FOUND
     return None
+
 
 async def update(db: Database, user: User, entry_id: str, journal_entry: JournalEntryUpdate) -> JournalEntry | UserError:
     """Update an existing journal entry."""
@@ -55,12 +55,11 @@ async def update(db: Database, user: User, entry_id: str, journal_entry: Journal
         existing_entry = JournalEntry.from_dict(existing_entry_doc)
         await trigger_new_journal_actions(db, user, existing_entry.creationTime)
         return existing_entry
-    
+
     return errors.NOT_FOUND
 
-async def query(
-    db: Database, user_id: str, search: str | None = None, favorite: bool | None = None
-) -> list[JournalEntry] | UserError:
+
+async def query(db: Database, user_id: str, search: str | None = None, favorite: bool | None = None) -> list[JournalEntry] | UserError:
     """List journal entries with optional filtering."""
     query = {"authorId": user_id}
 

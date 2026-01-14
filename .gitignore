@@ -1,4 +1,6 @@
 # backend:
+.env
+.env.*
 nohup.out
 **.pyc
 **.pyo

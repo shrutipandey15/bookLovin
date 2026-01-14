@@ -20,11 +20,5 @@ class Post(NewPost, UserObject):
     reactions: dict[str, int] = Field(default_factory=dict)
 
 
-class Post(NewPost, UserObject):
-    # lastLike: int = 0
-    # likes: int = 0
-    reactions: dict[str, int] = Field(default_factory=dict)
-
-
 class Count(BaseModel):
     count: int
